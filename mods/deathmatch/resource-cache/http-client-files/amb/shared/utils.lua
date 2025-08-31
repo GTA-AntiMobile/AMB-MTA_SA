@@ -383,6 +383,37 @@ function dumpTable(t, indent)
     end
 end
 
+function getCustomModelData(modelID, dataTable, baseStartID)
+    for idx, v in ipairs(dataTable) do
+        local expectedID = baseStartID + (idx - 1)
+        if expectedID == modelID then
+            return v
+        end
+    end
+    return nil
+end
+
+function isValidVehicleModel(id)
+    return id >= 400 and id <= 611 or id >= 30001 and id <= 40000
+end
+
+function isCustomSkin(id)
+    return id >= 20001 and id <= 21000
+end
+
+function isCustomObject(id)
+    return id >= 19001 and id <= 19999
+end
+
+-- Helper: lấy real model id từ baseId theo map của client
+function getRealModelID(player, mtype, baseID)
+    local map = player:getData("customModelMap")
+    if map and map[mtype] and map[mtype][baseID] then
+        return map[mtype][baseID]
+    end
+    return baseID -- fallback về ID gốc nếu không có custom
+end
+
 -- Export utilities to global namespace
 _G.AMB_UTILS = {
     -- String utilities

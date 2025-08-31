@@ -30,14 +30,14 @@ addEventHandler("onResourceStart", resourceRoot, function()
     setMapName("San Andreas")
     
     -- Initialize custom model loading system (once only)
-    if loadCustomModels then
-        outputDebugString("[AMB] Loading custom models...")
-        setTimer(function()
-            loadCustomModels() -- This now has duplicate protection built-in
-        end, 2000, 1) -- 2 second delay to ensure all includes are loaded
-    else
-        outputDebugString("[AMB] ⚠️ Custom model loader not found - check includes/core/models/loader.lua")
-    end
+    -- if loadCustomModels then
+    --     outputDebugString("[AMB] Loading custom models...")
+    --     setTimer(function()
+    --         loadCustomModels() -- This now has duplicate protection built-in
+    --     end, 2000, 1) -- 2 second delay to ensure all includes are loaded
+    -- else
+    --     outputDebugString("[AMB] ⚠️ Custom model loader not found - check includes/core/models/loader.lua")
+    -- end
     
     -- Call post-startup initialization after delay
     setTimer(function()

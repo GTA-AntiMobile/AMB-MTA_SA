@@ -3,6 +3,9 @@
         version="1.1.2-production" type="gamemode"
         description="🎉 COMPLETE SA-MP to MTA migration (1,182/1,182 commands) + Enhanced Client Features - PRODUCTION READY ✅" />
 
+    <!-- Library Dependencies -->
+    <dependency resource="mta-add-models" />
+
     <!-- Main Entry Point -->
     <script src="main.lua" type="server" />
     <script src="includes/core/database.lua" type="server" />
@@ -138,4 +141,8 @@
         <setting name="*documentation_complete" value="true" />
         <setting name="*vietnamese_support" value="complete" />
     </settings>
+
+    <!-- Files -->
+    <file src="files/models/Vehicle/lambor.dff" />
+    <file src="files/models/Vehicle/lambor.txd" />
 </meta>

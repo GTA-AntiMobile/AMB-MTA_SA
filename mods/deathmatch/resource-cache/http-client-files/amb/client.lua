@@ -124,3 +124,16 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     outputDebugString("=== CLIENT STARTED ===")
     setTimer(createSimpleLogin, 1000, 1)
 end)
+
+addEvent("onClientLoadCustomSkin", true)
+addEventHandler("onClientLoadCustomSkin", root, function(customSkinID)
+    outputDebugString("[CLIENT] Loading custom skin ID " .. tostring(customSkinID))
+    -- Tính baseSkinID từ customSkinID
+    local baseSkinID = 0 + ((customSkinID - 20001) % 310)
+    setElementModel(localPlayer, baseSkinID)
+    -- Replace model bằng file custom
+    local txd = engineLoadTXD("skins/" .. customSkinID .. ".txd")
+    if txd then engineImportTXD(txd, baseSkinID) end
+    local dff = engineLoadDFF("skins/" .. customSkinID .. ".dff", baseSkinID)
+    if dff then engineReplaceModel(dff, baseSkinID) end
+end)

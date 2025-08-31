@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 ==================================================================
 = Multi Theft Auto: San Andreas v1.6
 ==================================================================
@@ -520,3 +521,71 @@
 [2025-08-30 06:42:40] INFO: [ADMIN] Sei created Custom vehicle 30001 successfully
 [2025-08-30 06:43:01] QUIT: Sei left the game [Quit] 
 [2025-08-30 06:47:21] INFO: [MODELS] 🕐 Auto-checking for new models...
+=======
+[2025-09-01 05:36:23] restart: Requested by Console
+[2025-09-01 05:36:23] restart: Resource 'amb' restarting...
+[2025-09-01 05:36:23] Stopping amb
+[2025-09-01 05:36:23] AMB MTA:SA v1.1.2-production stopped
+[2025-09-01 05:36:24] Starting amb
+[2025-09-01 05:36:24] INFO: === AMB ROLEPLAY SERVER v1.1.2-production ===
+[2025-09-01 05:36:24] INFO: 🎮 Complete SA-MP to MTA migration (1,182 commands)
+[2025-09-01 05:36:24] INFO: ✨ Enhanced with modern client-side features:
+[2025-09-01 05:36:24] INFO:    📊 Enhanced Scoreboard (TAB)
+[2025-09-01 05:36:24] INFO:    🚗 Professional Speedometer & Fuel System
+[2025-09-01 05:36:24] INFO:    🎤 Voice Chat System (Local/Global)
+[2025-09-01 05:36:24] INFO:    🗺️ GPS Navigation (50+ locations)
+[2025-09-01 05:36:24] INFO: 🏁 Production-ready for Vietnamese Roleplay
+[2025-09-01 05:36:24] INFO: ==============================================
+[2025-09-01 05:36:24] INFO: AMB MTA:SA v1.1.2-production started - 1182 commands ready
+[2025-09-01 05:36:24] INFO: 🔧 Functions loaded
+[2025-09-01 05:36:24] INFO: 📝 Defines loaded
+[2025-09-01 05:36:24] INFO: [AMB] Admin Commands loaded successfully!
+[2025-09-01 05:36:24] INFO: [ADMIN] Vehicle admin commands loaded (/veh, /deleteveh, /listveh, /deleteallveh)
+[2025-09-01 05:36:24] [ADMIN] Admin Commands System loaded successfully!
+[2025-09-01 05:36:24] INFO: [AMB] Police System loaded successfully!
+[2025-09-01 05:36:24] INFO: [AMB] Family System loaded successfully!
+[2025-09-01 05:36:24] INFO: [AMB] Jobs System loaded successfully!
+[2025-09-01 05:36:24] INFO: Crate System loaded: crates, destroycrate, adestroycrate, gotocrate, cargo, delivercrate, loadcrate, unloadcrate
+[2025-09-01 05:36:24] INFO: Events System loaded: zombie, chance gambler, health/armor commands
+[2025-09-01 05:36:24] INFO: Property System loaded: house buying, rentals, businesses, mail system
+[2025-09-01 05:36:24] INFO: Activities System loaded: swimming, boxing, parkour, flying, duties, games, vehicle search
+[2025-09-01 05:36:24] INFO: Loading Arena & Turf System...
+[2025-09-01 05:36:24] INFO: Arena System loaded: joinarena, leavearena, createarena, startarena, arena, turf, startturf, turfinfo
+[2025-09-01 05:36:24] INFO: Turf System loaded: turf wars, gang zones, territory control
+[2025-09-01 05:36:24] INFO: Communication & Phone System loaded: calls, SMS, contacts, privacy, plans, 911
+[2025-09-01 05:36:24] INFO: Admin & Moderation System loaded: suspend, ban, fine, weapons, vehicles, health, announcements
+[2025-09-01 05:36:24] INFO: VIP & Gift System loaded: VIP levels, gift boxes, shop orders, gift codes, VIP chat
+[2025-09-01 05:36:24] INFO: Banking & Business System loaded: ATM, accounts, transfers, businesses, tokens, interest
+[2025-09-01 05:36:24] INFO: Shop & Services System loaded: clothing, toys, rentals, healthcare, credits, music, help
+[2025-09-01 05:36:24] INFO: Help & Documentation System loaded: complete help for all 1,182 migrated commands
+[2025-09-01 05:36:24] INFO: [VOICE] Voice chat server support loaded
+[2025-09-01 05:36:24] INFO: [CHAT] Chat control system loaded - blocking chat for non-logged players
+[2025-09-01 05:36:24] INFO: [GPS] GPS server support loaded with 21 default locations
+[2025-09-01 05:36:24] INFO: [VEHICLE] Vehicle system loaded with fuel management
+[2025-09-01 05:36:24] AMB MTA:SA v1.0.0-production started - 1182 commands ready
+[2025-09-01 05:36:24] INFO: [AMB] Debug mode enabled
+[2025-09-01 05:36:24] INFO: [DATABASE] Initializing connection...
+[2025-09-01 05:36:24] INFO: [DATABASE] ✅ Connected to amb@localhost
+[2025-09-01 05:36:24] INFO: Created police team: LSPD
+[2025-09-01 05:36:24] INFO: Created police team: SFPD
+[2025-09-01 05:36:24] INFO: Created police team: LVPD
+[2025-09-01 05:36:24] INFO: Created family team: Aztecas
+[2025-09-01 05:36:24] INFO: Created family team: Vagos
+[2025-09-01 05:36:24] INFO: Created family team: Grove Street
+[2025-09-01 05:36:24] INFO: Created family team: Ballas
+[2025-09-01 05:36:24] INFO: Jobs system initialized with 10 job types
+[2025-09-01 05:36:24] INFO: Property System initialized with sample houses, rentals, and businesses
+[2025-09-01 05:36:24] INFO: Help & Documentation System initialized with 12 categories
+[2025-09-01 05:36:24] Gamemode 'AMB Roleplay Server' started.
+[2025-09-01 05:36:24] amb restarted successfully
+[2025-09-01 05:36:25] INFO: [AMB] Commands system initialized with 51 commands
+[2025-09-01 05:36:54] CONNECT: Sei connected (IP: 26.179.169.5  Serial: A26A0A50AD574D2E3EA52458BAF024F3  Version: 1.6.0-9.23324.0)
+[2025-09-01 05:36:54] JOIN: Sei joined the game (IP: 26.179.169.5)
+[2025-09-01 05:37:00] INFO: ✅ [LOGIN] Player Sei logged in successfully
+[2025-09-01 05:37:00] INFO: ✅ [SPAWN] Player Sei spawned at 1642.9000244141, -2237.6000976562, 13.5
+[2025-09-01 05:37:00] INFO: 🎮 You have been spawned. Welcome to AMB Roleplay!
+[2025-09-01 05:37:06] INFO: ✅ [LOGIN] Player Sei logged in successfully
+[2025-09-01 05:37:06] INFO: ✅ [SPAWN] Player Sei spawned at 1642.9000244141, -2237.6000976562, 13.5
+[2025-09-01 05:37:06] INFO: 🎮 You have been spawned. Welcome to AMB Roleplay!
+[2025-09-01 05:37:12] INFO: [SERVER] Missing mapping for CID 30001
+>>>>>>> Stashed changes

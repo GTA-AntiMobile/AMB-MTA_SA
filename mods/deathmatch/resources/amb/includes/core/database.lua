@@ -100,6 +100,7 @@ function dbSavePlayer(player)
     local interior = getElementInterior(player)
     local dim = getElementDimension(player)
 
+    outputDebugString(string.format("[DB] Saving pos for %s: x=%.2f y=%.2f z=%.2f rot=%.2f", tostring(username), x or 0, y or 0, z or 0, rot or 0))
     dbExec(db_connection, [[
         UPDATE accounts SET 
         SPos_x=?, SPos_y=?, SPos_z=?, SPos_r=?,
@@ -107,7 +108,39 @@ function dbSavePlayer(player)
         `Int`=?, VirtualWorld=?, last_login=NOW()
         WHERE Username=?
     ]],
-    x,y,z,rot,skin,money,health,armor,interior,dim,username)
+        x, y, z, rot, skin, money, health, armor, interior, dim, username)
+end
+
+-- Spawn player from DB
+function dbSpawnPlayer(player, accountData)
+    if not isElement(player) or not accountData then return end
+    local x = tonumber(accountData.SPos_x) or 1642.9
+    local y = tonumber(accountData.SPos_y) or -2237.6
+    local z = tonumber(accountData.SPos_z) or 13.5
+    local rot = tonumber(accountData.SPos_r) or 0
+
+    -- nếu pos = 0 thì fallback về LS
+    if (x == 0 and y == 0 and z == 0) then
+        x, y, z, rot = 1642.9, -2237.6, 13.5, 0
+    end
+
+    outputDebugString(string.format("[DB] Loading pos for %s: x=%.2f y=%.2f z=%.2f rot=%.2f", tostring(getPlayerName(player)), x or 0, y or 0, z or 0, rot or 0))
+    local skin = accountData.Model or 299
+    setElementPosition(player, x, y, z)
+    setElementRotation(player, 0, 0, rot)
+
+    -- Nếu là skin custom thì dùng mta-add-models
+    if skin >= 20001 and skin <= 29999 then
+        setElementModel(player, skin)
+        triggerClientEvent(player, "onClientLoadCustomSkin", resourceRoot, skin)
+        outputDebugString("[SKIN] Spawned custom skin (ID: " .. tostring(skin) .. ") for player " .. getPlayerName(player))
+        setElementData(player, "customSkinID", skin)
+    else
+        setElementModel(player, skin)
+        if getElementData(player, "customSkinID") then
+            removeElementData(player, "customSkinID")
+        end
+    end
 end
 
 -- Exports

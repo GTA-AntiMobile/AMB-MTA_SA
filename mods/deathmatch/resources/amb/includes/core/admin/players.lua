@@ -10,6 +10,15 @@ local adminPlayerCommands = {
     "gethere", "spec", "unspec", "jail", "unjail", "warn", "unwarn"
 }
 
+-- Resolve target by ID or name
+local function resolveTarget(targetName)
+    if tonumber(targetName) then
+        return getPlayerById(tonumber(targetName))
+    else
+        return getPlayerFromPartialName(targetName)
+    end
+end
+
 -- Kick player command
 addCommandHandler("kick", function(player, cmd, targetName, ...)
     if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
@@ -21,8 +30,8 @@ addCommandHandler("kick", function(player, cmd, targetName, ...)
         outputChatBox("USAGE: /kick [player] [reason]", player, 255, 255, 255)
         return
     end
-    
-    local target = getPlayerFromPartialName(targetName)
+
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -53,8 +62,8 @@ addCommandHandler("ban", function(player, cmd, targetName, ...)
         outputChatBox("USAGE: /ban [player] [reason]", player, 255, 255, 255)
         return
     end
-    
-    local target = getPlayerFromPartialName(targetName)
+
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -88,8 +97,8 @@ addCommandHandler("mute", function(player, cmd, targetName, time, ...)
         outputChatBox("USAGE: /mute [player] [time_minutes] [reason]", player, 255, 255, 255)
         return
     end
-    
-    local target = getPlayerFromPartialName(targetName)
+
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -136,8 +145,8 @@ addCommandHandler("freeze", function(player, cmd, targetName)
         outputChatBox("USAGE: /freeze [player]", player, 255, 255, 255)
         return
     end
-    
-    local target = getPlayerFromPartialName(targetName)
+
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -173,8 +182,8 @@ addCommandHandler("goto", function(player, cmd, targetName)
         outputChatBox("USAGE: /goto [player]", player, 255, 255, 255)
         return
     end
-    
-    local target = getPlayerFromPartialName(targetName)
+
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -207,8 +216,8 @@ addCommandHandler("gethere", function(player, cmd, targetName)
         outputChatBox("USAGE: /gethere [player]", player, 255, 255, 255)
         return
     end
-    
-    local target = getPlayerFromPartialName(targetName)
+
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -240,7 +249,7 @@ addCommandHandler("heal", function(player, cmd, targetName)
     
     local target = player
     if targetName then
-        target = getPlayerFromPartialName(targetName)
+        target = resolveTarget(targetName)
         if not target then
             outputChatBox("Khong tim thay player!", player, 255, 0, 0)
             return
@@ -274,18 +283,18 @@ addCommandHandler("setskin", function(player, cmd, targetName, skinID)
         outputChatBox("USAGE: /setskin [player ID hoặc tên] [skin_id]", player, 255, 255, 255)
         return
     end
-    local target = getPlayerFromPartialName(targetName)
+    local target = resolveTarget(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
     end
     
     local skin = tonumber(skinID)
-    if not skin or (skin < 0 or skin > 311) and not (skin >= 20001 and skin <= 29999) then
+    if not skin or ((skin < 0 or skin > 311) and (skin < 20001 or skin > 29999)) then
         outputChatBox("Skin ID khong hop le! (0-311 hoac 20001-29999)", player, 255, 0, 0)
         return
     end
-    
+
     -- Save current position and stats before changing skin
     local x, y, z = getElementPosition(target)
     local rx, ry, rz = getElementRotation(target)
@@ -297,49 +306,24 @@ addCommandHandler("setskin", function(player, cmd, targetName, skinID)
     local money = getPlayerMoney(target)
     local weapon = getPedWeapon(target)
     local ammo = getPedTotalAmmo(target)
-    
+
     outputDebugString("[SETSKIN] Saving position for " .. getPlayerName(target) .. ": " .. x .. ", " .. y .. ", " .. z)
-    
-    -- Check if it's a custom skin and get base ID for MTA
-    local actualSkinID = skin
-    local skinType = "Regular"
-    if isCustomSkin and isCustomSkin(skin) then
-        -- For custom skins, we need to use base skin ID but store the custom ID
-        actualSkinID = 2 + ((skin - 20001) % 310) -- Map to 2-311 range
-        skinType = "Custom"
-        outputDebugString("[SETSKIN] Custom skin " .. skin .. " mapped to base ID " .. actualSkinID)
-    end
-    
-    -- Change skin
-    setElementModel(target, actualSkinID)
-    
-    -- Restore position and stats immediately
-    setTimer(function()
-        if isElement(target) then
-            setElementPosition(target, x, y, z)
-            setElementRotation(target, rx, ry, rz)
-            setElementInterior(target, interior)
-            setElementDimension(target, dimension)
-            setElementHealth(target, health)
-            setPedArmor(target, armor)
-            if team then setPlayerTeam(target, team) end
-            setPlayerMoney(target, money)
-            if weapon and weapon > 0 then
-                giveWeapon(target, weapon, ammo, true)
-            end
-            setElementData(target, "playerSkin", skin)
-            
-            outputDebugString("[SETSKIN] Position restored for " .. getPlayerName(target))
+
+    if skin >= 20001 and skin <= 29999 then
+        -- Custom skin: map về baseSkinID, lưu customSkinID
+        local baseSkinID = 2 + ((skin - 20001) % 310) -- 2-311
+        setElementModel(target, baseSkinID)
+        setElementData(target, "customSkinID", skin)
+        triggerClientEvent(target, "onClientLoadCustomSkin", resourceRoot, skin)
+        outputDebugString("[SETSKIN] Custom skin " .. skin .. " mapped to base ID " .. baseSkinID)
+    else
+        -- Skin thường: set model, xóa customSkinID
+        setElementModel(target, skin)
+        if getElementData(target, "customSkinID") then
+            removeElementData(target, "customSkinID")
         end
-    end, 100, 1) -- Small delay to ensure skin change is processed
-    
-    outputChatBox("Ban da thay doi skin cua " .. getPlayerName(target) .. " thanh " .. skin .. " (" .. skinType .. ")", player, 255, 255, 0)
-    outputChatBox("Admin da thay doi skin cua ban thanh " .. skin .. " (" .. skinType .. ")", target, 255, 255, 0)
-    
-    -- Log action
-    logAdminAction(player, "SETSKIN", getPlayerName(target), "Skin changed to " .. skin)
-    
-    incrementCommandStat("adminCommands")
+        outputDebugString("[SETSKIN] Set regular skin " .. skin)
+    end
 end)
 
 -- Check current skin command
@@ -353,6 +337,23 @@ addCommandHandler("myskin", function(player)
         outputChatBox("Current skin: " .. currentSkin, player, 100, 255, 255)
     end
 end)
+
+-- Gán playerId cho mỗi player khi join (ID online, tự tăng)
+local nextPlayerId = 1
+addEventHandler("onPlayerJoin", root, function()
+    setElementData(source, "playerId", nextPlayerId)
+    nextPlayerId = nextPlayerId + 1
+end)
+
+-- Hàm lấy player theo playerId
+function getPlayerById(id)
+    for _, p in ipairs(getElementsByType("player")) do
+        if getElementData(p, "playerId") == id then
+            return p
+        end
+    end
+    return nil
+end
 
 -- Admin Players module loaded (22 commands)
 registerCommandSystem("Admin Players", 22, true)

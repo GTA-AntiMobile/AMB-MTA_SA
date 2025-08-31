@@ -190,126 +190,106 @@ addCommandHandler("stats", function(player, cmd, targetName)
     end
 end)
 
--- /cv command - Create vehicle (supports custom vehicles like SA-MP)
-addCommandHandler("cv", function(player, command, modelID, color1, color2)
-    outputDebugString("[ADMIN] /cv command triggered by " .. getPlayerName(player))
-    
-    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
-        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
-        outputDebugString("[ADMIN] /cv access denied for " .. getPlayerName(player))
+local CUSTOM_VEHICLE_START = 30001
+local CUSTOM_VEHICLE_END   = 40000
+local REGULAR_VEHICLE_MIN  = 400
+local REGULAR_VEHICLE_MAX  = 611
+
+local BASE_CUSTOM_VEHICLE  = 411
+local MAX_BASE_CUSTOM_ID   = 600 -- tuần tự 411->600
+
+-- /cv command
+-- addCommandHandler("cv", function(player, _, modelID, color1, color2)
+--     modelID = tonumber(modelID)
+--     if not modelID then
+--         return outputChatBox("Usage: /cv [modelID]", player, 255, 215, 0)
+--     end
+
+--     local x, y, z = getElementPosition(player)
+--     local _, _, rot = getElementRotation(player)
+--     local radRot = math.rad(rot)
+--     x = x + 3 * math.sin(radRot)
+--     y = y + 3 * math.cos(radRot)
+
+--     local vehicle = spawnAdminVehicle(modelID, x, y, z, 0, 0, rot)
+
+--     if vehicle then
+--         color1 = tonumber(color1) or 0
+--         color2 = tonumber(color2) or 0
+--         setVehicleColor(vehicle, color1, color1, color2, color2)
+--         setElementInterior(vehicle, getElementInterior(player))
+--         setElementDimension(vehicle, getElementDimension(player))
+--         -- warpPedIntoVehicle(player, vehicle) -- enter luôn vào xe
+--         outputChatBox("✅ Spawned vehicle: " .. modelID, player, 76, 175, 80)
+--     else
+--         outputChatBox("❌ Invalid modelID!", player, 255, 152, 0)
+--     end
+-- end)
+-- command /cv
+addCommandHandler("cv", function(player, cmd, idStr)
+    local cid = tonumber(idStr)
+    if not cid then
+        outputChatBox("Usage: /cv [modelID]", player, 255, 0, 0)
         return
     end
-    
-    if not modelID then
-        outputChatBox("SU DUNG: /cv [model ID] [mau1] [mau2]", player, 74, 144, 226, false)
-        outputChatBox("VD: /cv 30001 | /cv 30001 3 2 | /cv 411 5 7", player, 255, 215, 0, false)
-        outputChatBox("Regular: 400-611, Custom: 30001-40000", player, 76, 175, 80, false)
+
+    if not customVehicleModels[cid] then
+        outputChatBox("❌ Custom model " .. tostring(cid) .. " not registered yet!", player, 255, 0, 0)
+        outputDebugString("[SERVER] Missing mapping for CID " .. tostring(cid))
         return
     end
-    
-    modelID = tonumber(modelID)
-    if not modelID then
-        outputChatBox("Model ID khong hop le!", player, 255, 107, 107, false)
-        return
-    end
-    
-    -- Validate model ID - support both regular and custom vehicles
-    local isValidModel = false
-    local vehType = "Unknown"
-    
-    if modelID >= 400 and modelID <= 611 then
-        isValidModel = true
-        vehType = "Regular"
-    elseif modelID >= 30001 and modelID <= 40000 then
-        isValidModel = true
-        vehType = "Custom"
-    end
-    
-    if not isValidModel then
-        outputChatBox("Model ID khong hop le!", player, 255, 107, 107, false)
-        outputChatBox("Su dung Regular (400-611) hoac Custom (30001-40000)", player, 255, 152, 0, false)
-        return
-    end
-    
-    -- Set default colors if not specified
-    color1 = tonumber(color1) or 0
-    color2 = tonumber(color2) or 0
-    
-    -- Validate colors
-    if color1 < 0 or color1 > 255 or color2 < 0 or color2 > 255 then
-        outputChatBox("Mau xe phai tu 0 den 255.", player, 255, 107, 107, false)
-        return
-    end
-    
-    outputDebugString("[ADMIN] /cv creating " .. vehType .. " vehicle " .. modelID .. " for " .. getPlayerName(player))
-    
-    -- Get player position and create vehicle  
+
+    local model = customVehicleModels[cid].realId
+    outputDebugString(("[SERVER] Mapping CID %d -> realId %d"):format(cid, model))
+
     local x, y, z = getElementPosition(player)
-    local _, _, rot = getElementRotation(player)
-    
-    -- Move vehicle slightly forward to avoid spawning on player
-    local radRot = math.rad(rot)
-    x = x + 3.0 * math.sin(radRot)
-    y = y + 3.0 * math.cos(radRot)
-    
-    -- Destroy previous admin vehicle if exists
-    local prevVehicle = getElementData(player, "adminVehicle")
-    if prevVehicle and isElement(prevVehicle) then
-        destroyElement(prevVehicle)
-    end
-    
-    -- Check if it's a custom vehicle and get base ID for MTA
-    local actualModelID = modelID
-    if isCustomVehicle and isCustomVehicle(modelID) then
-        -- For custom vehicles, we need to use a base vehicle ID for creation
-        -- The custom model will be applied through the model loading system
-        actualModelID = 411 + ((modelID - 30001) % 201) -- Map to 411-611 range
-        outputDebugString("[ADMIN] Custom vehicle " .. modelID .. " mapped to base ID " .. actualModelID)
-    end
-    
-    -- Create vehicle
-    local vehicle = createVehicle(actualModelID, x, y, z, 0, 0, rot)
-    if vehicle then
-        setVehicleColor(vehicle, color1, color1, color2, color2)
-        setElementInterior(vehicle, getElementInterior(player))
-        setElementDimension(vehicle, getElementDimension(player))
-        setElementData(player, "adminVehicle", vehicle)
-        -- Mark custom vehicles for client-side model swap
-        if vehType == "Custom" then
-            setElementData(vehicle, "customModelID", modelID)
-        end
-        
-        local vehicleID = getElementData(vehicle, "vehicleID")
-        if vehicleID == nil or type(vehicleID) == "boolean" then
-            vehicleID = "N/A"
-        end
-        outputChatBox("Da tao " .. vehType .. " vehicle (Model: " .. modelID .. ", ID: " .. tostring(vehicleID) .. ")", player, 76, 175, 80, false)
-        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " created " .. vehType .. " vehicle " .. modelID .. " successfully")
+    local veh = createVehicle(model, x + 2, y, z + 1)
+    if veh then
+        outputDebugString("[SERVER] 🚗 Spawned vehicle model " .. tostring(model))
     else
-        outputChatBox("Khong the tao xe! Co loi xay ra.", player, 255, 107, 107, false)
-        outputDebugString("[ADMIN] /cv failed to create vehicle for " .. getPlayerName(player))
+        outputDebugString("[SERVER] ❌ Failed to create vehicle with model " .. tostring(model))
     end
 end)
 
--- /listcv command - Show custom vehicle info (like SA-MP)
-addCommandHandler("listcv", function(player, command)
+-- /listcv command
+addCommandHandler("listcv", function(player)
     if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
-        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
-        return
+        return outputChatBox("Access denied! Moderator level required.", player, 255, 100, 100)
     end
-    
-    outputChatBox("=== CUSTOM VEHICLE INFO ===", player, 33, 150, 243, false)
-    outputChatBox("=== Vehicles ===", player, 255, 215, 0, false)
-    outputChatBox("30001 - Lamborghini", player, 100, 255, 100, false)
-    outputChatBox("30002 - BMW M6", player, 100, 255, 100, false)
-    outputChatBox("30003 - Alpha Romeo", player, 100, 255, 100, false)
-    outputChatBox("=== Objects ===", player, 255, 215, 0, false)
-    outputChatBox("19001-19004 - Server Objects", player, 100, 255, 100, false)
-    outputChatBox("=== Skins ===", player, 255, 215, 0, false)
-    outputChatBox("20001-20008 - Civilian Skins", player, 100, 255, 100, false)
-    outputChatBox("20101-20113 - Police/Army Skins", player, 100, 255, 100, false)
-    outputChatBox("Su dung: /cv [model] /createobject [model]", player, 74, 144, 226, false)
-    
+
+    outputChatBox("=== CUSTOM VEHICLE INFO ===", player, 33, 150, 243)
+    -- Vehicles
+    outputChatBox("=== Vehicles ===", player, 255, 215, 0)
+    if MTA_MODEL_DATA and MTA_MODEL_DATA.SERVER_VEHICLE_MODELS then
+        local id = CUSTOM_VEHICLE_START
+        for _, v in ipairs(MTA_MODEL_DATA.SERVER_VEHICLE_MODELS) do
+            local name = v.vehicleName or v.baseName or "Unknown"
+            outputChatBox(id .. " - " .. name, player, 100, 255, 100)
+            id = id + 1
+        end
+    end
+    -- Objects
+    outputChatBox("=== Objects ===", player, 255, 215, 0)
+    if MTA_MODEL_DATA and MTA_MODEL_DATA.SERVER_OBJECT_MODELS then
+        local id = 19001
+        for _, v in ipairs(MTA_MODEL_DATA.SERVER_OBJECT_MODELS) do
+            local name = v.objectName or v.baseName or "Object"
+            outputChatBox(id .. " - " .. name, player, 100, 255, 100)
+            id = id + 1
+        end
+    end
+    -- Skins
+    outputChatBox("=== Skins ===", player, 255, 215, 0)
+    if MTA_MODEL_DATA and MTA_MODEL_DATA.SERVER_SKIN_MODELS then
+        local id = 20001
+        for _, v in ipairs(MTA_MODEL_DATA.SERVER_SKIN_MODELS) do
+            local name = v.baseName or v.skinName or "Skin"
+            outputChatBox(id .. " - " .. name, player, 100, 255, 100)
+            id = id + 1
+        end
+    end
+
+    outputChatBox("Usage: /cv [model] | /createobject [model]", player, 74, 144, 226)
     outputDebugString("[ADMIN] " .. getPlayerName(player) .. " viewed custom vehicle info")
 end)
 
@@ -321,17 +301,14 @@ addCommandHandler("listskin", function(player, command)
     end
     
     outputChatBox("=== CUSTOM SKINS (MTA) ===", player, 33, 150, 243, false)
-    outputChatBox("=== Civilian Skins ===", player, 255, 215, 0, false)
-    outputChatBox("20001 - Brian", player, 100, 255, 100, false)
-    outputChatBox("20002 - Dylan", player, 100, 255, 100, false)
-    outputChatBox("20003 - ConMemay", player, 100, 255, 100, false)
-    outputChatBox("20004 - LAPD Officer", player, 100, 255, 100, false)
-    outputChatBox("20005 - Nam 1", player, 100, 255, 100, false)
-    outputChatBox("20006 - Nam 2", player, 100, 255, 100, false)
-    outputChatBox("20007 - Nu 1", player, 100, 255, 100, false)
-    outputChatBox("20008 - Nu 2", player, 100, 255, 100, false)
-    outputChatBox("=== Police/Army Skins ===", player, 255, 215, 0, false)
-    outputChatBox("20101-20113 - Police/FBI/Army/SWAT", player, 100, 255, 100, false)
+    if MTA_MODEL_DATA and MTA_MODEL_DATA.SERVER_SKIN_MODELS then
+        local id = 20001
+        for _, v in ipairs(MTA_MODEL_DATA.SERVER_SKIN_MODELS) do
+            local name = v.baseName or v.skinName or "Skin"
+            outputChatBox(tostring(id) .. " - " .. name, player, 100, 255, 100, false)
+            id = id + 1
+        end
+    end
     outputChatBox("Su dung: /setskin [player] [skin_id]", player, 74, 144, 226, false)
     
     outputDebugString("[ADMIN] " .. getPlayerName(player) .. " viewed custom skin info")
@@ -381,7 +358,8 @@ addCommandHandler("createobject", function(player, command, objectID)
         setElementData(player, "lastObject", object)
         
         outputChatBox("Da tao " .. objectType .. " object (Model: " .. objectID .. ")", player, 76, 175, 80, false)
-        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " created " .. objectType .. " object " .. objectID .. " successfully")
+        outputDebugString("[ADMIN] " ..
+            getPlayerName(player) .. " created " .. objectType .. " object " .. objectID .. " successfully")
     else
         outputChatBox("Khong the tao object! Co loi xay ra.", player, 255, 107, 107, false)
         outputDebugString("[ADMIN] /createobject failed to create object for " .. getPlayerName(player))
@@ -408,13 +386,13 @@ addCommandHandler("veh", function(player, command, vehicleID)
     
     local x, y, z = getElementPosition(player)
     local _, _, rot = getElementRotation(player)
-    
-    -- Destroy previous admin vehicle if exists
-    local prevVehicle = getElementData(player, "adminVehicle")
-    if prevVehicle and isElement(prevVehicle) then
-        destroyElement(prevVehicle)
-    end
-    
+
+    -- -- Destroy previous admin vehicle if exists
+    -- local prevVehicle = getElementData(player, "adminVehicle")
+    -- if prevVehicle and isElement(prevVehicle) then
+    --     destroyElement(prevVehicle)
+    -- end
+
     -- Create new vehicle
     local vehicle = createVehicle(vehicleID, x + 3, y, z + 1, 0, 0, rot)
     if vehicle then
