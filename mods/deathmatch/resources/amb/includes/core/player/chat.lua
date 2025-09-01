@@ -63,16 +63,25 @@ local allowedCommands = {
 addEventHandler("onPlayerCommand", getRootElement(), function(command)
     local cmd = string.lower(command)
     
+    outputDebugString("[CHAT] Command '" .. cmd .. "' by " .. getPlayerName(source))
+    
     -- Allow certain commands for non-logged users
     if allowedCommands[cmd] then
+        outputDebugString("[CHAT] Command '" .. cmd .. "' allowed for non-logged users")
         return
     end
     
-    if not isPlayerLoggedIn(source) then
+    local isLoggedIn = isPlayerLoggedIn(source)
+    outputDebugString("[CHAT] Player " .. getPlayerName(source) .. " login status: " .. tostring(isLoggedIn))
+    
+    if not isLoggedIn then
         outputChatBox("❌ You must be logged in to use commands! Use /login [password]", source, 255, 100, 100)
+        outputDebugString("[CHAT] Blocking command '" .. cmd .. "' - player not logged in")
         cancelEvent()
         return
     end
+    
+    outputDebugString("[CHAT] Command '" .. cmd .. "' allowed - player logged in")
 end)
 
 -- 🔔 Welcome Message for New Players
@@ -86,21 +95,6 @@ addEventHandler("onPlayerJoin", getRootElement(), function()
         outputChatBox("❓ Need help? Use /help for assistance", player, 255, 255, 100)
         outputChatBox("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", player, 100, 255, 100)
     end, 2000, 1)
-end)
-
--- 🚀 Enhanced Login Success Message (using consistent event)
-addEvent("amb:onPlayerLogin", true)
-addEventHandler("amb:onPlayerLogin", getRootElement(), function()
-    local player = source
-    setTimer(function()
-        outputChatBox("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", player, 0, 255, 0)
-        outputChatBox("✅ Welcome back to AMB Roleplay!", player, 255, 255, 255)
-        outputChatBox("💬 You can now chat and use all commands", player, 255, 255, 100)
-        outputChatBox("🛡️ Type /acmds for admin commands (if admin)", player, 255, 255, 100)
-        outputChatBox("🚗 Type /veh for vehicle commands (if admin)", player, 255, 255, 100)
-        outputChatBox("❓ Type /help for general commands", player, 255, 255, 100)
-        outputChatBox("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", player, 0, 255, 0)
-    end, 1000, 1)
 end)
 
 outputServerLog("[CHAT] Chat Security System loaded successfully!")

@@ -414,6 +414,17 @@ function getRealModelID(player, mtype, baseID)
     return baseID -- fallback về ID gốc nếu không có custom
 end
 
+-- Function to get database connection
+local function getDBConnection()
+    local dbConn = db_connection or _G.db_connection
+    if not dbConn and DATABASE_CONFIG then
+        local cfg = DATABASE_CONFIG.mysql
+        local connStr = string.format("dbname=%s;host=%s;port=%d", cfg.database, cfg.host, cfg.port)
+        dbConn = dbConnect("mysql", connStr, cfg.user, cfg.password, "share=1")
+    end
+    return dbConn
+end
+
 -- Export utilities to global namespace
 _G.AMB_UTILS = {
     -- String utilities

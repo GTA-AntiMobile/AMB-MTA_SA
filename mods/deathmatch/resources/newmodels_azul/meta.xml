@@ -56,8 +56,8 @@
     <file src="models/**/*.dff.nandocrypt"/>
 
     <!-- Debugging / Testing (remove this for a production server) -->
-    <script src="scripts/optional/debug/g_debug.lua" type="shared"/>
-    <script src="scripts/optional/debug/c_debug.lua" type="client"/>
-    <script src="scripts/optional/debug/s_debug.lua" type="server"/>
+    <!-- <script src="scripts/optional/debug/g_debug.lua" type="shared"/> -->
+    <!-- <script src="scripts/optional/debug/c_debug.lua" type="client"/> -->
+    <!-- <script src="scripts/optional/debug/s_debug.lua" type="server"/> -->
 
 </meta>

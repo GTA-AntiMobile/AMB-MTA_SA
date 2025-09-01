@@ -228,7 +228,7 @@ addCommandHandler("vinfo", function(player, cmd)
     local purchasePrice = getElementData(vehicle, "purchasePrice") or 0
     local locked = getElementData(vehicle, "locked") and "Co" or "Khong"
     local model = getElementModel(vehicle)
-    local vehicleName = getVehicleName(vehicle)
+    local vehicleName = getCustomVehicleName(vehicle)
     
     outputChatBox("=== THONG TIN XE ===", player, 255, 255, 0)
     outputChatBox("Ten xe: " .. vehicleName .. " (ID: " .. model .. ")", player, 255, 255, 255)

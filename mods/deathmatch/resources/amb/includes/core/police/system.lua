@@ -172,7 +172,7 @@ end)
 
 -- Police command: /release
 addCommandHandler("release", function(player, cmd, targetName)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) and not isPlayerCop(player) then
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) and not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You don't have permission to use this command!", player)
         return
     end

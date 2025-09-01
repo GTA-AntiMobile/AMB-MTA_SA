@@ -3,92 +3,172 @@
 -- Core admin commands for player management
 -- ================================
 
+-- Debug command to check database connection and skin
+addCommandHandler("checkdb", function(player)
+    outputChatBox("🔧 Checking database connection...", player, 255, 255, 0)
+    
+    -- Try different ways to get database connection
+    local dbConn = db_connection or _G.db_connection or exports.amb:getDatabaseConnection()
+    
+    if not dbConn then
+        outputChatBox("❌ No database connection found!", player, 255, 0, 0)
+        outputChatBox("Trying alternative method...", player, 255, 255, 0)
+        
+        -- Try to get connection from global table
+        if DATABASE_CONFIG then
+            outputChatBox("✅ DATABASE_CONFIG found", player, 0, 255, 0)
+            local cfg = DATABASE_CONFIG.mysql
+            local connStr = string.format("dbname=%s;host=%s;port=%d", cfg.database, cfg.host, cfg.port)
+            dbConn = dbConnect("mysql", connStr, cfg.user, cfg.password, "share=1")
+            if dbConn then
+                outputChatBox("✅ Created new database connection", player, 0, 255, 0)
+            else
+                outputChatBox("❌ Failed to create database connection", player, 255, 0, 0)
+                return
+            end
+        else
+            outputChatBox("❌ DATABASE_CONFIG not found", player, 255, 0, 0)
+            return
+        end
+    else
+        outputChatBox("✅ Database connection found", player, 0, 255, 0)
+    end
+    
+    local account = getPlayerAccount(player)
+    if account then
+        outputChatBox("Account: " .. getAccountName(account), player, 255, 255, 0)
+        dbQuery(function(qh, player)
+            local result = dbPoll(qh, 0)
+            if result and #result > 0 then
+                local data = result[1]
+                outputChatBox("DB Model: " .. tostring(data.Model), player, 0, 255, 255)
+                outputChatBox("Current Model: " .. getElementModel(player), player, 255, 255, 0)
+                outputChatBox("CustomSkinID: " .. tostring(getElementData(player, "customSkinID")), player, 255, 0, 255)
+            else
+                outputChatBox("No data found in DB", player, 255, 0, 0)
+            end
+        end, {player}, dbConn, "SELECT Model FROM accounts WHERE Username = ?", getAccountName(account))
+    else
+        outputChatBox("❌ No account found", player, 255, 0, 0)
+    end
+end)
+
+-- Remove old setskin command from admin resource
+removeCommandHandler("setskin")
+outputDebugString("[PLAYERS] Overriding /setskin command from admin resource")
+
+-- SETSKIN COMMAND MOVED TO END OF FILE FOR FINAL OVERRIDE
+
+-- Working applyskin command (for testing)
+addCommandHandler("applyskin", function(player, _, targetName, skinID)
+    outputDebugString("[APPLYSKIN] Command called by " .. getPlayerName(player))
+    outputChatBox("🔧 APPLYSKIN command received!", player, 255, 255, 0)
+    
+    -- Check admin level
+    local adminLevel = tonumber(getElementData(player, "adminLevel")) or 0
+    outputChatBox("Your admin level: " .. adminLevel, player, 255, 255, 0)
+    
+    if adminLevel < 2 then
+        outputChatBox("❌ Need admin level 2+", player, 255, 0, 0)
+        return
+    end
+    
+    if not targetName or not skinID then
+        outputChatBox("Usage: /applyskin [player] [skinID]", player, 255, 255, 0)
+        return
+    end
+    
+    local target = getPlayerFromNameOrId(targetName)
+    if not target then
+        outputChatBox("❌ Player not found!", player, 255, 0, 0)
+        return
+    end
+    
+    local skin = tonumber(skinID)
+    if not skin then
+        outputChatBox("❌ Invalid skin ID!", player, 255, 0, 0)
+        return
+    end
+    
+    outputChatBox("✅ Applying skin " .. skin .. " to " .. getPlayerName(target), player, 0, 255, 0)
+    
+    -- Apply skin directly
+    if skin >= 20001 and skin <= 29999 then
+        -- Custom skin
+        local newmodelsResource = getResourceFromName("newmodels_azul")
+        if newmodelsResource and getResourceState(newmodelsResource) == "running" then
+            local success = exports["newmodels_azul"]:setElementCustomModel(target, skin)
+            if success then
+                outputChatBox("✅ Custom skin " .. skin .. " applied to " .. getPlayerName(target), player, 0, 255, 0)
+                setElementData(target, "customSkinID", skin)
+                setElementData(target, "pModel", skin) -- SA-MP style storage
+                
+                -- IMPORTANT: Save to database for persistence
+                local dbConn = exports.amb:getDatabaseConnection() or _G.getDatabaseConnection and _G.getDatabaseConnection()
+                if dbConn then
+                    dbExec(dbConn, "UPDATE accounts SET Model = ? WHERE Username = ?", skin, getAccountName(getPlayerAccount(target)))
+                    outputDebugString("[APPLYSKIN] Saved custom skin " .. skin .. " to database for " .. getPlayerName(target))
+                else
+                    outputChatBox("⚠️ Database not available - skin won't persist", player, 255, 255, 0)
+                end
+                
+                -- SA-MP style success message
+                outputChatBox("Skin cua ban da duoc thay doi thanh ID " .. skin .. " boi Administrator " .. getPlayerName(player) .. ".", target, 255, 255, 255)
+                
+                -- Log action
+                if logAdminAction then
+                    logAdminAction(player, "APPLYSKIN", getPlayerName(target), "Changed skin to " .. skin)
+                end
+            else
+                outputChatBox("❌ Failed to apply custom skin " .. skin, player, 255, 0, 0)
+            end
+        else
+            outputChatBox("❌ newmodels_azul not running!", player, 255, 0, 0)
+        end
+    else
+        -- Standard skin
+        setElementModel(target, skin)
+        setElementData(target, "pModel", skin) -- SA-MP style storage
+        
+        -- IMPORTANT: Save to database for persistence
+        local dbConn = exports.amb:getDatabaseConnection() or _G.getDatabaseConnection and _G.getDatabaseConnection()
+        if dbConn then
+            dbExec(dbConn, "UPDATE accounts SET Model = ? WHERE Username = ?", skin, getAccountName(getPlayerAccount(target)))
+            outputDebugString("[APPLYSKIN] Saved standard skin " .. skin .. " to database for " .. getPlayerName(target))
+        else
+            outputChatBox("⚠️ Database not available - skin won't persist", player, 255, 255, 0)
+        end
+        
+        outputChatBox("✅ Standard skin " .. skin .. " applied to " .. getPlayerName(target), player, 0, 255, 0)
+        if getElementData(target, "customSkinID") then
+            removeElementData(target, "customSkinID")
+        end
+        
+        -- SA-MP style success message
+        outputChatBox("Skin cua ban da duoc thay doi thanh ID " .. skin .. " boi Administrator " .. getPlayerName(player) .. ".", target, 255, 255, 255)
+        
+        -- Log action  
+        if logAdminAction then
+            logAdminAction(player, "APPLYSKIN", getPlayerName(target), "Changed skin to " .. skin)
+        end
+    end
+end)
+
+-- Dummy function to prevent errors (statistics tracking can be added later)
+function incrementCommandStat(category)
+    -- Do nothing for now, can be implemented later for statistics
+end
+
 -- Admin player management commands
 local adminPlayerCommands = {
     "kick", "ban", "unban", "mute", "unmute", "freeze", "unfreeze",
-    "slap", "kill", "heal", "armor", "setskin", "setinterior", "goto",
+    "slap", "kill", "heal", "armor", "setskin", "setinterior", "tp",
     "gethere", "spec", "unspec", "jail", "unjail", "warn", "unwarn"
 }
 
--- Resolve target by ID or name
-local function resolveTarget(targetName)
-    if tonumber(targetName) then
-        return getPlayerById(tonumber(targetName))
-    else
-        return getPlayerFromPartialName(targetName)
-    end
-end
-
--- Kick player command
-addCommandHandler("kick", function(player, cmd, targetName, ...)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
-    end
-    
-    if not targetName then
-        outputChatBox("USAGE: /kick [player] [reason]", player, 255, 255, 255)
-        return
-    end
-
-    local target = resolveTarget(targetName)
-    if not target then
-        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
-        return
-    end
-    
-    local reason = table.concat({...}, " ") or "Khong co ly do"
-    
-    outputChatBox("Admin " .. getPlayerName(player) .. " da kick " .. getPlayerName(target) .. ". Ly do: " .. reason, root, 255, 255, 0)
-    
-    -- Log action
-    logAdminAction(player, "KICK", getPlayerName(target), reason)
-    
-    setTimer(function()
-        kickPlayer(target, "Ban da bi kick boi admin. Ly do: " .. reason)
-    end, 1000, 1)
-    
-    incrementCommandStat("adminCommands")
-end)
-
--- Ban player command
-addCommandHandler("ban", function(player, cmd, targetName, ...)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_ADMIN) then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
-    end
-    
-    if not targetName then
-        outputChatBox("USAGE: /ban [player] [reason]", player, 255, 255, 255)
-        return
-    end
-
-    local target = resolveTarget(targetName)
-    if not target then
-        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
-        return
-    end
-    
-    local reason = table.concat({...}, " ") or "Khong co ly do"
-    
-    -- Add to ban database
-    addPlayerBan(target, player, reason)
-    
-    outputChatBox("Admin " .. getPlayerName(player) .. " da ban " .. getPlayerName(target) .. ". Ly do: " .. reason, root, 255, 255, 0)
-    
-    -- Log action
-    logAdminAction(player, "BAN", getPlayerName(target), reason)
-    
-    setTimer(function()
-        banPlayer(target, true, true, true, player, reason)
-    end, 1000, 1)
-    
-    incrementCommandStat("adminCommands")
-end)
-
 -- Mute player command
-addCommandHandler("mute", function(player, cmd, targetName, time, ...)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+addCommandHandler("mute", function(player, _, targetName, time, ...)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
@@ -98,7 +178,7 @@ addCommandHandler("mute", function(player, cmd, targetName, time, ...)
         return
     end
 
-    local target = resolveTarget(targetName)
+    local target = getPlayerFromNameOrId(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -129,61 +209,26 @@ addCommandHandler("mute", function(player, cmd, targetName, time, ...)
     end, muteTime * 60 * 1000, 1)
     
     -- Log action
-    logAdminAction(player, "MUTE", getPlayerName(target), reason .. " (" .. muteTime .. " minutes)")
+    if logAdminAction then
+        logAdminAction(player, "MUTE", getPlayerName(target), reason .. " (" .. muteTime .. " minutes)")
+    end
     
     incrementCommandStat("adminCommands")
 end)
 
--- Freeze player command
-addCommandHandler("freeze", function(player, cmd, targetName)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+-- Teleport to player command (SA-MP style: /tp [player])
+addCommandHandler("tp", function(player, _, targetName)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
     if not targetName then
-        outputChatBox("USAGE: /freeze [player]", player, 255, 255, 255)
+        outputChatBox("USAGE: /tp [player]", player, 255, 255, 255)
         return
     end
 
-    local target = resolveTarget(targetName)
-    if not target then
-        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
-        return
-    end
-    
-    toggleControl(target, "forwards", false)
-    toggleControl(target, "backwards", false)
-    toggleControl(target, "left", false)
-    toggleControl(target, "right", false)
-    toggleControl(target, "jump", false)
-    
-    setElementData(target, "frozen", true)
-    
-    outputChatBox("Ban da bi dong bang boi admin!", target, 255, 255, 0)
-    outputChatBox("Ban da dong bang " .. getPlayerName(target), player, 255, 255, 0)
-    
-    -- Log action
-    logAdminAction(player, "FREEZE", getPlayerName(target), "Player frozen")
-    
-    incrementCommandStat("adminCommands")
-end)
-
--- Unfreeze player command
-
--- Goto player command
-addCommandHandler("goto", function(player, cmd, targetName)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
-    end
-    
-    if not targetName then
-        outputChatBox("USAGE: /goto [player]", player, 255, 255, 255)
-        return
-    end
-
-    local target = resolveTarget(targetName)
+    local target = getPlayerFromNameOrId(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -200,14 +245,14 @@ addCommandHandler("goto", function(player, cmd, targetName)
     outputChatBox("Ban da teleport den " .. getPlayerName(target), player, 255, 255, 0)
     
     -- Log action
-    logAdminAction(player, "GOTO", getPlayerName(target), "Teleported to player")
-    
-    incrementCommandStat("adminCommands")
+    if logAdminAction then
+        logAdminAction(player, "TP", getPlayerName(target), "Teleported to player")
+    end
 end)
 
 -- Get player here command
-addCommandHandler("gethere", function(player, cmd, targetName)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+addCommandHandler("gethere", function(player, _, targetName)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
@@ -217,7 +262,7 @@ addCommandHandler("gethere", function(player, cmd, targetName)
         return
     end
 
-    local target = resolveTarget(targetName)
+    local target = getPlayerFromNameOrId(targetName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -235,125 +280,178 @@ addCommandHandler("gethere", function(player, cmd, targetName)
     outputChatBox("Ban da bi admin " .. getPlayerName(player) .. " goi den", target, 255, 255, 0)
     
     -- Log action
-    logAdminAction(player, "GETHERE", getPlayerName(target), "Teleported player to admin")
+    if logAdminAction then
+        logAdminAction(player, "GETHERE", getPlayerName(target), "Teleported player to admin")
+    end
     
     incrementCommandStat("adminCommands")
 end)
 
--- Heal player command
-addCommandHandler("heal", function(player, cmd, targetName)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
+-- SA-MP Style Player ID System (0-based, reuse slots)
+local MAX_PLAYERS = 500
+local playerSlots = {} -- Track used slots
+
+local function getNextAvailableID()
+    for i = 0, MAX_PLAYERS - 1 do
+        if not playerSlots[i] then
+            return i
+        end
     end
+    return -1 -- Server full
+end
+
+local function releasePlayerID(id)
+    if id and id >= 0 and id < MAX_PLAYERS then
+        playerSlots[id] = nil
+    end
+end
+
+-- Initialize player IDs for players already connected (server restart handling)
+addEventHandler("onResourceStart", resourceRoot, function()
+    outputDebugString("[PLAYER] Initializing player IDs after resource restart...")
     
-    local target = player
-    if targetName then
-        target = resolveTarget(targetName)
-        if not target then
-            outputChatBox("Khong tim thay player!", player, 255, 0, 0)
-            return
+    -- Clear the slots table to start fresh
+    playerSlots = {}
+    
+    -- Reassign IDs to all currently connected players
+    for _, player in ipairs(getElementsByType("player")) do
+        local playerID = getNextAvailableID()
+        if playerID >= 0 then
+            playerSlots[playerID] = player
+            setElementData(player, "ID", playerID) -- Use "ID" consistently
+            outputDebugString("[PLAYER] Reassigned ID " .. playerID .. " to " .. getPlayerName(player) .. " after restart")
+        else
+            outputDebugString("[PLAYER] Server full during restart! Cannot assign ID to " .. getPlayerName(player), 2)
         end
     end
     
-    setElementHealth(target, 100)
-    
-    if target == player then
-        outputChatBox("Ban da hoi phuc suc khoe cua minh", player, 0, 255, 0)
-    else
-        outputChatBox("Ban da hoi phuc suc khoe cho " .. getPlayerName(target), player, 255, 255, 0)
-        outputChatBox("Admin da hoi phuc suc khoe cho ban", target, 0, 255, 0)
-    end
-    
-    -- Log action
-    logAdminAction(player, "HEAL", getPlayerName(target), "Player healed")
-    
-    incrementCommandStat("adminCommands")
+    outputDebugString("[PLAYER] Player ID initialization complete. " .. #getElementsByType("player") .. " players assigned IDs.")
 end)
 
--- Set player skin command
-addCommandHandler("setskin", function(player, cmd, targetName, skinID)
-    
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
+-- Assign Player ID when joining (SA-MP style: 0-based, reuse slots)
+addEventHandler("onPlayerJoin", root, function()
+    local playerID = getNextAvailableID()
+    if playerID >= 0 then
+        playerSlots[playerID] = source
+        setElementData(source, "ID", playerID) -- Use "ID" consistently
+        outputDebugString("[PLAYER] Assigned ID " .. playerID .. " to " .. getPlayerName(source))
+    else
+        outputDebugString("[PLAYER] Server full! Cannot assign ID to " .. getPlayerName(source), 2)
+        kickPlayer(source, "Server full")
     end
+end)
 
-    if not targetName or not skinID then
-        outputChatBox("USAGE: /setskin [player ID hoặc tên] [skin_id]", player, 255, 255, 255)
+-- Release Player ID when quitting
+addEventHandler("onPlayerQuit", root, function()
+    local playerID = getElementData(source, "ID")
+    if playerID and playerSlots then -- Add safety check for playerSlots table
+        releasePlayerID(playerID)
+        outputDebugString("[PLAYER] Released ID " .. playerID .. " from " .. getPlayerName(source))
+    elseif playerID then
+        outputDebugString("[PLAYER] Warning: Player " .. getPlayerName(source) .. " had ID " .. playerID .. " but playerSlots table not available (resource stopping?)")
+    end
+end)
+
+-- Clean up when resource stops (prevent errors during restart)
+addEventHandler("onResourceStop", resourceRoot, function()
+    outputDebugString("[PLAYER] Resource stopping - clearing player slots table")
+    playerSlots = nil -- Clear the table to prevent errors during restart
+end)
+
+-- Admin Players module loaded
+outputDebugString("[ADMIN] Players module loaded with setskin override", 3)
+
+-- FORCE OVERRIDE SETSKIN COMMAND AT THE END (should take priority)
+addCommandHandler("setskin", function(player, _, targetName, skinID)
+    outputDebugString("[SETSKIN-OVERRIDE] Final setskin command called by " .. getPlayerName(player))
+    outputChatBox("🔧 SETSKIN (FINAL OVERRIDE) command received!", player, 255, 255, 0)
+    
+    -- EXACT SAME LOGIC AS APPLYSKIN FOR TESTING
+    outputDebugString("[SETSKIN] Command called by " .. getPlayerName(player))
+    outputChatBox("🔧 SETSKIN command received!", player, 255, 255, 0)
+    
+    -- Check admin level
+    local adminLevel = tonumber(getElementData(player, "adminLevel")) or 0
+    outputChatBox("Your admin level: " .. adminLevel, player, 255, 255, 0)
+    
+    if adminLevel < 2 then
+        outputChatBox("❌ Need admin level 2+", player, 255, 0, 0)
         return
     end
-    local target = resolveTarget(targetName)
+    
+    if not targetName or not skinID then
+        outputChatBox("Usage: /setskin [player] [skinID]", player, 255, 255, 0)
+        return
+    end
+    
+    local target = getPlayerFromNameOrId(targetName)
     if not target then
-        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
+        outputChatBox("❌ Player not found!", player, 255, 0, 0)
         return
     end
     
     local skin = tonumber(skinID)
-    if not skin or ((skin < 0 or skin > 311) and (skin < 20001 or skin > 29999)) then
-        outputChatBox("Skin ID khong hop le! (0-311 hoac 20001-29999)", player, 255, 0, 0)
+    if not skin then
+        outputChatBox("❌ Invalid skin ID!", player, 255, 0, 0)
         return
     end
-
-    -- Save current position and stats before changing skin
-    local x, y, z = getElementPosition(target)
-    local rx, ry, rz = getElementRotation(target)
-    local interior = getElementInterior(target)
-    local dimension = getElementDimension(target)
-    local health = getElementHealth(target)
-    local armor = getPedArmor(target)
-    local team = getPlayerTeam(target)
-    local money = getPlayerMoney(target)
-    local weapon = getPedWeapon(target)
-    local ammo = getPedTotalAmmo(target)
-
-    outputDebugString("[SETSKIN] Saving position for " .. getPlayerName(target) .. ": " .. x .. ", " .. y .. ", " .. z)
-
-    if skin >= 20001 and skin <= 29999 then
-        -- Custom skin: map về baseSkinID, lưu customSkinID
-        local baseSkinID = 2 + ((skin - 20001) % 310) -- 2-311
-        setElementModel(target, baseSkinID)
-        setElementData(target, "customSkinID", skin)
-        triggerClientEvent(target, "onClientLoadCustomSkin", resourceRoot, skin)
-        outputDebugString("[SETSKIN] Custom skin " .. skin .. " mapped to base ID " .. baseSkinID)
-    else
-        -- Skin thường: set model, xóa customSkinID
-        setElementModel(target, skin)
-        if getElementData(target, "customSkinID") then
-            removeElementData(target, "customSkinID")
-        end
-        outputDebugString("[SETSKIN] Set regular skin " .. skin)
-    end
-end)
-
--- Check current skin command
-addCommandHandler("myskin", function(player)
-    local currentSkin = getElementModel(player)
-    local customSkin = getElementData(player, "playerSkin")
     
-    if customSkin and customSkin ~= currentSkin then
-        outputChatBox("Current skin: " .. currentSkin .. " (Base) | Custom: " .. customSkin, player, 100, 255, 255)
+    outputChatBox("✅ Applying skin " .. skin .. " to " .. getPlayerName(target), player, 0, 255, 0)
+    
+    -- Apply skin directly (EXACT SAME AS APPLYSKIN)
+    if skin >= 20001 and skin <= 29999 then
+        -- Custom skin
+        local newmodelsResource = getResourceFromName("newmodels_azul")
+        if newmodelsResource and getResourceState(newmodelsResource) == "running" then
+            local success = exports["newmodels_azul"]:setElementCustomModel(target, skin)
+            if success then
+                outputChatBox("✅ Custom skin " .. skin .. " applied to " .. getPlayerName(target), player, 0, 255, 0)
+                setElementData(target, "customSkinID", skin)
+                setElementData(target, "pModel", skin) -- SA-MP style storage
+                
+                -- IMPORTANT: Save to database for persistence
+                local dbConn = exports.amb:getDatabaseConnection() or _G.getDatabaseConnection and _G.getDatabaseConnection()
+                if dbConn then
+                    dbExec(dbConn, "UPDATE accounts SET Model = ? WHERE Username = ?", skin, getAccountName(getPlayerAccount(target)))
+                    outputDebugString("[SETSKIN] Saved custom skin " .. skin .. " to database for " .. getPlayerName(target))
+                else
+                    outputChatBox("⚠️ Database not available - skin won't persist", player, 255, 255, 0)
+                end
+                
+                -- SA-MP style success message
+                outputChatBox("Skin cua ban da duoc thay doi thanh ID " .. skin .. " boi Administrator " .. getPlayerName(player) .. ".", target, 255, 255, 255)
+                
+                -- Log admin action
+                if logAdminAction then
+                    logAdminAction(player, "SETSKIN", getPlayerName(target), "Changed skin to " .. skin)
+                end
+            else
+                outputChatBox("❌ Failed to apply custom skin", player, 255, 0, 0)
+            end
+        else
+            outputChatBox("❌ Custom models resource not running", player, 255, 0, 0)
+        end
     else
-        outputChatBox("Current skin: " .. currentSkin, player, 100, 255, 255)
-    end
-end)
-
--- Gán playerId cho mỗi player khi join (ID online, tự tăng)
-local nextPlayerId = 1
-addEventHandler("onPlayerJoin", root, function()
-    setElementData(source, "playerId", nextPlayerId)
-    nextPlayerId = nextPlayerId + 1
-end)
-
--- Hàm lấy player theo playerId
-function getPlayerById(id)
-    for _, p in ipairs(getElementsByType("player")) do
-        if getElementData(p, "playerId") == id then
-            return p
+        -- Standard skin 
+        setElementModel(target, skin)
+        setElementData(target, "pModel", skin) -- SA-MP style storage
+        outputChatBox("✅ Standard skin " .. skin .. " applied to " .. getPlayerName(target), player, 0, 255, 0)
+        
+        -- Save to database
+        local dbConn = exports.amb:getDatabaseConnection() or _G.getDatabaseConnection and _G.getDatabaseConnection()
+        if dbConn then
+            dbExec(dbConn, "UPDATE accounts SET Model = ? WHERE Username = ?", skin, getAccountName(getPlayerAccount(target)))
+            outputDebugString("[SETSKIN] Saved standard skin " .. skin .. " to database for " .. getPlayerName(target))
+        else
+            outputChatBox("⚠️ Database not available - skin won't persist", player, 255, 255, 0)
+        end
+        
+        -- SA-MP style success message
+        outputChatBox("Skin cua ban da duoc thay doi thanh ID " .. skin .. " boi Administrator " .. getPlayerName(player) .. ".", target, 255, 255, 255)
+        
+        -- Log admin action
+        if logAdminAction then
+            logAdminAction(player, "SETSKIN", getPlayerName(target), "Changed skin to " .. skin)
         end
     end
-    return nil
-end
-
--- Admin Players module loaded (22 commands)
-registerCommandSystem("Admin Players", 22, true)
+end)

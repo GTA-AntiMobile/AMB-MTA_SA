@@ -7,10 +7,24 @@
 
 -- 🔧 Admin Level Check Function
 function isAdmin(player, level)
-    local account = getPlayerAccount(player)
-    if not account then return false end
+    if not isElement(player) then return false end
     
-    local adminLevel = getAccountData(account, "AdminLevel") or 0
+    -- Try to get adminLevel from ElementData first (matches main system)
+    local adminLevel = getElementData(player, "adminLevel")
+    
+    -- Fallback to playerData if ElementData not set
+    if not adminLevel then
+        local playerData = getElementData(player, "playerData")
+        adminLevel = playerData and playerData.adminLevel or 0
+    else
+        adminLevel = tonumber(adminLevel) or 0
+    end
+    
+    -- GOD level có toàn quyền
+    if adminLevel == ADMIN_LEVELS.GOD then
+        return true
+    end
+    
     return adminLevel >= level
 end
 
@@ -25,13 +39,13 @@ function sendAdminMessage(message)
 end
 
 -- 💰 Money & Stats Commands
-addCommandHandler("givemoney", function(player, cmd, target, amount)
+addCommandHandler("givemoney", function(player, _, playerIdOrName, amount)
     if not isAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local money = tonumber(amount)
     
     if not targetPlayer then
@@ -51,13 +65,13 @@ addCommandHandler("givemoney", function(player, cmd, target, amount)
     sendAdminMessage(getPlayerName(player) .. " gave $" .. money .. " to " .. getPlayerName(targetPlayer))
 end)
 
-addCommandHandler("setmoney", function(player, cmd, target, amount)
+addCommandHandler("setmoney", function(player, _, playerIdOrName, amount)
     if not isAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local money = tonumber(amount)
     
     if not targetPlayer then
@@ -78,13 +92,13 @@ addCommandHandler("setmoney", function(player, cmd, target, amount)
 end)
 
 -- 🩺 Health & Armor Commands
-addCommandHandler("sethp", function(player, cmd, target, health)
+addCommandHandler("sethp", function(player, _, playerIdOrName, health)
     if not isAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local hp = tonumber(health)
     
     if not targetPlayer then
@@ -104,13 +118,13 @@ addCommandHandler("sethp", function(player, cmd, target, health)
     sendAdminMessage(getPlayerName(player) .. " set " .. getPlayerName(targetPlayer) .. "'s health to " .. hp)
 end)
 
-addCommandHandler("setarmor", function(player, cmd, target, armor)
+addCommandHandler("setarmor", function(player, _, playerIdOrName, armor)
     if not isAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local arm = tonumber(armor)
     
     if not targetPlayer then
@@ -131,13 +145,13 @@ addCommandHandler("setarmor", function(player, cmd, target, armor)
 end)
 
 -- 🚀 Jetpack Command
-addCommandHandler("jetpack", function(player, cmd, target)
+addCommandHandler("jetpack", function(player, _, playerIdOrName)
     if not isAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = target and getPlayerFromName(target) or player
+    local targetPlayer = target and getPlayerFromNameOrId(playerIdOrName) or player
     
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
@@ -161,69 +175,54 @@ addCommandHandler("jetpack", function(player, cmd, target)
     sendAdminMessage(getPlayerName(player) .. " toggled jetpack for " .. getPlayerName(targetPlayer))
 end)
 
--- 📍 Teleport Commands
-addCommandHandler("goto", function(player, cmd, target)
+-- � Respawn/Revival Commands
+addCommandHandler("hoisinh", function(player, cmd, playerIdOrName)
     if not isAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = playerIdOrName and getPlayerFromNameOrId(playerIdOrName) or player
     
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
         return
     end
     
-    local x, y, z = getElementPosition(targetPlayer)
-    local interior = getElementInterior(targetPlayer)
-    local dimension = getElementDimension(targetPlayer)
+    if not isPedDead(targetPlayer) then
+        outputChatBox("❌ " .. getPlayerName(targetPlayer) .. " is not dead!", player, 255, 255, 0)
+        return
+    end
     
-    setElementPosition(player, x + 2, y, z)
-    setElementInterior(player, interior)
-    setElementDimension(player, dimension)
+    spawnPlayer(targetPlayer, 0, 0, 3) -- Spawn at default location
+    setElementHealth(targetPlayer, 100)
     
-    outputChatBox("✅ Teleported to " .. getPlayerName(targetPlayer), player, 0, 255, 0)
-    outputChatBox("📍 Admin " .. getPlayerName(player) .. " teleported to you", targetPlayer, 255, 255, 0)
+    outputChatBox("✅ Revived " .. getPlayerName(targetPlayer), player, 0, 255, 0)
+    if targetPlayer ~= player then
+        outputChatBox("💚 You have been revived by admin " .. getPlayerName(player), targetPlayer, 0, 255, 100)
+    end
     
-    sendAdminMessage(getPlayerName(player) .. " teleported to " .. getPlayerName(targetPlayer))
+    sendAdminMessage(getPlayerName(player) .. " revived " .. getPlayerName(targetPlayer))
 end)
 
-addCommandHandler("gethere", function(player, cmd, target)
-    if not isAdmin(player, 2) then
-        outputChatBox("❌ Access denied!", player, 255, 0, 0)
-        return
-    end
-    
-    local targetPlayer = getPlayerFromName(target)
-    
-    if not targetPlayer then
-        outputChatBox("❌ Player not found!", player, 255, 0, 0)
-        return
-    end
-    
-    local x, y, z = getElementPosition(player)
-    local interior = getElementInterior(player)
-    local dimension = getElementDimension(player)
-    
-    setElementPosition(targetPlayer, x + 2, y, z)
-    setElementInterior(targetPlayer, interior)
-    setElementDimension(targetPlayer, dimension)
-    
-    outputChatBox("✅ Brought " .. getPlayerName(targetPlayer) .. " to you", player, 0, 255, 0)
-    outputChatBox("📍 You were teleported to admin " .. getPlayerName(player), targetPlayer, 255, 255, 0)
-    
-    sendAdminMessage(getPlayerName(player) .. " brought " .. getPlayerName(targetPlayer) .. " to them")
+-- Alias for respawn command
+addCommandHandler("respawn", function(player, cmd, playerIdOrName)
+    executeCommandHandler("hoisinh", player, playerIdOrName)
 end)
+
+-- �📍 Teleport Commands
+-- Note: /goto command moved to players.lua for better admin integration
+
+-- Note: /gethere command moved to players.lua for better admin integration
 
 -- ❄️ Freeze/Unfreeze Commands
-addCommandHandler("freeze", function(player, cmd, target)
+addCommandHandler("freeze", function(player, _, playerIdOrName)
     if not isAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
@@ -239,13 +238,13 @@ addCommandHandler("freeze", function(player, cmd, target)
     sendAdminMessage(getPlayerName(player) .. " froze " .. getPlayerName(targetPlayer))
 end)
 
-addCommandHandler("unfreeze", function(player, cmd, target)
+addCommandHandler("unfreeze", function(player, _, playerIdOrName)
     if not isAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
@@ -264,13 +263,13 @@ end)
 -- 🏃 Spectate Commands
 local spectateData = {}
 
-addCommandHandler("spec", function(player, cmd, target)
+addCommandHandler("spec", function(player, _, playerIdOrName)
     if not isAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
@@ -302,7 +301,7 @@ addCommandHandler("spec", function(player, cmd, target)
     sendAdminMessage(getPlayerName(player) .. " is spectating " .. getPlayerName(targetPlayer))
 end)
 
-addCommandHandler("specoff", function(player, cmd)
+addCommandHandler("specoff", function(player, _)
     if not isAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
@@ -330,7 +329,7 @@ addCommandHandler("specoff", function(player, cmd)
 end)
 
 -- 🌤️ Weather & Time Commands
-addCommandHandler("weather", function(player, cmd, weatherId)
+addCommandHandler("thoitiet", function(player, _, weatherId)
     if not isAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
@@ -352,7 +351,7 @@ addCommandHandler("weather", function(player, cmd, weatherId)
     end
 end)
 
-addCommandHandler("time", function(player, cmd, hour, minute)
+addCommandHandler("time", function(player, _, hour, minute)
     if not isAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
@@ -381,13 +380,13 @@ addCommandHandler("time", function(player, cmd, hour, minute)
 end)
 
 -- ⚠️ Kick & Ban Commands
-addCommandHandler("kick", function(player, cmd, target, ...)
+addCommandHandler("kick", function(player, _, playerIdOrName, ...)
     if not isAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local reason = table.concat({...}, " ") or "No reason specified"
     
     if not targetPlayer then
@@ -403,13 +402,13 @@ addCommandHandler("kick", function(player, cmd, target, ...)
     kickPlayer(targetPlayer, reason)
 end)
 
-addCommandHandler("ban", function(player, cmd, target, ...)
+addCommandHandler("ban", function(player, _, playerIdOrName, ...)
     if not isAdmin(player, 4) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
-    local targetPlayer = getPlayerFromName(target)
+    local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local reason = table.concat({...}, " ") or "No reason specified"
     
     if not targetPlayer then
@@ -427,15 +426,15 @@ addCommandHandler("ban", function(player, cmd, target, ...)
 end)
 
 -- 📋 Admin Help Command
-addCommandHandler("acmds", function(player, cmd)
+addCommandHandler("acmds", function(player, _)
     if not isAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
     
     outputChatBox("━━━━━━━━━━ 🛡️ ADMIN COMMANDS ━━━━━━━━━━", player, 100, 255, 100)
-    outputChatBox("Level 1: /goto, /spec, /specoff", player, 255, 255, 255)
-    outputChatBox("Level 2: /sethp, /setarmor, /jetpack, /gethere, /freeze, /unfreeze, /kick", player, 255, 255, 255)
+    outputChatBox("Level 1: /goto, /spec, /specoff, /hoisinh, /respawn", player, 255, 255, 255)
+    outputChatBox("Level 2: /sethp, /setarmor, /jetpack, /fly, /gethere, /freeze, /unfreeze, /kick", player, 255, 255, 255)
     outputChatBox("Level 3: /givemoney, /setmoney, /weather, /time", player, 255, 255, 255)
     outputChatBox("Level 4: /ban", player, 255, 255, 255)
     outputChatBox("Vehicle: /veh, /deleteveh, /listveh, /deleteallveh", player, 255, 255, 255)

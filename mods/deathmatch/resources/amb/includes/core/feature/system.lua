@@ -278,7 +278,7 @@ end)
 
 -- Feature command: /weather
 addCommandHandler("weather", function(player, cmd, weatherID)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox(COLOR_RED .. "You don't have permission to use this command!", player)
         return
     end
@@ -307,7 +307,7 @@ end)
 
 -- Feature command: /time
 addCommandHandler("time", function(player, cmd, hour, minute)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox(COLOR_RED .. "You don't have permission to use this command!", player)
         return
     end

@@ -12,7 +12,6 @@ end
 
 -- Init DB connection
 function initDatabase()
-    outputDebugString("[DATABASE] Initializing connection...")
 
     if not DATABASE_CONFIG or not DATABASE_CONFIG.mysql then
         outputDebugString("[DATABASE] ERROR: DATABASE_CONFIG not found in settings.lua!", 1)
@@ -24,8 +23,7 @@ function initDatabase()
     db_connection = dbConnect("mysql", connStr, cfg.user, cfg.password, "share=1")
 
     if db_connection then
-        outputDebugString("[DATABASE] ✅ Connected to " .. cfg.database .. "@" .. cfg.host)
-        createAccountsTable()
+        -- createAccountsTable() -- Commented out - using existing database from original.sql
         return true
     else
         outputDebugString("[DATABASE] ❌ Failed to connect!", 1)
@@ -43,6 +41,7 @@ function createAccountsTable()
             `Key` VARCHAR(256) NOT NULL,
             Level INT DEFAULT 1,
             AdminLevel INT DEFAULT 0,
+            VIPLevel INT DEFAULT 0,
             Money BIGINT DEFAULT 5000,
             Bank BIGINT DEFAULT 20000,
             XP INT DEFAULT 0,
@@ -53,8 +52,10 @@ function createAccountsTable()
             SPos_r FLOAT DEFAULT 0,
             pHealth FLOAT DEFAULT 100,
             pArmor FLOAT DEFAULT 0,
+            `Int` INT DEFAULT 0,
+            VirtualWorld INT DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            last_login DATETIME DEFAULT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ]]
     dbExec(db_connection, query)
@@ -100,12 +101,11 @@ function dbSavePlayer(player)
     local interior = getElementInterior(player)
     local dim = getElementDimension(player)
 
-    outputDebugString(string.format("[DB] Saving pos for %s: x=%.2f y=%.2f z=%.2f rot=%.2f", tostring(username), x or 0, y or 0, z or 0, rot or 0))
     dbExec(db_connection, [[
         UPDATE accounts SET 
         SPos_x=?, SPos_y=?, SPos_z=?, SPos_r=?,
         Model=?, Money=?, pHealth=?, pArmor=?,
-        `Int`=?, VirtualWorld=?, last_login=NOW()
+        `Int`=?, VirtualWorld=?
         WHERE Username=?
     ]],
         x, y, z, rot, skin, money, health, armor, interior, dim, username)
@@ -118,29 +118,88 @@ function dbSpawnPlayer(player, accountData)
     local y = tonumber(accountData.SPos_y) or -2237.6
     local z = tonumber(accountData.SPos_z) or 13.5
     local rot = tonumber(accountData.SPos_r) or 0
+    local interior = tonumber(accountData.Int) or 0
+    local dimension = tonumber(accountData.VirtualWorld) or 0
 
     -- nếu pos = 0 thì fallback về LS
     if (x == 0 and y == 0 and z == 0) then
         x, y, z, rot = 1642.9, -2237.6, 13.5, 0
     end
-
-    outputDebugString(string.format("[DB] Loading pos for %s: x=%.2f y=%.2f z=%.2f rot=%.2f", tostring(getPlayerName(player)), x or 0, y or 0, z or 0, rot or 0))
+    
     local skin = accountData.Model or 299
-    setElementPosition(player, x, y, z)
-    setElementRotation(player, 0, 0, rot)
-
-    -- Nếu là skin custom thì dùng mta-add-models
+    
+    -- Fade camera before spawning
+    fadeCamera(player, false, 0.0)
+    
+    -- For custom skins (20001+), spawn with default skin first, then apply custom model
+    local spawnSkin = skin
     if skin >= 20001 and skin <= 29999 then
-        setElementModel(player, skin)
-        triggerClientEvent(player, "onClientLoadCustomSkin", resourceRoot, skin)
-        outputDebugString("[SKIN] Spawned custom skin (ID: " .. tostring(skin) .. ") for player " .. getPlayerName(player))
-        setElementData(player, "customSkinID", skin)
+        spawnSkin = 299 -- Use default skin for spawning
+        outputDebugString("[SPAWN] Will spawn with default skin 299, then apply custom skin " .. skin)
+    end
+    
+    -- Actually spawn the player at the saved position
+    spawnPlayer(player, x, y, z, rot, spawnSkin, interior, dimension)
+    
+    -- Set player properties
+    setElementInterior(player, interior)
+    setElementDimension(player, dimension)
+    
+    -- Check if it's a custom skin using newmodels_azul
+    if skin >= 20001 and skin <= 29999 then
+        -- Custom skin: apply using newmodels_azul
+        local newmodelsResource = getResourceFromName("newmodels_azul")
+        if newmodelsResource and getResourceState(newmodelsResource) == "running" then
+            local customModels = exports["newmodels_azul"]:getCustomModels()
+            if customModels[skin] and customModels[skin].type == "ped" then
+                local success = exports["newmodels_azul"]:setElementCustomModel(player, skin)
+                if success then
+                    outputDebugString("[SKIN] Restored custom ped (ID: " .. tostring(skin) .. ", Name: " .. (customModels[skin].name or "Unknown") .. ") for player " .. getPlayerName(player))
+                    setElementData(player, "customSkinID", skin)
+                else
+                    outputDebugString("[SKIN] Failed to restore custom ped " .. tostring(skin) .. ", using fallback", 2)
+                    -- Already spawned with skin 299, so no change needed
+                end
+            else
+                outputDebugString("[SKIN] Custom skin " .. skin .. " not found in models, using default", 2)
+                -- Already spawned with skin 299, so no change needed
+            end
+        else
+            outputDebugString("[SKIN] newmodels_azul not available, using default skin for " .. getPlayerName(player), 2)
+            -- Already spawned with skin 299, so no change needed
+        end
     else
-        setElementModel(player, skin)
+        -- Standard GTA skin (0-312) - already applied during spawn
+        if skin >= 0 and skin <= 312 then
+            outputDebugString("[SKIN] Spawned standard skin (ID: " .. tostring(skin) .. ") for player " .. getPlayerName(player))
+        else
+            outputDebugString("[SKIN] Invalid skin ID " .. tostring(skin) .. ", using default", 2)
+            setElementModel(player, 299)
+        end
+        -- Clear custom skin data for standard skins
         if getElementData(player, "customSkinID") then
             removeElementData(player, "customSkinID")
         end
     end
+    
+    -- Restore player stats
+    local health = tonumber(accountData.pHealth) or 100
+    local armor = tonumber(accountData.pArmor) or 0
+    local money = tonumber(accountData.Money) or 5000
+    
+    setElementHealth(player, health)
+    setPedArmor(player, armor)
+    setPlayerMoney(player, money)
+    
+    -- Set camera and fade back
+    setCameraTarget(player, player)
+    
+    -- Delay fade in để đảm bảo mọi thứ đã load
+    setTimer(function()
+        if isElement(player) then
+            fadeCamera(player, true, 1.0)
+        end
+    end, 1000, 1)
 end
 
 -- Exports

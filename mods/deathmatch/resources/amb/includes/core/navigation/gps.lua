@@ -139,9 +139,7 @@ end)
 
 -- Admin command to manage server locations
 addCommandHandler("addserverlocation", function(player, cmd, name, x, y, z, category)
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    
-    if adminLevel < 3 then
+    if not isPlayerAdmin(player, 3) then
         outputChatBox("❌ Insufficient admin level", player, 255, 100, 100)
         return
     end

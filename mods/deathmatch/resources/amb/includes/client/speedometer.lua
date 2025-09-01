@@ -28,6 +28,48 @@ function getVehicleSpeed(vehicle)
     return math.floor(speed)
 end
 
+-- Custom Vehicle Name System (Client)
+function getCustomVehicleName(vehicle)
+    if not isElement(vehicle) or getElementType(vehicle) ~= "vehicle" then
+        return "Unknown Vehicle"
+    end
+    
+    -- Get vehicle model ID
+    local modelID = getElementModel(vehicle)
+    
+    -- For standard GTA vehicles (400-611), always use default names
+    if modelID >= 400 and modelID <= 611 then
+        return getVehicleName(vehicle) or ("Vehicle " .. modelID)
+    end
+    
+    -- For custom vehicles (30001+), try to get custom name
+    if modelID >= 30001 then
+        -- First check element data for temporary custom names
+        local tempName = getElementData(vehicle, "customVehicleName")
+        if tempName then
+            return tempName
+        end
+        
+        -- Try to get custom vehicle name from newmodels_azul
+        local customName = exports.newmodels_azul:getCustomModelName(modelID)
+        if customName then
+            return customName
+        end
+        
+        -- Fallback: Check if it's a registered custom vehicle
+        local customModels = exports.newmodels_azul:getCustomModels()
+        if customModels and customModels[modelID] then
+            return customModels[modelID].name or ("Custom Vehicle " .. modelID)
+        end
+        
+        -- Final fallback for custom vehicles
+        return "Custom Vehicle " .. modelID
+    end
+    
+    -- Fallback for any other vehicles
+    return getVehicleName(vehicle) or ("Vehicle " .. modelID)
+end
+
 -- Get vehicle health percentage
 function getVehicleHealthPercent(vehicle)
     if not vehicle then return 100 end
@@ -56,8 +98,8 @@ function drawSpeedometer()
     dxDrawRectangle(SPEEDO_X, SPEEDO_Y, SPEEDO_WIDTH, SPEEDO_HEIGHT, tocolor(0, 0, 0, 150))
     dxDrawRectangle(SPEEDO_X, SPEEDO_Y, SPEEDO_WIDTH, 3, tocolor(255, 165, 0, 255)) -- Orange top border
     
-    -- Vehicle name
-    local vehicleName = getVehicleName(vehicle)
+    -- Vehicle name with custom support
+    local vehicleName = getCustomVehicleName(vehicle)
     dxDrawText(vehicleName, SPEEDO_X + 10, SPEEDO_Y + 10, SPEEDO_X + SPEEDO_WIDTH - 10, SPEEDO_Y + 30, tocolor(255, 255, 255, 255), 0.8, font, "center")
     
     -- Speed
