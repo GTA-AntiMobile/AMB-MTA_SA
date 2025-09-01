@@ -41,3 +41,4 @@ luac.out
 *.log
 logs/
 resource-cache/
+dumps/

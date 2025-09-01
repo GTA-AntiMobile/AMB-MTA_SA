@@ -94,7 +94,16 @@ function dbSavePlayer(player)
 
     local x,y,z = getElementPosition(player)
     local _,_,rot = getElementRotation(player)
-    local skin = getElementModel(player)
+    
+    -- Get skin using newmodels system to handle custom skins properly
+    local skin = 299 -- default fallback
+    local newmodelsResource = getResourceFromName("newmodels_azul")
+    if newmodelsResource and getResourceState(newmodelsResource) == "running" then
+        skin = exports["newmodels_azul"]:getElementModel(player) or 299
+    else
+        skin = getElementModel(player)
+    end
+    
     local money = getPlayerMoney(player)
     local health = getElementHealth(player)
     local armor = getPedArmor(player)

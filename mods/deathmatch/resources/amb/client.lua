@@ -103,7 +103,7 @@ addEventHandler("onLoginResponse", root, function(success, message)
     outputDebugString("📩 [LOGIN] Response: " .. message)
     if success then
         forceCloseLogin()
-        outputChatBox("🎉 " .. message, 0, 255, 0)
+        -- Don't show chat message here - server already sends it
     else
         outputChatBox("⚠️ " .. message, 255, 0, 0)
     end

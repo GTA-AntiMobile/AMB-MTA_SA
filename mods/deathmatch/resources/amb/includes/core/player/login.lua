@@ -14,7 +14,8 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
     if row then
         local hashed = WP_Hash(password)
         if row.Key == hashed then
-            triggerClientEvent(client, "onLoginResponse", root, true, "Welcome back, " .. username .. "!")
+            triggerClientEvent(client, "onLoginResponse", root, true, "Login successful!")
+            outputChatBox("🎉 Welcome back, " .. username .. "!", client, 0, 255, 0)
             outputDebugString("✅ [LOGIN] Player " .. username .. " logged in successfully")
             
             -- Set all player data for scoreboard and systems FIRST

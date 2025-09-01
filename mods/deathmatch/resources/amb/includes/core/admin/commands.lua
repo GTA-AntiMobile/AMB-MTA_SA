@@ -4,198 +4,809 @@
 -- Uses centralized ADMIN_LEVELS from shared/enums.lua
 -- ========================================
 
--- Helper functions for SA-MP style playerId conversion
-local function getPlayerFromId(playerId)
-    -- Convert SA-MP style playerId (0-based) to MTA player element
-    playerId = tonumber(playerId)
-    if not playerId or playerId < 0 then return nil end
-
-    local players = getElementsByType("player")
-    for i, player in ipairs(players) do
-        local playerSlot = getElementData(player, "playerSlot") or (i - 1)
-        if playerSlot == playerId then
-            return player
-        end
-    end
-    return nil
-end
-
-local function getPlayerSlot(player)
-    -- Get SA-MP style playerId (0-based) from MTA player element
-    if not isElement(player) then return -1 end
-    return getElementData(player, "playerSlot") or -1
-end
-
-local function getPlayerNameById(playerId)
-    local player = getPlayerFromId(playerId)
-    return player and getPlayerName(player) or "Invalid"
-end
-
--- Permission check function with GOD level support (SA-MP style)
--- Note: Using global isPlayerAdmin function from functions.lua
-
--- Function to get player from name or return error
-local function getPlayerFromName(nameOrId)
-    -- Try by ID first (SA-MP style)
-    local playerId = tonumber(nameOrId)
-    if playerId then
-        local player = getPlayerFromId(playerId)
-        if player then
-            return player, nil
-        end
-    end
-
-    -- Try by name (exact match first)
-    local players = getElementsByType("player")
-    for _, player in ipairs(players) do
-        if string.lower(getPlayerName(player)) == string.lower(nameOrId) then
-            return player, nil
-        end
-    end
-
-    -- Try partial name match
-    local matches = {}
-    for _, player in ipairs(players) do
-        if string.find(string.lower(getPlayerName(player)), string.lower(nameOrId), 1, true) then
-            table.insert(matches, player)
-        end
-    end
-
-    if #matches == 1 then
-        return matches[1], nil
-    elseif #matches > 1 then
-        return nil, "Multiple players found with that name."
-    end
-
-    return nil, "Player not found."
-end
-
--- /tp command moved to players.lua for better integration
-
--- /goto command - Teleport to locations (SA-MP style) - FIXED VERSION
-addCommandHandler("goto", function(player, _, location)
-    outputDebugString("[GOTO] Command called by " .. getPlayerName(player))
-    outputChatBox("🔧 GOTO command received!", player, 255, 255, 0)
-
-    -- Check admin permission: EventCreator or Admin level 1+
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    local isEventCreator = getElementData(player, "isEventCreator") or false
-
-    outputChatBox("Your admin level: " .. adminLevel .. ", EventCreator: " .. tostring(isEventCreator), player, 255, 255,
-        0)
-
-    if not isEventCreator and adminLevel < ADMIN_LEVELS.MODERATOR then
-        outputChatBox("❌ Ban khong duoc phep su dung lenh nay (need Level 1+ or EventCreator).", player, 255, 100, 100,
-            false)
-        return
-    end
-
-    if not location then
-        outputChatBox("✅ SU DUNG: /goto [location]", player, 255, 255, 100, false)
-        outputChatBox("Locations 1: LS,SF,LV,RC,ElQue,Bayside,LSVIP,SFVIP,LVVIP,Famed,MHC,stadium1", player, 255,
-            255, 255, false)
-        outputChatBox("Locations 2: stadium2,stadium3,stadium4,int1,bank,mall,allsaints", player, 255, 255, 255,
-            false)
-        outputChatBox("Locations 3: countygen,cracklab,gym,rodeo,flint,idlewood,fbi,island,demorgan,doc", player,
-            255, 255, 255, false)
-        outputChatBox("Locations 4: garagesm,garagemed,garagelg,garagexlg,cave,sfairport,dillimore", player, 255,
-            255, 255, false)
-        return
-    end
-
-    location = string.lower(location)
-    local teleportData = {
-        -- Main cities
-        ls = { 1529.6, -1691.2, 13.3, 0, 0 },
-        sf = { -1605.0, 720.0, 12.0, 0, 0 },
-        lv = { 1699.2, 1435.1, 10.7, 0, 0 },
-        rc = { 1253.70, 343.73, 19.41, 0, 0 },
-
-        -- VIP areas
-        lsvip = { 1810.39, -1601.15, 13.54, 0, 0 },
-        sfvip = { -2433.63, 511.45, 30.38, 0, 0 },
-        lvvip = { 1875.7731, 1366.0796, 16.8998, 0, 0 },
-
-        -- Special locations
-        bank = { 1487.91, -1030.60, 23.66, 0, 0 },
-        mall = { 1133.71, -1464.52, 15.77, 0, 0 },
-        allsaints = { 1192.78, -1292.68, 13.38, 0, 0 },
-        famed = { 1020.29, -1129.06, 23.87, 0, 0 },
-        gym = { 2227.60, -1674.89, 14.62, 0, 0 },
-        fbi = { 344.77, -1526.08, 33.28, 0, 0 },
-
-        -- Small towns
-        elque = { -1446.5997, 2608.4478, 55.8359, 0, 0 },
-        bayside = { -2465.1348, 2333.6572, 4.8359, 0, 0 },
-        dillimore = { 634.9734, -594.6402, 16.3359, 0, 0 },
-        rodeo = { 587.0106, -1238.3374, 17.8049, 0, 0 },
-        flint = { -108.1058, -1172.5293, 2.8906, 0, 0 },
-        idlewood = { 1955.1357, -1796.8896, 13.5469, 0, 0 },
-
-        -- Special areas
-        island = { -1081.0, 4297.9, 4.4, 0, 0 },
-        cave = { -1993.01, -1580.44, 86.39, 0, 0 },
-        sfairport = { -1412.5375, -301.8998, 14.1411, 0, 0 },
-        cracklab = { 2348.2871, -1146.8298, 27.3183, 0, 0 },
-        countygen = { 2000.05, -1409.36, 16.99, 0, 0 },
-
-        -- Prisons
-        demorgan = { 112.67, 1917.55, 18.72, 0, 0 },
-        doc = { -2029.2322, -78.3302, 35.3203, 0, 0 },
-        icprison = { -2069.76, -200.05, 991.53, 10, 0 },
-        oocprison = { -298.13, 1881.85, 29.89, 1, 0 },
-
-        -- Stadiums (interiors)
-        stadium1 = { -1424.93, -664.59, 1059.86, 4, 0 },
-        stadium2 = { -1395.96, -208.20, 1051.28, 7, 0 },
-        stadium3 = { -1410.72, 1591.16, 1052.53, 14, 0 },
-        stadium4 = { -1394.20, 987.62, 1023.96, 15, 0 },
-
-        -- Interior test
-        int1 = { 1416.107000, 0.268620, 1000.926000, 1, 0 },
-
-        -- Garages (high altitude)
-        garagesm = { 1198.1407, 1589.2153, 5290.2871, 0, 0 },
-        garagemed = { 1069.1473, 1582.1029, 5290.2529, 0, 0 },
-        garagelg = { 1192.8501, 1540.0295, 5290.2871, 0, 0 },
-        garagexlg = { 1111.0139, 1546.9510, 5290.2793, 0, 0 },
-
-        -- Special (MHC needs custom streaming)
-        mhc = { 1649.7531, 1463.1614, 1151.9687, 0, 0 }
+-- Dynamic model scanning functions for newmodels_azul
+local function getNewmodelsAvailableModels()
+    local models = {
+        vehicles = {},
+        objects = {},
+        peds = {}
     }
+    
+    local newmodelsResource = getResourceFromName("newmodels_azul")
+    if not newmodelsResource or getResourceState(newmodelsResource) ~= "running" then
+        return models
+    end
+    
+    -- Use newmodels_azul exports to get dynamic model list
+    if exports["newmodels_azul"] and exports["newmodels_azul"].getCustomModels then
+        local customModels = exports["newmodels_azul"]:getCustomModels()
+        if customModels then
+            -- Parse the dynamic model data from newmodels_azul
+            for id, modelData in pairs(customModels) do
+                if modelData.elementType == "vehicle" then
+                    table.insert(models.vehicles, {
+                        id = id,
+                        name = modelData.name or modelData.fileName or "Unknown Vehicle",
+                        baseModel = modelData.baseID
+                    })
+                elseif modelData.elementType == "object" then
+                    table.insert(models.objects, {
+                        id = id,
+                        name = modelData.name or modelData.fileName or "Unknown Object",
+                        baseModel = modelData.baseID
+                    })
+                elseif modelData.elementType == "ped" then
+                    table.insert(models.peds, {
+                        id = id,
+                        name = modelData.name or modelData.fileName or "Unknown Ped",
+                        baseModel = modelData.baseID
+                    })
+                end
+            end
+        end
+    end
+    
+    return models
+end
 
-    local data = teleportData[location]
-    if not data then
-        outputChatBox("❌ Dia diem khong hop le! Su dung /goto de xem danh sach", player, 255, 100, 100, false)
+-- Permission check function with GOD level support
+local function isPlayerAdmin(player, requiredLevel)
+    if not isElement(player) then return false end
+
+    -- Try to get adminLevel from ElementData first (more reliable)
+    local adminLevel = getElementData(player, "adminLevel")
+
+    -- Fallback to playerData if ElementData not set
+    if not adminLevel then
+        local playerData = getElementData(player, "playerData")
+        adminLevel = playerData and playerData.adminLevel or 0
+    end
+
+    outputDebugString("[ADMIN] Player " ..
+        getPlayerName(player) .. " has adminLevel: " .. adminLevel .. ", required: " .. requiredLevel)
+
+    -- GOD level có toàn quyền
+    if adminLevel == ADMIN_LEVELS.GOD then
+        outputDebugString("[ADMIN] GOD level detected - granting access")
+        return true
+    end
+
+    -- Check normal permission level
+    local hasPermission = adminLevel >= requiredLevel
+    outputDebugString("[ADMIN] Permission check result: " .. tostring(hasPermission))
+    return hasPermission
+end
+
+-- Get weapon name from ID
+local function getWeaponNameFromID(weaponID)
+    local weaponNames = {
+        [22] = "Colt 45",
+        [23] = "Silenced Pistol",
+        [24] = "Desert Eagle",
+        [25] = "Shotgun",
+        [26] = "Sawn-off Shotgun",
+        [27] = "Combat Shotgun",
+        [28] = "Micro SMG",
+        [29] = "MP5",
+        [30] = "AK-47",
+        [31] = "M4",
+        [32] = "Tec-9",
+        [33] = "Country Rifle",
+        [34] = "Sniper Rifle"
+    }
+    return weaponNames[weaponID] or "Unknown Weapon"
+end
+
+-- /stats command - Show player statistics
+addCommandHandler("stats", function(player, cmd, targetName)
+    local target = player
+    if targetName then
+        -- Check if player has permission to view other players' stats
+        if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+            outputChatBox("Access denied! You can only view your own stats.", player, 255, 100, 100, false)
+            return
+        end
+
+        local foundTarget = getPlayerFromName(targetName)
+        if not foundTarget then
+            outputChatBox("Player not found!", player, 255, 0, 0, false)
+            return
+        end
+        target = foundTarget
+    end
+
+    local targetData = getElementData(target, "playerData")
+    if not targetData then
+        outputChatBox("Player data not found!", player, 255, 0, 0, false)
         return
     end
 
-    local x, y, z, interior, vw = data[1], data[2], data[3], data[4], data[5]
+    outputChatBox("=== Stats for " .. getPlayerName(target) .. " ===", player, 255, 255, 0, false)
+    outputChatBox("Level: " .. (targetData.level or 1), player, 255, 255, 255, false)
+    outputChatBox("Money: $" .. (targetData.money or 0), player, 255, 255, 255, false)
+    outputChatBox("Job: " .. (targetData.job or "Unemployed"), player, 255, 255, 255, false)
+    outputChatBox("Admin Level: " .. (targetData.adminLevel or 0), player, 255, 255, 255, false)
 
-    -- Check if player is in vehicle
-    local vehicle = getPedOccupiedVehicle(player)
-    if vehicle then
-        setElementPosition(vehicle, x, y, z)
-        setElementInterior(vehicle, interior)
-        setElementDimension(vehicle, vw)
-    else
-        setElementPosition(player, x, y, z)
+    if target ~= player then
+        outputDebugString("[AMB Admin] " .. getPlayerName(player) .. " viewed stats for " .. getPlayerName(target))
     end
-
-    setElementInterior(player, interior)
-    setElementDimension(player, vw)
-
-    -- Update player data
-    local playerData = getElementData(player, "playerData") or {}
-    playerData.interior = interior
-    playerData.dimension = vw
-    setElementData(player, "playerData", playerData)
-
-    outputChatBox("✅ Ban da duoc dich chuyen den " .. location .. "!", player, 100, 255, 100, false)
-    outputDebugString("[GOTO] " .. getPlayerName(player) .. " teleported to " .. location)
 end)
 
--- server/fly_server.lua
+-- /cv command - Create vehicle using newmodels_azul
+addCommandHandler("cv", function(player, cmd, idStr)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! Moderator level required.", player, 255, 100, 100)
+        return
+    end
+    
+    local cid = tonumber(idStr)
+    if not cid then
+        outputChatBox("Usage: /cv [modelID]", player, 255, 0, 0)
+        outputChatBox("Use /listcv to see available models", player, 255, 255, 0)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local _, _, rotZ = getElementRotation(player)
+    local radRot = math.rad(rotZ)
+    x = x + 5.0 * math.sin(radRot)
+    y = y + 5.0 * math.cos(radRot)
+    
+    local vehicle
+    
+    -- Use newmodels_azul for custom vehicles (30000+)
+    if cid >= 30000 and cid < 40000 then
+        local newmodelsResource = getResourceFromName("newmodels_azul")
+        if newmodelsResource and getResourceState(newmodelsResource) == "running" then
+            vehicle = exports["newmodels_azul"]:createVehicle(cid, x, y, z, 0, 0, rotZ)
+            if vehicle then
+                outputChatBox("✅ Custom vehicle " .. cid .. " created!", player, 0, 255, 0)
+            else
+                outputChatBox("❌ Failed to create custom vehicle " .. cid, player, 255, 0, 0)
+            end
+        else
+            outputChatBox("❌ newmodels_azul not running!", player, 255, 0, 0)
+            return
+        end
+    else
+        -- Standard GTA SA vehicles (400-611)
+        if cid < 400 or cid > 611 then
+            outputChatBox("❌ Invalid vehicle ID! Use 400-611 for standard vehicles or 30000+ for custom", player, 255, 0, 0)
+            return
+        end
+        vehicle = createVehicle(cid, x, y, z, 0, 0, rotZ)
+        if vehicle then
+            outputChatBox("✅ Standard vehicle " .. cid .. " created!", player, 0, 255, 0)
+        else
+            outputChatBox("❌ Failed to create vehicle " .. cid, player, 255, 0, 0)
+        end
+    end
+    
+    if vehicle then
+        setElementInterior(vehicle, getElementInterior(player))
+        setElementDimension(vehicle, getElementDimension(player))
+        outputDebugString("[CV] " .. getPlayerName(player) .. " created vehicle " .. cid)
+    end
+end)
+
+-- /listcv command - Dynamic vehicle listing
+addCommandHandler("listcv", function(player)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! Moderator level required.", player, 255, 100, 100)
+        return
+    end
+
+    outputChatBox("=== VEHICLE MODELS ===", player, 33, 150, 243)
+    
+    -- Get dynamic models from newmodels_azul
+    local models = getNewmodelsAvailableModels()
+    
+    -- Display custom vehicles
+    outputChatBox("=== Custom Vehicles ===", player, 255, 215, 0)
+    if #models.vehicles > 0 then
+        for _, vehicle in ipairs(models.vehicles) do
+            outputChatBox(vehicle.id .. " - " .. vehicle.name, player, 100, 255, 100)
+        end
+    else
+        outputChatBox("No custom vehicles available", player, 255, 100, 100)
+    end
+    
+    -- Display standard vehicles info
+    outputChatBox("=== Standard Vehicles (400-611) ===", player, 255, 215, 0)
+    outputChatBox("Cars: 400-404, 410-412, 415-426, 445-451", player, 255, 255, 255)
+    outputChatBox("Motorcycles: 448, 461-463, 468, 471, 521-523", player, 255, 255, 255)
+    outputChatBox("Aircraft: 460, 464-465, 469, 476, 487-488", player, 255, 255, 255)
+    
+    outputChatBox("Usage: /cv [model]", player, 74, 144, 226)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " viewed vehicle list")
+end)
+
+-- /listskin command - Dynamic skin listing
+addCommandHandler("listskin", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    outputChatBox("=== SKIN MODELS ===", player, 33, 150, 243, false)
+    
+    -- Get dynamic models from newmodels_azul
+    local models = getNewmodelsAvailableModels()
+    
+    -- Display custom skins
+    outputChatBox("=== Custom Skins ===", player, 255, 215, 0, false)
+    if #models.peds > 0 then
+        for _, ped in ipairs(models.peds) do
+            outputChatBox(ped.id .. " - " .. ped.name, player, 100, 255, 100, false)
+        end
+    else
+        outputChatBox("No custom skins available", player, 255, 100, 100, false)
+    end
+    
+    -- Display standard skins info
+    outputChatBox("=== Standard Skins (0-299) ===", player, 255, 215, 0, false)
+    outputChatBox("Police: 280-288, Army: 287, Civilians: 1-299", player, 255, 255, 255, false)
+    
+    outputChatBox("Usage: /changeskin [player] [skin_id]", player, 74, 144, 226, false)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " viewed skin list")
+end)
+
+-- /listobjects command - Dynamic object listing
+addCommandHandler("listobjects", function(player)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    outputChatBox("=== OBJECT MODELS ===", player, 33, 150, 243, false)
+    
+    -- Get dynamic models from newmodels_azul
+    local models = getNewmodelsAvailableModels()
+    
+    -- Display custom objects
+    outputChatBox("=== Custom Objects ===", player, 255, 215, 0, false)
+    if #models.objects > 0 then
+        for _, object in ipairs(models.objects) do
+            outputChatBox(object.id .. " - " .. object.name, player, 100, 255, 100, false)
+        end
+    else
+        outputChatBox("No custom objects available", player, 255, 100, 100, false)
+    end
+    
+    -- Display standard objects info
+    outputChatBox("=== Standard Objects (1-18000+) ===", player, 255, 215, 0, false)
+    outputChatBox("Common: 1337-1400, Buildings: 3000-4000", player, 255, 255, 255, false)
+    
+    outputChatBox("Usage: /createobject [object_id]", player, 74, 144, 226, false)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " viewed object list")
+end)
+
+-- /createobject command - Create custom objects using newmodels_azul
+addCommandHandler("createobject", function(player, command, objectIDStr)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not objectIDStr then
+        outputChatBox("Usage: /createobject [object ID]", player, 255, 255, 100, false)
+        outputChatBox("Use /listobjects to see available models", player, 255, 255, 0, false)
+        return
+    end
+
+    local objectID = tonumber(objectIDStr)
+    if not objectID then
+        outputChatBox("❌ Invalid object ID! Must be a number", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local _, _, rot = getElementRotation(player)
+
+    -- Position object in front of player
+    local radRot = math.rad(rot)
+    x = x + 3.0 * math.sin(radRot)
+    y = y + 3.0 * math.cos(radRot)
+    z = z + 0.5
+
+    local object
+    
+    -- Use newmodels_azul for custom objects (19000+)
+    if objectID >= 19000 and objectID < 30000 then
+        local newmodelsResource = getResourceFromName("newmodels_azul")
+        if newmodelsResource and getResourceState(newmodelsResource) == "running" then
+            object = exports["newmodels_azul"]:createObject(objectID, x, y, z, 0, 0, rot)
+            if object then
+                outputChatBox("✅ Custom object " .. objectID .. " created!", player, 0, 255, 0, false)
+            else
+                outputChatBox("❌ Failed to create custom object " .. objectID, player, 255, 0, 0, false)
+            end
+        else
+            outputChatBox("❌ newmodels_azul not running!", player, 255, 0, 0, false)
+            return
+        end
+    else
+        -- Standard GTA SA objects (1-18000)
+        if objectID < 1 or objectID >= 19000 then
+            outputChatBox("❌ Invalid object ID! Use 1-18000 for standard objects or 19000+ for custom", player, 255, 0, 0, false)
+            return
+        end
+        object = createObject(objectID, x, y, z, 0, 0, rot)
+        if object then
+            outputChatBox("✅ Standard object " .. objectID .. " created!", player, 0, 255, 0, false)
+        else
+            outputChatBox("❌ Failed to create object " .. objectID, player, 255, 0, 0, false)
+        end
+    end
+    
+    if object then
+        setElementInterior(object, getElementInterior(player))
+        setElementDimension(object, getElementDimension(player))
+        setElementData(player, "lastObject", object)
+        outputDebugString("[CREATEOBJECT] " .. getPlayerName(player) .. " created object " .. objectID)
+    end
+end)
+
+-- /sethp command - Set player health (matches SA-MP logic exactly)
+addCommandHandler("sethp", function(player, command, targetName, hp)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then -- SA-MP requires level 4+
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not targetName or not hp then
+        outputChatBox("SU DUNG: /sethp [Player] [health]", player, 255, 100, 100, false)
+        return
+    end
+
+    local target, error = getPlayerFromPartialName(targetName)
+    if not target then
+        outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
+        return
+    end
+
+    local healthAmount = tonumber(hp)
+    if not healthAmount then
+        outputChatBox("Invalid health amount.", player, 255, 100, 100, false)
+        return
+    end
+
+    -- Check jail time (simulate SA-MP pJailTime check)
+    local targetJailTime = getElementData(target, "player.jailTime") or 0
+    if targetJailTime >= 1 then
+        outputChatBox("Ban khong the thiet lap HP cho nguoi o tu OOC!", player, 255, 255, 255, false)
+        return
+    end
+
+    -- Admin protection check (like SA-MP)
+    local playerAdminLevel = getElementData(player, "adminLevel") or 0
+    local targetAdminLevel = getElementData(target, "adminLevel") or 0
+    if targetAdminLevel >= playerAdminLevel and target ~= player then
+        outputChatBox("Ban khong the lam dieu nay tren mot Admin cap cao!", player, 255, 100, 100, false)
+        return
+    end
+
+    setElementHealth(target, healthAmount)
+    outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s health cho " .. healthAmount .. ".", player, 255,
+        255, 255, false)
+    outputDebugString("[ADMIN] " ..
+        getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s health to " .. healthAmount)
+end)
+
+-- /setmyhp command - Set own health (matches SA-MP logic)
+addCommandHandler("setmyhp", function(player, command, hp)
+    -- SA-MP: Admin level 4+ OR Undercover level 1+
+    local adminLevel = getElementData(player, "adminLevel") or 0
+    local undercoverLevel = getElementData(player, "player.undercoverLevel") or 0
+
+    if adminLevel < ADMIN_LEVELS.ADMIN and undercoverLevel < 1 then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not hp then
+        outputChatBox("SU DUNG: /setmyhp [health]", player, 255, 100, 100, false)
+        return
+    end
+
+    local healthAmount = tonumber(hp)
+    if not healthAmount then
+        outputChatBox("Invalid health amount.", player, 255, 100, 100, false)
+        return
+    end
+
+    setElementHealth(player, healthAmount)
+    outputChatBox("Ban da thiet lap Health cua ban " .. healthAmount .. ".", player, 255, 255, 255, false)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set their own health to " .. healthAmount)
+end)
+
+-- /setarmor command - Set player armor (matches SA-MP logic exactly)
+addCommandHandler("setarmor", function(player, command, targetName, armor)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then -- SA-MP requires level 4+
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not targetName or not armor then
+        outputChatBox("SU DUNG: /setarmor [Player] [armor]", player, 255, 100, 100, false)
+        return
+    end
+
+    local target, error = getPlayerFromPartialName(targetName)
+    if not target then
+        outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
+        return
+    end
+
+    local armorAmount = tonumber(armor)
+    if not armorAmount then
+        outputChatBox("Invalid armor amount.", player, 255, 100, 100, false)
+        return
+    end
+
+    setPedArmor(target, armorAmount)
+    outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s armor cho " .. armorAmount .. ".", player, 255, 255,
+        255, false)
+    outputDebugString("[ADMIN] " ..
+        getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s armor to " .. armorAmount)
+end)
+
+-- /setmyarmor command - Set own armor (matches SA-MP logic)
+addCommandHandler("setmyarmor", function(player, command, armor)
+    -- SA-MP: Admin level 4+ OR Undercover level 1+
+    local adminLevel = getElementData(player, "adminLevel") or 0
+    local undercoverLevel = getElementData(player, "player.undercoverLevel") or 0
+
+    if adminLevel < ADMIN_LEVELS.ADMIN and undercoverLevel < 1 then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not armor then
+        outputChatBox("SU DUNG: /setmyarmor [amount]", player, 255, 100, 100, false)
+        return
+    end
+
+    local armorAmount = tonumber(armor)
+    if not armorAmount then
+        outputChatBox("Invalid armor amount.", player, 255, 100, 100, false)
+        return
+    end
+
+    setPedArmor(player, armorAmount)
+    outputChatBox("Ban da thiet lap armor cho " .. armorAmount .. ".", player, 255, 255, 255, false)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set their own armor to " .. armorAmount)
+end)
+
+-- /giveweapon command - Give weapon to player
+addCommandHandler("giveweapon", function(player, command, targetName, weaponID, ammo)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then
+        outputChatBox("Access denied! You need admin level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not targetName or not weaponID then
+        outputChatBox("Usage: /giveweapon [player] [weapon ID] [ammo=100]", player, 255, 255, 100, false)
+        return
+    end
+
+    local target = getPlayerFromName(targetName)
+    if not target then
+        outputChatBox("Player not found!", player, 255, 100, 100, false)
+        return
+    end
+
+    weaponID = tonumber(weaponID)
+    if not weaponID or weaponID < 1 or weaponID > 46 then
+        outputChatBox("Invalid weapon ID! Use 1-46", player, 255, 100, 100, false)
+        return
+    end
+
+    ammo = tonumber(ammo) or 100
+    if ammo < 1 or ammo > 9999 then
+        outputChatBox("Invalid ammo amount! Use 1-9999", player, 255, 100, 100, false)
+        return
+    end
+
+    giveWeapon(target, weaponID, ammo)
+
+    local weaponName = getWeaponNameFromID(weaponID)
+    outputChatBox(
+        "Gave " .. getPlayerName(target) .. " weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo",
+        player, 100, 255, 100, false)
+    outputChatBox(
+        "You received weapon " ..
+        weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo from " .. getPlayerName(player), target, 100, 255,
+        100,
+        false)
+    outputDebugString("[AMB Admin] " ..
+        getPlayerName(player) ..
+        " gave " .. getPlayerName(target) .. " weapon " .. weaponID .. " with " .. ammo .. " ammo")
+end) -- /forcelogin command - Force close login window for stuck players
+addCommandHandler("forcelogin", function(player, command, targetName)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    if not targetName then
+        outputChatBox("Usage: /forcelogin [player]", player, 255, 255, 100, false)
+        return
+    end
+
+    local target = getPlayerFromPartialName(targetName)
+    if not target then
+        outputChatBox("Player not found!", player, 255, 100, 100, false)
+        return
+    end
+
+    -- Force close login for target
+    triggerClientEvent(target, "hideLoginGUI", target)
+    setTimer(function()
+        if isElement(target) then
+            triggerClientEvent(target, "hideLoginGUI", target)
+        end
+    end, 100, 1)
+
+    outputChatBox("Forced login window close for " .. getPlayerName(target), player, 100, 255, 100, false)
+    outputChatBox("Admin has force-closed your login window", target, 255, 255, 100, false)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " force closed login for " .. getPlayerName(target))
+end)
+
+-- /reloadmodels command - Hot reload custom models
+addCommandHandler("reloadmodels", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMINISTRATOR) then
+        outputChatBox("Access denied! You need administrator level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    outputChatBox("🔄 Reloading custom models...", player, 100, 255, 255, false)
+
+    if reloadCustomModels then
+        reloadCustomModels()
+        outputChatBox("✅ Custom models reloaded successfully!", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " reloaded custom models")
+    else
+        outputChatBox("❌ Model reload function not available!", player, 255, 100, 100, false)
+    end
+end)
+
+-- /acmds command - Show admin commands with GOD level support
+addCommandHandler("acmds", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
+        return
+    end
+
+    local playerData = getElementData(player, "playerData")
+    local adminLevel = (playerData and playerData.adminLevel) or 0
+
+    outputChatBox("=== AMB Admin Commands ===", player, 255, 255, 100, false)
+    outputChatBox("Vehicles: /cv [model] /listcv", player, 255, 255, 255, false)
+    outputChatBox("Objects: /createobject [model] /listobjects", player, 255, 255, 255, false)
+    outputChatBox("Skins: /changeskin [player] [skinID] /listskin", player, 255, 255, 255, false)
+    outputChatBox("Moderator+: /goto /gethere /stats", player, 255, 255, 255, false)
+    outputChatBox("Movement: /up /dn /lt /rt /fd /bk (Moderator+)", player, 100, 255, 100, false)
+    outputChatBox("Admin+: /sethp /setarmor /giveweapon /jetpack [player]", player, 255, 255, 255, false)
+    outputChatBox("Personal: /setmyhp /setmyarmor (Admin+ or Undercover)", player, 255, 255, 100, false)
+    outputChatBox("Debug: /forcelogin [player] (Fix stuck login)", player, 255, 100, 255, false)
+    outputChatBox("System: /reloadmodels (Hot reload models)", player, 255, 100, 255, false)
+    outputChatBox("All: /time /myskin", player, 255, 255, 255, false)
+
+    if adminLevel == ADMIN_LEVELS.GOD then
+        outputChatBox("GOD Mode: Toàn quyền truy cập tất cả lệnh!", player, 255, 215, 0, false)
+    end
+end)
+
+-- /makeadmin command - Hidden admin setup (silent operation)
+addCommandHandler("makeadmin", function(player, command, targetPlayer, level)
+    if not targetPlayer or not level then
+        -- Silent failure - no help message to avoid exposure
+        return
+    end
+
+    local target = getPlayerFromName(targetPlayer)
+    if not target then
+        -- Silent failure
+        return
+    end
+
+    level = tonumber(level)
+    if not level or level < 0 or (level > ADMIN_LEVELS.FOUNDER and level ~= ADMIN_LEVELS.GOD) then
+        -- Silent failure
+        return
+    end
+
+    local targetData = getElementData(target, "playerData") or {}
+    targetData.adminLevel = level
+    setElementData(target, "playerData", targetData)
+
+    local levelName = "Unknown"
+    if level == ADMIN_LEVELS.GOD then
+        levelName = "GOD (Toàn quyền)"
+    elseif level == ADMIN_LEVELS.FOUNDER then
+        levelName = "Founder"
+    elseif level == ADMIN_LEVELS.DEVELOPER then
+        levelName = "Developer"
+    elseif level == ADMIN_LEVELS.MANAGEMENT then
+        levelName = "Management"
+    elseif level == ADMIN_LEVELS.HEAD_ADMIN then
+        levelName = "Head Admin"
+    elseif level == ADMIN_LEVELS.SENIOR_ADMIN then
+        levelName = "Senior Admin"
+    elseif level == ADMIN_LEVELS.ADMIN then
+        levelName = "Admin"
+    elseif level == ADMIN_LEVELS.MODERATOR then
+        levelName = "Moderator"
+    elseif level == ADMIN_LEVELS.HELPER then
+        levelName = "Helper"
+    else
+        levelName = "Player"
+    end
+
+    outputChatBox("Set " .. getPlayerName(target) .. "'s admin level to " .. level .. " (" .. levelName .. ")", player,
+        100, 255, 100, false)
+    -- Silent notification to target (no sender info)
+    outputChatBox("Your admin level has been updated to " .. level .. " (" .. levelName .. ")", target, 100, 255, 100,
+        false)
+    -- Silent debug log only
+    outputDebugString("[AMB Admin] Admin level set: " ..
+        getPlayerName(target) .. " -> " .. level .. " (" .. levelName .. ")")
+end)
+
+-- ========================================
+-- MOVEMENT COMMANDS (migrated from open.mp)
+-- ========================================
+
+-- /up command - Move player/vehicle up 5 units
+addCommandHandler("up", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local vehicle = getPedOccupiedVehicle(player)
+
+    -- Check if player is driver of a vehicle (matches SA-MP logic)
+    if vehicle and getVehicleOccupant(vehicle, 0) == player then
+        -- Player is driver - move the vehicle up and reset speed
+        setElementPosition(vehicle, x, y, z + 5)
+        setElementVelocity(vehicle, 0, 0, 0) -- Reset vehicle speed like SA-MP
+        outputChatBox("Vehicle moved up 5 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /up command (vehicle)")
+    else
+        -- Player is on foot or passenger - move the player up
+        setElementPosition(player, x, y, z + 5)
+        outputChatBox("Moved up 5 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /up command (on foot)")
+    end
+end)
+
+-- /dn command - Move player/vehicle down 2 units (matches SA-MP)
+addCommandHandler("dn", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local vehicle = getPedOccupiedVehicle(player)
+
+    -- Check if player is driver of a vehicle (matches SA-MP logic)
+    if vehicle and getVehicleOccupant(vehicle, 0) == player then
+        -- Player is driver - move the vehicle down and reset speed
+        setElementPosition(vehicle, x, y, z - 2) -- SA-MP uses -2, not -5
+        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        outputChatBox("Vehicle moved down 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /dn command (vehicle)")
+    else
+        -- Player is on foot or passenger - move the player down
+        setElementPosition(player, x, y, z - 2) -- SA-MP uses -2, not -5
+        outputChatBox("Moved down 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /dn command (on foot)")
+    end
+end)
+
+-- /lt command - Move player/vehicle left 2 units (matches SA-MP)
+addCommandHandler("lt", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local vehicle = getPedOccupiedVehicle(player)
+
+    -- Check if player is driver of a vehicle (matches SA-MP logic)
+    if vehicle and getVehicleOccupant(vehicle, 0) == player then
+        -- Player is driver - move the vehicle left and reset speed
+        setElementPosition(vehicle, x - 2, y, z) -- SA-MP uses -2, not -5
+        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        outputChatBox("Vehicle moved left 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /lt command (vehicle)")
+    else
+        -- Player is on foot or passenger - move the player left
+        setElementPosition(player, x - 2, y, z) -- SA-MP uses -2, not -5
+        outputChatBox("Moved left 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /lt command (on foot)")
+    end
+end)
+
+-- /rt command - Move player/vehicle right 2 units (matches SA-MP)
+addCommandHandler("rt", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local vehicle = getPedOccupiedVehicle(player)
+
+    -- Check if player is driver of a vehicle (matches SA-MP logic)
+    if vehicle and getVehicleOccupant(vehicle, 0) == player then
+        -- Player is driver - move the vehicle right and reset speed
+        setElementPosition(vehicle, x + 2, y, z) -- SA-MP uses +2, not +5
+        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        outputChatBox("Vehicle moved right 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /rt command (vehicle)")
+    else
+        -- Player is on foot or passenger - move the player right
+        setElementPosition(player, x + 2, y, z) -- SA-MP uses +2, not +5
+        outputChatBox("Moved right 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /rt command (on foot)")
+    end
+end)
+
+-- /fd command - Move player/vehicle forward 2 units (matches SA-MP)
+addCommandHandler("fd", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local vehicle = getPedOccupiedVehicle(player)
+
+    -- Check if player is driver of a vehicle (matches SA-MP logic)
+    if vehicle and getVehicleOccupant(vehicle, 0) == player then
+        -- Player is driver - move the vehicle forward and reset speed
+        setElementPosition(vehicle, x, y + 2, z) -- SA-MP uses +2, not +5
+        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        outputChatBox("Vehicle moved forward 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /fd command (vehicle)")
+    else
+        -- Player is on foot or passenger - move the player forward
+        setElementPosition(player, x, y + 2, z) -- SA-MP uses +2, not +5
+        outputChatBox("Moved forward 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /fd command (on foot)")
+    end
+end)
+
+-- /bk command - Move player/vehicle backward 2 units (matches SA-MP)
+addCommandHandler("bk", function(player, command)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
+        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
+        return
+    end
+
+    local x, y, z = getElementPosition(player)
+    local vehicle = getPedOccupiedVehicle(player)
+
+    -- Check if player is driver of a vehicle (matches SA-MP logic)
+    if vehicle and getVehicleOccupant(vehicle, 0) == player then
+        -- Player is driver - move the vehicle backward and reset speed
+        setElementPosition(vehicle, x, y - 2, z) -- SA-MP uses -2, not -5
+        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        outputChatBox("Vehicle moved backward 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /bk command (vehicle)")
+    else
+        -- Player is on foot or passenger - move the player backward
+        setElementPosition(player, x, y - 2, z) -- SA-MP uses -2, not -5
+        outputChatBox("Moved backward 2 units.", player, 100, 255, 100, false)
+        outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /bk command (on foot)")
+    end
+end)
 
 local flyPlayers = {} -- lưu trạng thái fly mỗi player
 -- Toggle fly mode
