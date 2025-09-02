@@ -181,7 +181,7 @@ function initializeHelpSystem()
 end
 
 -- Main help command - with permission filtering
-addCommandHandler("help", function(player, cmd, category)
+addCommandHandler("help", function(player, _, category)
     if not category then
         outputChatBox("=== AMB MTA:SA - HELP SYSTEM ===", player, 255, 255, 0)
         outputChatBox("Chon mot category de xem chi tiet:", player, 255, 255, 255)
@@ -315,7 +315,7 @@ addCommandHandler("rules", function(player)
 end)
 
 -- Newbie help system
-addCommandHandler("newb", function(player, cmd, ...)
+addCommandHandler("newb", function(player, _, ...)
     if not ... then
         outputChatBox("Su dung: /newb [cau hoi]", player, 255, 255, 255)
         outputChatBox("Kenh ho tro cho nguoi choi moi", player, 255, 255, 255)
@@ -342,7 +342,7 @@ addCommandHandler("newb", function(player, cmd, ...)
 end)
 
 -- Helper response system
-addCommandHandler("hn", function(player, cmd, ...)
+addCommandHandler("hn", function(player, _, ...)
     if not hasPermission(player, "helper") and 
        not hasPermission(player, "admin", ADMIN_LEVELS.HELPER) and
        (getElementData(player, "player.level") or 0) < 10 then

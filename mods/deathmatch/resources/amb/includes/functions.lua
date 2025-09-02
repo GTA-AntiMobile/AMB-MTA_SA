@@ -3,32 +3,94 @@
 -- Common functions used throughout the gamemode
 -- ================================
 
--- Player utility functions
+-- Player utility functions - SA-MP style (support both ID and name)
+function getPlayerFromNameOrId(nameOrID)
+    if not nameOrID then return nil end
+    
+    -- Try to convert to number first (player ID)
+    local playerID = tonumber(nameOrID)
+    if playerID then
+        for _, player in ipairs(getElementsByType("player")) do
+            if getElementData(player, "ID") == playerID then
+                return player
+            end
+        end
+        return nil -- Player ID not found
+    end
+    
+    -- Search by name (exact match first, then partial)
+    local nameOrID_lower = nameOrID:lower()
+    local exactMatch = nil
+    local partialMatches = {}
+    
+    for _, player in ipairs(getElementsByType("player")) do
+        local playerName = getPlayerName(player):lower()
+        if playerName == nameOrID_lower then
+            exactMatch = player
+            break
+        elseif playerName:find(nameOrID_lower, 1, true) then
+            table.insert(partialMatches, player)
+        end
+    end
+    
+    -- Return exact match if found
+    if exactMatch then
+        return exactMatch
+    end
+    
+    -- Return single partial match, or nil if multiple/none
+    if #partialMatches == 1 then
+        return partialMatches[1]
+    elseif #partialMatches > 1 then
+        return nil, "Multiple players found" -- Too many matches
+    else
+        return nil, "Player not found" -- No matches
+    end
+end
+
+-- Legacy compatibility functions
+function getPlayerFromName(nameOrID)
+    return getPlayerFromNameOrId(nameOrID)
+end
+
 function getPlayerFromPartialName(partialName)
-    if not partialName then return nil end
-    partialName = partialName:lower()
-    
-    -- First try exact match
-    for _, player in ipairs(getElementsByType("player")) do
-        if getPlayerName(player):lower() == partialName then
-            return player
-        end
-    end
-    
-    -- Then try partial match
-    for _, player in ipairs(getElementsByType("player")) do
-        if getPlayerName(player):lower():find(partialName, 1, true) then
-            return player
-        end
-    end
-    
-    return nil
+    local player, error = getPlayerFromNameOrId(partialName)
+    return player, error
+end
+
+function getPlayerById(id)
+    return getPlayerFromNameOrId(tostring(id))
 end
 
 function isPlayerAdmin(player, requiredLevel)
     if not isElement(player) then return false end
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    return adminLevel >= requiredLevel
+    
+    -- Try to get adminLevel from ElementData first (more reliable)
+    local adminLevel = getElementData(player, "adminLevel")
+    
+    -- Fallback to playerData if ElementData not set
+    if not adminLevel then
+        local playerData = getElementData(player, "playerData")
+        adminLevel = playerData and playerData.adminLevel or 0
+    else
+        adminLevel = tonumber(adminLevel) or 0
+    end
+    
+    -- GOD level có toàn quyền
+    if adminLevel == ADMIN_LEVELS.GOD then
+        outputDebugString("[ADMIN] GOD level detected, granting access")
+        return true
+    end
+    
+    -- Also check if admin level is higher than GOD (just in case)
+    if adminLevel >= ADMIN_LEVELS.GOD then
+        outputDebugString("[ADMIN] Admin level >= GOD, granting access")
+        return true
+    end
+    
+    local result = adminLevel >= requiredLevel
+    outputDebugString("[ADMIN] Access " .. (result and "GRANTED" or "DENIED") .. " (Level: " .. adminLevel .. " vs Required: " .. requiredLevel .. ")")
+    return result
 end
 
 -- Permission system for role-based access control with GOD support
@@ -103,7 +165,7 @@ function formatMoney(amount)
 end
 
 function sendMessageToAdmins(message, minLevel)
-    minLevel = minLevel or ADMIN_LEVEL_MODERATOR
+    minLevel = minLevel or ADMIN_LEVELS.MODERATOR
     for _, player in ipairs(getElementsByType("player")) do
         if isPlayerAdmin(player, minLevel) then
             outputChatBox(message, player, 255, 255, 0)
@@ -272,15 +334,6 @@ end
 function escapeString(str)
     if not str then return "" end
     return str:gsub("'", "''"):gsub("\\", "\\\\")
-end
-
--- Debug and development functions
-function debugMessage(message, player)
-    if player and isPlayerAdmin(player, ADMIN_LEVEL_ADMIN) then
-        outputChatBox("[DEBUG] " .. tostring(message), player, 255, 255, 0)
-    else
-        print("[DEBUG] " .. tostring(message))
-    end
 end
 
 function dumpTable(table, player)

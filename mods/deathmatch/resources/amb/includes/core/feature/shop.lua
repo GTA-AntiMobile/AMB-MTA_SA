@@ -51,7 +51,7 @@ addCommandHandler("clothes", function(player)
     executeCommandHandler("trangphuc", player)
 end)
 
-addCommandHandler("muatrangphuc", function(player, cmd, clothId)
+addCommandHandler("muatrangphuc", function(player, _, clothId)
     if not clothId then
         outputChatBox("Su dung: /muatrangphuc [cloth ID]", player, 255, 255, 255)
         executeCommandHandler("trangphuc", player)
@@ -90,8 +90,8 @@ addCommandHandler("muatrangphuc", function(player, cmd, clothId)
     setElementData(player, "player.wardrobe", wardrobe)
 end)
 
-addCommandHandler("buyclothes", function(player, cmd, clothId)
-    executeCommandHandler("muatrangphuc", player, cmd, clothId)
+addCommandHandler("buyclothes", function(player, _, clothId)
+    executeCommandHandler("muatrangphuc", player, _, clothId)
 end)
 
 -- Toy shop system
@@ -107,7 +107,7 @@ addCommandHandler("toyshop", function(player)
     outputChatBox("Su dung: /toys de xem do choi cua ban", player, 255, 255, 255)
 end)
 
-addCommandHandler("muadochoi", function(player, cmd, toyId)
+addCommandHandler("muadochoi", function(player, _, toyId)
     if not toyId then
         outputChatBox("Su dung: /muadochoi [toy ID]", player, 255, 255, 255)
         executeCommandHandler("toyshop", player)
@@ -145,8 +145,8 @@ addCommandHandler("muadochoi", function(player, cmd, toyId)
     outputChatBox("Su dung /toys de xem va su dung do choi", player, 255, 255, 255)
 end)
 
-addCommandHandler("buytoys", function(player, cmd, toyId)
-    executeCommandHandler("muadochoi", player, cmd, toyId)
+addCommandHandler("buytoys", function(player, _, toyId)
+    executeCommandHandler("muadochoi", player, _, toyId)
 end)
 
 addCommandHandler("toys", function(player)
@@ -166,7 +166,7 @@ addCommandHandler("toys", function(player)
     outputChatBox("Su dung: /dt [toy ID] de thao do choi", player, 255, 255, 255)
 end)
 
-addCommandHandler("wt", function(player, cmd, toyIndex) -- Wear toy
+addCommandHandler("wt", function(player, _, toyIndex) -- Wear toy
     if not toyIndex then
         outputChatBox("Su dung: /wt [toy index]", player, 255, 255, 255)
         return
@@ -187,7 +187,7 @@ addCommandHandler("wt", function(player, cmd, toyIndex) -- Wear toy
     setElementData(player, "player.currentToy", toy)
 end)
 
-addCommandHandler("dt", function(player, cmd, toyIndex) -- Remove toy
+addCommandHandler("dt", function(player, _, toyIndex) -- Remove toy
     if not toyIndex then
         outputChatBox("Su dung: /dt [toy index]", player, 255, 255, 255)
         return
@@ -198,7 +198,7 @@ addCommandHandler("dt", function(player, cmd, toyIndex) -- Remove toy
 end)
 
 -- Vehicle rental system
-addCommandHandler("thuexe", function(player, cmd, vehicleType, hours)
+addCommandHandler("thuexe", function(player, _, vehicleType, hours)
     if not vehicleType then
         outputChatBox("Su dung: /thuexe [car/bike/boat] [hours]", player, 255, 255, 255)
         outputChatBox("Gia thue:", player, 255, 255, 255)
@@ -270,8 +270,8 @@ addCommandHandler("thuexe", function(player, cmd, vehicleType, hours)
     end, hours * 3600 * 1000, 1)
 end)
 
-addCommandHandler("rentacar", function(player, cmd, vehicleType, hours)
-    executeCommandHandler("thuexe", player, cmd, vehicleType, hours)
+addCommandHandler("rentacar", function(player, _, vehicleType, hours)
+    executeCommandHandler("thuexe", player, _, vehicleType, hours)
 end)
 
 addCommandHandler("stoprentacar", function(player)
@@ -318,7 +318,7 @@ addCommandHandler("chamsocsuckhoe", function(player)
     outputChatBox("Su dung: /buyhealthcare [basic/premium/platinum]", player, 255, 255, 255)
 end)
 
-addCommandHandler("buyhealthcare", function(player, cmd, planType)
+addCommandHandler("buyhealthcare", function(player, _, planType)
     if not planType then
         executeCommandHandler("chamsocsuckhoe", player)
         return
@@ -390,18 +390,18 @@ addCommandHandler("credits", function(player)
     outputChatBox("/sellcredits [amount] - Ban credits lay tien", player, 200, 200, 200)
 end)
 
-addCommandHandler("givecredits", function(player, cmd, targetName, amount)
+addCommandHandler("givecredits", function(player, _, playerIdOrName, amount)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /givecredits [player] [amount]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -420,7 +420,7 @@ addCommandHandler("givecredits", function(player, cmd, targetName, amount)
     outputChatBox("Admin " .. getPlayerName(player) .. " da give ban " .. creditAmount .. " credits!", target, 255, 255, 0)
 end)
 
-addCommandHandler("sellcredits", function(player, cmd, amount)
+addCommandHandler("sellcredits", function(player, _, amount)
     if not amount then
         outputChatBox("Su dung: /sellcredits [amount]", player, 255, 255, 255)
         outputChatBox("Gia: 1 credit = $100", player, 255, 255, 255)
@@ -446,7 +446,7 @@ addCommandHandler("sellcredits", function(player, cmd, amount)
 end)
 
 -- Music and entertainment
-addCommandHandler("music", function(player, cmd, action, url)
+addCommandHandler("music", function(player, _, action, url)
     if not action then
         outputChatBox("Su dung: /music [play/stop] [url]", player, 255, 255, 255)
         outputChatBox("Vi du: /music play http://example.com/song.mp3", player, 255, 255, 255)
@@ -471,7 +471,7 @@ addCommandHandler("music", function(player, cmd, action, url)
     end
 end)
 
-addCommandHandler("mp3", function(player, cmd, ...)
+addCommandHandler("mp3", function(player, _, ...)
     if not ... then
         outputChatBox("Su dung: /mp3 [search keywords]", player, 255, 255, 255)
         outputChatBox("Tim kiem va phat nhac MP3", player, 255, 255, 255)
@@ -484,13 +484,13 @@ addCommandHandler("mp3", function(player, cmd, ...)
 end)
 
 -- Boxing and fighting
-addCommandHandler("fight", function(player, cmd, targetName)
-    if not targetName then
+addCommandHandler("fight", function(player, _, playerIdOrName)
+    if not playerIdOrName then
         outputChatBox("Su dung: /fight [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -557,7 +557,7 @@ addCommandHandler("dichvu", function(player)
     outputChatBox("5. Yeu cau tro giup - /yeucautrogiup", player, 200, 200, 200)
 end)
 
-addCommandHandler("yeucautrogiup", function(player, cmd, ...)
+addCommandHandler("yeucautrogiup", function(player, _, ...)
     if not ... then
         outputChatBox("Su dung: /yeucautrogiup [van de can tro giup]", player, 255, 255, 255)
         return
@@ -585,18 +585,18 @@ addCommandHandler("yeucautrogiup", function(player, cmd, ...)
     end
 end)
 
-addCommandHandler("tr", function(player, cmd, targetName, ...)
+addCommandHandler("tr", function(player, _, playerIdOrName, ...)
     if not hasPermission(player, "helper") and not hasPermission(player, "admin", 1) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not ... then
+    if not playerIdOrName or not ... then
         outputChatBox("Su dung: /tr [player] [message]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return

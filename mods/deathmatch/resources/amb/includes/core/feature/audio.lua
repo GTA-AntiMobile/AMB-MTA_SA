@@ -17,18 +17,18 @@ local audioSystem = {
 }
 
 -- Set boombox for player
-addCommandHandler("setboombox", function(player, cmd, targetName)
+addCommandHandler("setboombox", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /setboombox [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -47,7 +47,7 @@ addCommandHandler("setboombox", function(player, cmd, targetName)
 end)
 
 -- Set radio station
-addCommandHandler("setstation", function(player, cmd, stationID)
+addCommandHandler("setstation", function(player, _, stationID)
     local hasBoombox = getElementData(player, "player.boombox")
     if not hasBoombox then
         outputChatBox("Ban khong co boombox!", player, 255, 0, 0)
@@ -129,7 +129,7 @@ addCommandHandler("audiostopurl", function(player)
 end)
 
 -- Play custom audio URL
-addCommandHandler("audiourl", function(player, cmd, url)
+addCommandHandler("audiourl", function(player, _, url)
     local hasBoombox = getElementData(player, "player.boombox")
     if not hasBoombox then
         outputChatBox("Ban khong co boombox!", player, 255, 0, 0)
@@ -177,7 +177,7 @@ addCommandHandler("audiourl", function(player, cmd, url)
 end)
 
 -- Vehicle music system
-addCommandHandler("carmusic", function(player, cmd, action, ...)
+addCommandHandler("carmusic", function(player, _, action, ...)
     local vehicle = getPedOccupiedVehicle(player)
     if not vehicle then
         outputChatBox("Ban can o trong xe!", player, 255, 0, 0)

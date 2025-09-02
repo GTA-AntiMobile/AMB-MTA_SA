@@ -195,7 +195,7 @@ addCommandHandler("jobs", function(player)
 end)
 
 -- Job command: /getjob
-addCommandHandler("getjob", function(player, cmd, jobName)
+addCommandHandler("getjob", function(player, _, jobName)
     if not jobName then
         outputChatBox(COLOR_YELLOW .. "Usage: /getjob [job name]", player)
         outputChatBox(COLOR_GRAY .. "Use /jobs to see available jobs.", player)

@@ -98,7 +98,7 @@ end
 
 -- Math Utilities
 function math.round(num, decimals)
-    local mult = 10^(decimals or 0)
+    local mult = 10 ^ (decimals or 0)
     return math.floor(num * mult + 0.5) / mult
 end
 
@@ -155,7 +155,7 @@ function formatTime(seconds)
     local hours = math.floor(seconds / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
     local secs = seconds % 60
-    
+
     if hours > 0 then
         return string.format("%02d:%02d:%02d", hours, minutes, secs)
     else
@@ -168,13 +168,13 @@ function formatDuration(seconds)
     local hours = math.floor((seconds % 86400) / 3600)
     local minutes = math.floor((seconds % 3600) / 60)
     local secs = seconds % 60
-    
+
     local parts = {}
     if days > 0 then table.insert(parts, days .. " day" .. (days ~= 1 and "s" or "")) end
     if hours > 0 then table.insert(parts, hours .. " hour" .. (hours ~= 1 and "s" or "")) end
     if minutes > 0 then table.insert(parts, minutes .. " minute" .. (minutes ~= 1 and "s" or "")) end
     if secs > 0 then table.insert(parts, secs .. " second" .. (secs ~= 1 and "s" or "")) end
-    
+
     if #parts == 0 then
         return "0 seconds"
     elseif #parts == 1 then
@@ -199,11 +199,11 @@ function formatMoney(amount)
     local k = 1
     while k < #formatted do
         if k % 3 == 1 and k > 1 then
-            formatted = formatted:sub(1, -k) .. "," .. formatted:sub(-k+1)
+            formatted = formatted:sub(1, -k) .. "," .. formatted:sub(-k + 1)
         end
         k = k + 1
     end
-    
+
     if amount < 0 then
         return "-$" .. formatted
     else
@@ -252,23 +252,23 @@ end
 
 function getClosestPlayer(player, maxDistance)
     if not isElement(player) then return nil end
-    
+
     local px, py, pz = getElementPosition(player)
     local closestPlayer = nil
     local closestDistance = maxDistance or math.huge
-    
+
     for _, target in ipairs(getElementsByType("player")) do
         if target ~= player then
             local tx, ty, tz = getElementPosition(target)
             local distance = math.distance3D(px, py, pz, tx, ty, tz)
-            
+
             if distance < closestDistance then
                 closestDistance = distance
                 closestPlayer = target
             end
         end
     end
-    
+
     return closestPlayer, closestDistance
 end
 
@@ -309,7 +309,7 @@ end
 function readFileContents(path)
     local file = fileOpen(path)
     if not file then return nil end
-    
+
     local content = fileRead(file, fileGetSize(file))
     fileClose(file)
     return content
@@ -318,7 +318,7 @@ end
 function writeFileContents(path, content)
     local file = fileCreate(path)
     if not file then return false end
-    
+
     fileWrite(file, content)
     fileClose(file)
     return true
@@ -336,7 +336,7 @@ end
 function wordWrap(text, width)
     local lines = {}
     local currentLine = ""
-    
+
     for word in text:gmatch("%S+") do
         if #currentLine + #word + 1 <= width then
             if #currentLine > 0 then
@@ -353,25 +353,25 @@ function wordWrap(text, width)
             end
         end
     end
-    
+
     if #currentLine > 0 then
         table.insert(lines, currentLine)
     end
-    
+
     return lines
 end
 
 -- Debug Utilities
 function debugPrint(...)
     if DEBUG_MODE then
-        outputDebugString("[AMB DEBUG] " .. table.concat({...}, " "))
+        outputDebugString("[AMB DEBUG] " .. table.concat({ ... }, " "))
     end
 end
 
 function dumpTable(t, indent)
     indent = indent or 0
     local spacing = string.rep("  ", indent)
-    
+
     for k, v in pairs(t) do
         if type(v) == "table" then
             print(spacing .. tostring(k) .. " = {")
@@ -383,6 +383,244 @@ function dumpTable(t, indent)
     end
 end
 
+function getCustomModelData(modelID, dataTable, baseStartID)
+    for idx, v in ipairs(dataTable) do
+        local expectedID = baseStartID + (idx - 1)
+        if expectedID == modelID then
+            return v
+        end
+    end
+    return nil
+end
+
+function isValidVehicleModel(id)
+    return id >= 400 and id <= 611 or id >= 30001 and id <= 40000
+end
+
+function isCustomSkin(id)
+    return id >= 20001 and id <= 21000
+end
+
+function isCustomObject(id)
+    return id >= 19001 and id <= 19999
+end
+
+-- Helper: lấy real model id từ baseId theo map của client
+function getRealModelID(player, mtype, baseID)
+    local map = player:getData("customModelMap")
+    if map and map[mtype] and map[mtype][baseID] then
+        return map[mtype][baseID]
+    end
+    return baseID -- fallback về ID gốc nếu không có custom
+end
+
+-- Dynamic vehicle folder scanner - fully automatic
+local function scanVehicleFolderStructure()
+    local vehicles = {}
+    outputDebugString("[SCAN] Starting automatic vehicle folder scan...")
+
+    -- Function to scan a specific path for .dff files
+    local function scanPath(path, baseModel, folderName)
+        outputDebugString("[SCAN] Scanning path: " .. path)
+
+        -- Try a range of common custom vehicle IDs
+        for modelId = 30001, 30050 do
+            local dffFile = path .. "/" .. modelId .. ".dff"
+            local txdFile = path .. "/" .. modelId .. ".txd"
+
+            if fileExists(dffFile) and fileExists(txdFile) then
+                table.insert(vehicles, {
+                    id = modelId,
+                    name = folderName,
+                    baseModel = baseModel,
+                    dffPath = dffFile,
+                    txdPath = txdFile
+                })
+                outputDebugString("[SCAN] ✅ Found: " .. folderName .. " (ID: " .. modelId .. ") -> Base: " .. baseModel)
+            end
+        end
+    end
+
+    -- Scan all possible base vehicle model directories (400-611)
+    for baseModel = 400, 611 do
+        local basePath = ":newmodels_azul/models/vehicle/" .. baseModel
+
+        -- Check if base directory exists
+        if fileExists(basePath) then
+            outputDebugString("[SCAN] Found base directory: " .. baseModel)
+
+            -- Try to find subdirectories by checking common patterns
+            local commonNames = {
+                "Lamborghini", "BMW", "BMW 2010", "BMW 2020", "Audi", "Mercedes", "Ferrari",
+                "Porsche", "Toyota", "Honda", "Nissan", "Mazda", "Subaru", "Mitsubishi",
+                "Volkswagen", "Ford", "Chevrolet", "Dodge", "Jeep", "Hyundai", "Kia",
+                "Sport", "Luxury", "Custom", "Tuned", "Modified", "Racing", "Drift"
+            }
+
+            for _, folderName in ipairs(commonNames) do
+                local folderPath = basePath .. "/" .. folderName
+
+                -- Check if this folder contains vehicle files
+                local hasFiles = false
+                for testId = 30001, 30050 do
+                    if fileExists(folderPath .. "/" .. testId .. ".dff") then
+                        hasFiles = true
+                        break
+                    end
+                end
+
+                if hasFiles then
+                    scanPath(folderPath, baseModel, folderName)
+                end
+            end
+
+            -- Also try scanning with exact folder names from your structure
+            if baseModel == 411 then
+                scanPath(basePath .. "/Lamborghini", baseModel, "Lamborghini")
+            elseif baseModel == 412 then
+                scanPath(basePath .. "/BMW", baseModel, "BMW")
+                scanPath(basePath .. "/BMW 2010", baseModel, "BMW 2010")
+            end
+        end
+    end
+
+    -- If no vehicles found, try direct file scan in known locations
+    if #vehicles == 0 then
+        outputDebugString("[SCAN] No vehicles found, trying direct scan...")
+
+        -- Direct check for your exact structure
+        local directPaths = {
+            { path = ":newmodels_azul/models/vehicle/411/Lamborghini", base = 411, name = "Lamborghini" },
+            { path = ":newmodels_azul/models/vehicle/412/BMW",         base = 412, name = "BMW" },
+            { path = ":newmodels_azul/models/vehicle/412/BMW 2010",    base = 412, name = "BMW 2010" }
+        }
+
+        for _, pathInfo in ipairs(directPaths) do
+            scanPath(pathInfo.path, pathInfo.base, pathInfo.name)
+        end
+    end
+
+    outputDebugString("[SCAN] Automatic scan complete. Found " .. #vehicles .. " vehicles")
+    return vehicles
+end
+
+-- Dynamic model scanning functions for newmodels_azul
+function getNewmodelsAvailableModels()
+    local models = {
+        vehicles = {},
+        objects = {},
+        peds = {}
+    }
+
+    local newmodelsResource = getResourceFromName("newmodels_azul")
+    if not newmodelsResource or getResourceState(newmodelsResource) ~= "running" then
+        outputDebugString("[LISTCV] newmodels_azul resource not running")
+        return models
+    end
+
+    -- Try to get from exports first (preferred method)
+    if exports["newmodels_azul"] and exports["newmodels_azul"].getCustomModels then
+        local customModels = exports["newmodels_azul"]:getCustomModels()
+
+        if customModels and next(customModels) then
+            outputDebugString("[LISTCV] Using newmodels_azul exports")
+            for id, modelData in pairs(customModels) do
+                if modelData.type == "vehicle" then
+                    table.insert(models.vehicles, {
+                        id = id,
+                        name = modelData.name or "Unknown Vehicle",
+                        baseModel = modelData.baseModel
+                    })
+                elseif modelData.type == "object" then
+                    table.insert(models.objects, {
+                        id = id,
+                        name = modelData.name or "Unknown Object",
+                        baseModel = modelData.baseModel
+                    })
+                elseif modelData.type == "ped" then
+                    table.insert(models.peds, {
+                        id = id,
+                        name = modelData.name or "Unknown Ped",
+                        baseModel = modelData.baseModel
+                    })
+                end
+            end
+            outputDebugString("[LISTCV] Loaded " .. #models.vehicles .. " vehicles from exports")
+            return models
+        end
+    end
+
+    -- Fallback: Scan folder structure directly
+    outputDebugString("[LISTCV] Exports not available, scanning folder structure...")
+    models.vehicles = scanVehicleFolderStructure()
+
+    return models
+end
+
+-- Custom Vehicle Name System - Improved with /cv logic
+function getCustomVehicleName(vehicle)
+    if not isElement(vehicle) then return "Unknown Vehicle" end
+    local id = getElementData(vehicle, "customVehicleID") or getElementModel(vehicle)
+    -- Xe custom
+    if id >= 30001 and id < 40000 then
+        local name = getElementData(vehicle, "customVehicleName")
+        if name and tostring(name) ~= "" then
+            return name
+        end
+        -- Nếu chưa có, lấy từ mapping custom
+        local models = getNewmodelsAvailableModels()
+        for _, customVehicle in ipairs(models.vehicles) do
+            if id == customVehicle.id then
+                return customVehicle.name or ("Custom Vehicle " .. id)
+            end
+        end
+        return "Custom Vehicle " .. id
+    end
+    -- Xe thường
+    if id >= 400 and id <= 611 then
+        return getVehicleName(vehicle) or ("Vehicle " .. id)
+    end
+    -- Fallback cuối cùng
+    return "Unknown Vehicle " .. id
+end
+
+-- function getCustomVehicleName(vehicle)
+--     if not isElement(vehicle) then return "Unknown Vehicle" end
+
+--     local customName
+--     local id = getElementData(vehicle, "customVehicleID")
+--     if not id then
+--         id = getElementModel(vehicle)
+--     end
+
+--     -- Custom vehicles (30000+) - use same logic as /cv command
+--     if id >= 30001 and id < 40000 then
+--         local models = getNewmodelsAvailableModels()
+--         for _, customVehicle in ipairs(models.vehicles) do
+--             if id == customVehicle.id then
+--                 customName = customVehicle.name
+
+--             end
+--             -- customName = getElementData(vehicle, "customVehicleName")
+--         end
+--         -- Try to get name from newmodels_azul
+--         if customName then
+--             return customName
+--         end
+
+--         -- Fallback for custom vehicles
+--         return "Custom Vehicle " .. id
+--     end
+
+--     -- Standard GTA vehicles (400-611)
+--     if id >= 400 and id <= 611 then
+--         return getVehicleName(vehicle) or ("Vehicle " .. id)
+--     end
+
+--     -- Final fallback
+--     return "Unknown Vehicle " .. id
+-- end
+
 -- Export utilities to global namespace
 _G.AMB_UTILS = {
     -- String utilities
@@ -393,7 +631,7 @@ _G.AMB_UTILS = {
     contains = string.contains,
     startsWith = string.startsWith,
     endsWith = string.endsWith,
-    
+
     -- Table utilities
     tableCopy = table.copy,
     tableMerge = table.merge,
@@ -402,7 +640,7 @@ _G.AMB_UTILS = {
     tableFindKey = table.findKey,
     tableRemoveValue = table.removeValue,
     tableIsEmpty = table.isEmpty,
-    
+
     -- Math utilities
     round = math.round,
     clamp = math.clamp,
@@ -410,48 +648,48 @@ _G.AMB_UTILS = {
     distance2D = math.distance2D,
     distance3D = math.distance3D,
     angleBetweenPoints = math.angleBetweenPoints,
-    
+
     -- Color utilities
     hexToRGB = hexToRGB,
     rgbToHex = rgbToHex,
     interpolateColor = interpolateColor,
-    
+
     -- Time utilities
     formatTime = formatTime,
     formatDuration = formatDuration,
     getTimeStamp = getTimeStamp,
     formatTimeStamp = formatTimeStamp,
-    
+
     -- Money utilities
     formatMoney = formatMoney,
     parseMoney = parseMoney,
-    
+
     -- Validation utilities
     isValidEmail = isValidEmail,
     isValidUsername = isValidUsername,
     isValidPassword = isValidPassword,
     isValidName = isValidName,
-    
+
     -- Position utilities
     isPlayerNearPosition = isPlayerNearPosition,
     getClosestPlayer = getClosestPlayer,
-    
+
     -- Random utilities
     getRandomElement = getRandomElement,
     shuffle = shuffle,
     randomFloat = randomFloat,
     randomBool = randomBool,
-    
+
     -- File utilities
     fileExists = fileExists,
     readFileContents = readFileContents,
     writeFileContents = writeFileContents,
-    
+
     -- Chat utilities
     removeColorCodes = removeColorCodes,
     stripColors = stripColors,
     wordWrap = wordWrap,
-    
+
     -- Debug utilities
     debugPrint = debugPrint,
     dumpTable = dumpTable

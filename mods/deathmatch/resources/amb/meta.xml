@@ -3,6 +3,9 @@
         version="1.1.2-production" type="gamemode"
         description="🎉 COMPLETE SA-MP to MTA migration (1,182/1,182 commands) + Enhanced Client Features - PRODUCTION READY ✅" />
 
+    <!-- Library Dependencies -->
+    <dependency resource="newmodels_azul" />
+
     <!-- Main Entry Point -->
     <script src="main.lua" type="server" />
     <script src="includes/core/database.lua" type="server" />
@@ -31,6 +34,7 @@
     <script src="includes/core/jobs/system.lua" type="server" />
     <script src="includes/core/feature/system.lua" type="server" />
     <script src="includes/core/feature/audio.lua" type="server" />
+    <script src="includes/core/feature/vehicle_sounds.lua" type="client" />
     <script src="includes/core/feature/crates.lua" type="server" />
     <script src="includes/core/feature/events.lua" type="server" />
     <script src="includes/core/feature/property.lua" type="server" />
@@ -44,10 +48,13 @@
     <script src="includes/core/feature/help.lua" type="server" />
 
     <!-- Core System Features -->
-    <script src="includes/core/communication/voice.lua" type="server" />
+    <!-- <script src="includes/core/communication/voice.lua" type="server" /> -->
     <script src="includes/core/communication/chat.lua" type="server" />
     <script src="includes/core/navigation/gps.lua" type="server" />
     <script src="includes/core/vehicles/fuel.lua" type="server" />
+    
+    <!-- Test Commands for debugging -->
+    <!-- <script src="includes/test_command.lua" type="server" /> -->
 
     <!-- Shared Utilities -->
     <script src="shared/config.lua" type="shared" />
@@ -57,14 +64,6 @@
     <!-- Game data files -->
     <file src="data/properties/*.txt" />
     <file src="data/vehicles/*.txt" />
-
-    <!-- Model files -->
-    <file src="files/models/Server/*.dff" />
-    <file src="files/models/Server/*.txd" />
-    <file src="files/models/Skin/*.dff" />
-    <file src="files/models/Skin/*.txd" />
-    <file src="files/models/Vehicle/*.dff" />
-    <file src="files/models/Vehicle/*.txd" />
 
     <!-- Configuration files -->
     <file src="files/config/*.xml" />
@@ -79,6 +78,9 @@
     <file src="files/sounds/*.mp3" />
     <file src="files/sounds/*.wav" />
     <file src="files/sounds/*.ogg" />
+    <file src="files/sounds/vehicles/*.mp3" />
+    <file src="files/sounds/vehicles/*.wav" />
+    <file src="files/sounds/vehicles/*.ogg" />
     <file src="files/images/*.png" />
     <file src="files/images/*.jpg" />
     <file src="files/images/*.bmp" />
@@ -105,9 +107,12 @@
     <!-- Client-side Features -->
     <script src="includes/client/scoreboard.lua" type="client" />
     <script src="includes/client/speedometer.lua" type="client" />
-    <script src="includes/client/voice.lua" type="client" />
+    <!-- <script src="includes/client/voice.lua" type="client" /> -->
     <script src="includes/client/gps.lua" type="client" />
+    <!-- <script src="includes/client/chatbox_config.lua" type="client" /> -->
+    <script src="includes/client/input_handler.lua" type="client" />
     <script src="includes/client/models/loader.lua" type="client" />
+    <script src="includes/client/fly/flyMode.lua" type="client" />
 
     <!-- Client events -->
     <export function="showLoginGUI" type="client" />
@@ -138,4 +143,5 @@
         <setting name="*documentation_complete" value="true" />
         <setting name="*vietnamese_support" value="complete" />
     </settings>
+
 </meta>

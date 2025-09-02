@@ -337,7 +337,7 @@ addCommandHandler("flipcoin", function(player)
     outputChatBox(getPlayerName(player) .. " tung dong xu: " .. result, root, 255, 255, 0)
 end)
 
-addCommandHandler("dice", function(player, cmd, sides)
+addCommandHandler("dice", function(player, _, sides)
     local maxSides = tonumber(sides) or 6
     if maxSides < 2 or maxSides > 100 then
         outputChatBox("So mat xuc xac phai tu 2-100! (mac dinh: 6)", player, 255, 0, 0)
@@ -364,18 +364,18 @@ addCommandHandler("contracts", function(player)
 end)
 
 -- Vehicle search system
-addCommandHandler("searchcar", function(player, cmd, targetName)
+addCommandHandler("searchcar", function(player, _, playerIdOrName)
     if not hasPermission(player, "police") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /searchcar [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -409,18 +409,18 @@ addCommandHandler("searchcar", function(player, cmd, targetName)
     end
 end)
 
-addCommandHandler("takecarweapons", function(player, cmd, targetName)
+addCommandHandler("takecarweapons", function(player, _, playerIdOrName)
     if not hasPermission(player, "police") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /takecarweapons [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return

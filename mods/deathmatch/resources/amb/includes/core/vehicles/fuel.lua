@@ -403,9 +403,7 @@ end)
 
 -- Command to refuel (cheat for testing)
 addCommandHandler("refuel", function(player)
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    
-    if adminLevel < 1 then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("❌ Admin only command", player, 255, 100, 100)
         return
     end

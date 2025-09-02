@@ -32,18 +32,18 @@ local vipSystem = {
 }
 
 -- VIP level management
-addCommandHandler("newgvip", function(player, cmd, targetName)
+addCommandHandler("newgvip", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 5) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /newgvip [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -64,18 +64,18 @@ addCommandHandler("newgvip", function(player, cmd, targetName)
     outputChatBox("Cac tinh nang VIP da duoc kich hoat", target, 255, 255, 255)
 end)
 
-addCommandHandler("renewgvip", function(player, cmd, targetName)
+addCommandHandler("renewgvip", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 5) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /renewgvip [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -97,7 +97,7 @@ addCommandHandler("renewgvip", function(player, cmd, targetName)
     outputChatBox("Gold VIP cua ban da duoc gia han 30 ngay!", target, 255, 215, 0)
 end)
 
-addCommandHandler("sellvip", function(player, cmd, vipType)
+addCommandHandler("sellvip", function(player, _, vipType)
     if not vipType then
         outputChatBox("Su dung: /sellvip [bronze/silver/gold/diamond]", player, 255, 255, 255)
         outputChatBox("=== VIP PACKAGES ===", player, 255, 255, 0)
@@ -268,7 +268,7 @@ addCommandHandler("doublexp", function(player)
 end)
 
 -- Shop order system
-addCommandHandler("shoporder", function(player, cmd, orderType, ...)
+addCommandHandler("shoporder", function(player, _, orderType, ...)
     if not orderType or not ... then
         outputChatBox("Su dung: /shoporder [vehicle/weapon/house/business] [details]", player, 255, 255, 255)
         outputChatBox("Vi du: /shoporder vehicle Infernus", player, 255, 255, 255)
@@ -338,7 +338,7 @@ addCommandHandler("orders", function(player)
     end
 end)
 
-addCommandHandler("processorder", function(player, cmd, orderId)
+addCommandHandler("processorder", function(player, _, orderId)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -375,7 +375,7 @@ addCommandHandler("processorder", function(player, cmd, orderId)
     end
 end)
 
-addCommandHandler("denyorder", function(player, cmd, orderId)
+addCommandHandler("denyorder", function(player, _, orderId)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -413,7 +413,7 @@ addCommandHandler("denyorder", function(player, cmd, orderId)
     end
 end)
 
-addCommandHandler("cancelorder", function(player, cmd, orderId)
+addCommandHandler("cancelorder", function(player, _, orderId)
     if not orderId then
         outputChatBox("Su dung: /cancelorder [order ID]", player, 255, 255, 255)
         return
@@ -448,7 +448,7 @@ addCommandHandler("cancelorder", function(player, cmd, orderId)
 end)
 
 -- Gift codes system
-addCommandHandler("giftcode", function(player, cmd, code)
+addCommandHandler("giftcode", function(player, _, code)
     if not code then
         outputChatBox("Su dung: /giftcode [code]", player, 255, 255, 255)
         return
@@ -496,7 +496,7 @@ addCommandHandler("giftcode", function(player, cmd, code)
 end)
 
 -- Admin command to create gift codes
-addCommandHandler("dathopqua", function(player, cmd, code, type, amount, days)
+addCommandHandler("dathopqua", function(player, _, code, type, amount, days)
     if not hasPermission(player, "admin", 4) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -563,7 +563,7 @@ function applyVIPBenefits(player, action)
 end
 
 -- VIP chat command
-addCommandHandler("v", function(player, cmd, ...)
+addCommandHandler("v", function(player, _, ...)
     local vipLevel = getElementData(player, "player.vipLevel")
     if not vipLevel then
         outputChatBox("Ban khong co VIP de su dung chat nay!", player, 255, 0, 0)

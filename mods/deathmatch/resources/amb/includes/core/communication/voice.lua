@@ -31,10 +31,9 @@ addEventHandler("onGlobalVoiceToggle", root, function(enabled)
     local player = source
     if not player then return end
     
-    local adminLevel = getElementData(player, "adminLevel") or 0
     local playerName = getPlayerName(player)
     
-    if adminLevel < 1 then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("❌ You need admin privileges for global voice", player, 255, 100, 100)
         return
     end

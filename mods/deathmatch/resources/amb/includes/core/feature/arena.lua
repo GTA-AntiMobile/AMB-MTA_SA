@@ -50,7 +50,7 @@ arenaSystem.arenas[2] = {
 }
 
 -- Arena Commands
-addCommandHandler("joinarena", function(player, cmd, arenaId)
+addCommandHandler("joinarena", function(player, _, arenaId)
     if not arenaId then
         outputChatBox("Su dung: /joinarena [arena ID]", player, 255, 255, 255)
         outputChatBox("Arena co san: 1 (LS Deathmatch), 2 (SF Arena)", player, 255, 255, 255)
@@ -245,7 +245,7 @@ addCommandHandler("turf", function(player)
     outputChatBox("Turf wars allow gangs to fight for territory control", player, 255, 255, 255)
 end)
 
-addCommandHandler("startturf", function(player, cmd, zone)
+addCommandHandler("startturf", function(player, _, zone)
     if not zone then
         outputChatBox("Su dung: /startturf [zone name]", player, 255, 255, 255)
         outputChatBox("Available zones: Grove, Ballas, Aztecas, Vagos", player, 255, 255, 255)

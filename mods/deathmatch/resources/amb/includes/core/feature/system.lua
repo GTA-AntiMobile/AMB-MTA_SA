@@ -30,7 +30,7 @@ local stuntBonuses = {
 }
 
 -- Feature command: /race
-addCommandHandler("race", function(player, cmd, action, ...)
+addCommandHandler("race", function(player, _, action, ...)
     if not action then
         outputChatBox(COLOR_YELLOW .. "Usage: /race [create/join/start/leave/list]", player)
         return
@@ -167,7 +167,7 @@ function startRace(raceName)
 end
 
 -- Feature command: /drift
-addCommandHandler("drift", function(player, cmd, action)
+addCommandHandler("drift", function(player, _, action)
     if action == "start" then
         local vehicle = getPedOccupiedVehicle(player)
         if not vehicle then
@@ -210,7 +210,7 @@ addCommandHandler("drift", function(player, cmd, action)
 end)
 
 -- Feature command: /derby
-addCommandHandler("derby", function(player, cmd, action)
+addCommandHandler("derby", function(player, _, action)
     if action == "join" then
         local arena = derbyArenas[1] -- Use first arena
         local px, py, pz = getElementPosition(player)
@@ -249,7 +249,7 @@ addCommandHandler("derby", function(player, cmd, action)
 end)
 
 -- Feature command: /teleport
-addCommandHandler("teleport", function(player, cmd, location)
+addCommandHandler("teleport", function(player, _, location)
     if not location then
         outputChatBox(COLOR_YELLOW .. "Usage: /teleport [location]", player)
         outputChatBox(COLOR_GRAY .. "Locations: ls, sf, lv, airport, pier, stadium, casino", player)
@@ -277,8 +277,8 @@ addCommandHandler("teleport", function(player, cmd, location)
 end)
 
 -- Feature command: /weather
-addCommandHandler("weather", function(player, cmd, weatherID)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+addCommandHandler("weather", function(player, _, weatherID)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox(COLOR_RED .. "You don't have permission to use this command!", player)
         return
     end
@@ -306,8 +306,8 @@ addCommandHandler("weather", function(player, cmd, weatherID)
 end)
 
 -- Feature command: /time
-addCommandHandler("time", function(player, cmd, hour, minute)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) then
+addCommandHandler("time", function(player, _, hour, minute)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox(COLOR_RED .. "You don't have permission to use this command!", player)
         return
     end
@@ -337,7 +337,7 @@ addCommandHandler("time", function(player, cmd, hour, minute)
 end)
 
 -- Feature command: /neon
-addCommandHandler("neon", function(player, cmd, color)
+addCommandHandler("neon", function(player, _, color)
     local vehicle = getPedOccupiedVehicle(player)
     if not vehicle then
         outputChatBox(COLOR_RED .. "You must be in a vehicle to add neon!", player)
@@ -379,7 +379,7 @@ addCommandHandler("neon", function(player, cmd, color)
 end)
 
 -- Feature command: /nos
-addCommandHandler("nos", function(player, cmd, level)
+addCommandHandler("nos", function(player, _, level)
     local vehicle = getPedOccupiedVehicle(player)
     if not vehicle then
         outputChatBox(COLOR_RED .. "You must be in a vehicle to add NOS!", player)

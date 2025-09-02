@@ -474,7 +474,7 @@ getDatabaseConfig()                     -- Get database connection config
 ### Command Integration
 ```lua
 -- Adding custom admin commands
-local function myCustomCommand(player, cmd, ...)
+local function myCustomCommand(player, _, ...)
     if getElementData(player, "AdminLevel") >= 5 then
         -- Custom admin logic here
         outputChatBox("Custom command executed!", player)

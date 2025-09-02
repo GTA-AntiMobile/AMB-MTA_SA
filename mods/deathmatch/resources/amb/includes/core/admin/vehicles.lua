@@ -54,11 +54,9 @@ function Vehicle_ResetData(vehicle)
 end
 
 -- /veh command - Create admin vehicle (migrated from SA-MP)
-addCommandHandler("veh", function(player, cmd, vehicleModel, color1, color2)
-    -- Check admin level (pAdmin >= 4 in SA-MP)
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    
-    if adminLevel < 4 then
+addCommandHandler("veh", function(player, _, vehicleModel, color1, color2)
+    -- Check admin level (pAdmin >= 4 in SA-MP) using global isPlayerAdmin function
+    if not isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100)
         return
     end
@@ -162,10 +160,8 @@ addCommandHandler("veh", function(player, cmd, vehicleModel, color1, color2)
 end)
 
 -- /deleteveh command - Delete admin vehicles
-addCommandHandler("deleteveh", function(player, cmd, slotID)
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    
-    if adminLevel < 4 then
+addCommandHandler("deleteveh", function(player, _, slotID)
+    if not isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100)
         return
     end
@@ -200,9 +196,7 @@ end)
 
 -- /listveh command - List created vehicles
 addCommandHandler("listveh", function(player)
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    
-    if adminLevel < 4 then
+    if not isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100)
         return
     end
@@ -231,9 +225,7 @@ end)
 
 -- /deleteallveh command - Delete all admin vehicles
 addCommandHandler("deleteallveh", function(player)
-    local adminLevel = getElementData(player, "adminLevel") or 0
-    
-    if adminLevel < 5 then -- Higher admin level required
+    if not isPlayerAdmin(player, 5) then -- Higher admin level required
         outputChatBox("❌ Can Admin level 5+ to use this command.", player, 255, 100, 100)
         return
     end

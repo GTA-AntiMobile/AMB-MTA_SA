@@ -1,208 +1,58 @@
--- ================================
--- AMB MTA Client Model Loading System
--- Handles custom model loading on client side
--- ================================
+local addModels = exports["mta-add-models"]
+customVehicleModels = {} -- chỉ để log/debug client thôi
 
-local loadedModels = {
-    vehicles = {},
-    skins = {},
-    objects = {}
-}
+clientLog("CLIENNT", "[CLIENT] Model loader script started")
 
--- Load a custom vehicle model on client
-function loadClientVehicleModel(modelData)
-    outputDebugString("[MODELS] Client loading vehicle: " .. modelData.name .. " (ID: " .. modelData.id .. ")")
-    
-    -- Load TXD first
-    local txd = engineLoadTXD(modelData.txd, modelData.baseID)
-    if not txd then
-        outputDebugString("[MODELS] ❌ Failed to load TXD: " .. modelData.txd)
-        return false
-    end
-    
-    -- Import TXD
-    engineImportTXD(txd, modelData.baseID)
-    
-    -- Load DFF
-    local dff = engineLoadDFF(modelData.dff)
-    if not dff then
-        outputDebugString("[MODELS] ❌ Failed to load DFF: " .. modelData.dff)
-        return false
-    end
-    
-    -- Replace model
-    engineReplaceModel(dff, modelData.baseID)
-    
-    -- Store loaded model info
-    loadedModels.vehicles[modelData.id] = {
-        baseID = modelData.baseID,
-        name = modelData.name,
-        txd = txd,
-        dff = dff
-    }
-    
-    outputDebugString("[MODELS] ✅ Successfully loaded vehicle: " .. modelData.name)
-    return true
-end
-
--- Load a custom skin model on client
-function loadClientSkinModel(modelData)
-    outputDebugString("[MODELS] Client loading skin: " .. modelData.name .. " (ID: " .. modelData.id .. ")")
-    
-    -- Load TXD first
-    local txd = engineLoadTXD(modelData.txd, modelData.baseID)
-    if not txd then
-        outputDebugString("[MODELS] ❌ Failed to load skin TXD: " .. modelData.txd)
-        return false
-    end
-    
-    -- Import TXD
-    engineImportTXD(txd, modelData.baseID)
-    
-    -- Load DFF
-    local dff = engineLoadDFF(modelData.dff)
-    if not dff then
-        outputDebugString("[MODELS] ❌ Failed to load skin DFF: " .. modelData.dff)
-        return false
-    end
-    
-    -- Replace model
-    engineReplaceModel(dff, modelData.baseID)
-    
-    -- Store loaded model info
-    loadedModels.skins[modelData.id] = {
-        baseID = modelData.baseID,
-        name = modelData.name,
-        txd = txd,
-        dff = dff
-    }
-    
-    outputDebugString("[MODELS] ✅ Successfully loaded skin: " .. modelData.name)
-    return true
-end
-
--- Load a custom object model on client
-function loadClientObjectModel(modelData)
-    outputDebugString("[MODELS] Client loading object: " .. modelData.name .. " (ID: " .. modelData.id .. ")")
-    
-    -- Load TXD first
-    local txd = engineLoadTXD(modelData.txd, modelData.baseID)
-    if not txd then
-        outputDebugString("[MODELS] ❌ Failed to load object TXD: " .. modelData.txd)
-        return false
-    end
-    
-    -- Import TXD
-    engineImportTXD(txd, modelData.baseID)
-    
-    -- Load DFF
-    local dff = engineLoadDFF(modelData.dff)
-    if not dff then
-        outputDebugString("[MODELS] ❌ Failed to load object DFF: " .. modelData.dff)
-        return false
-    end
-    
-    -- Replace model
-    engineReplaceModel(dff, modelData.baseID)
-    
-    -- Store loaded model info
-    loadedModels.objects[modelData.id] = {
-        baseID = modelData.baseID,
-        name = modelData.name,
-        txd = txd,
-        dff = dff
-    }
-    
-    outputDebugString("[MODELS] ✅ Successfully loaded object: " .. modelData.name)
-    return true
-end
-
--- Check if a custom vehicle is loaded
-function isCustomVehicleLoaded(modelID)
-    return loadedModels.vehicles[modelID] ~= nil
-end
-
--- Check if a custom skin is loaded
-function isCustomSkinLoaded(modelID)
-    return loadedModels.skins[modelID] ~= nil
-end
-
--- Check if a custom object is loaded
-function isCustomObjectLoaded(modelID)
-    return loadedModels.objects[modelID] ~= nil
-end
-
--- Get base vehicle ID for custom vehicle
-function getCustomVehicleBaseID(modelID)
-    if loadedModels.vehicles[modelID] then
-        return loadedModels.vehicles[modelID].baseID
-    end
-    return nil
-end
-
--- Get base skin ID for custom skin
-function getCustomSkinBaseID(modelID)
-    if loadedModels.skins[modelID] then
-        return loadedModels.skins[modelID].baseID
-    end
-    return nil
-end
-
--- Get base object ID for custom object
-function getCustomObjectBaseID(modelID)
-    if loadedModels.objects[modelID] then
-        return loadedModels.objects[modelID].baseID
-    end
-    return nil
-end
-
--- Event handlers for server-triggered model loading
-addEvent("loadCustomVehicleModel", true)
-addEventHandler("loadCustomVehicleModel", root, function(modelData)
-    loadClientVehicleModel(modelData)
-end)
-
-addEvent("loadCustomSkinModel", true)
-addEventHandler("loadCustomSkinModel", root, function(modelData)
-    loadClientSkinModel(modelData)
-end)
-
-addEvent("loadCustomObjectModel", true)
-addEventHandler("loadCustomObjectModel", root, function(modelData)
-    loadClientObjectModel(modelData)
-end)
-
--- Initialize on resource start
--- Ensure custom model is applied when vehicle streams in
-addEventHandler("onClientElementStreamIn", root, function()
-    if getElementType(source) == "vehicle" then
-        local customModelID = getElementData(source, "customModelID")
-        if customModelID and isCustomVehicleLoaded(customModelID) then
-            local baseID = getCustomVehicleBaseID(customModelID)
-            if baseID then
-                engineChangeModel(source, baseID)
-            end
-        end
-    elseif getElementType(source) == "ped" then
-        local customSkinID = getElementData(source, "customSkinID")
-        if customSkinID and isCustomSkinLoaded(customSkinID) then
-            local baseID = getCustomSkinBaseID(customSkinID)
-            if baseID then
-                engineChangeModel(source, baseID)
-            end
-        end
-    elseif getElementType(source) == "object" then
-        local customObjectID = getElementData(source, "customObjectID")
-        if customObjectID and isCustomObjectLoaded(customObjectID) then
-            local baseID = getCustomObjectBaseID(customObjectID)
-            if baseID then
-                engineChangeModel(source, baseID)
-            end
-        end
-    end
-end)
+-- Delay để đảm bảo resource đã load hoàn toàn
 addEventHandler("onClientResourceStart", resourceRoot, function()
-    outputDebugString("[MODELS] Client model loading system initialized")
-end)
+    clientLog("CLIENNT", "[CLIENT] onClientResourceStart triggered")
 
-outputDebugString("[MODELS] Client Model Loading System loaded")
+    -- Đợi thêm 1 giây để đảm bảo mọi thứ đã sẵn sàng
+    setTimer(function()
+        clientLog("CLIENNT", "[CLIENT] Starting custom vehicle registration...")
+
+        if not MTA_MODEL_DATA then
+            clientLog("CLIENNT", "[CLIENT] ❌ MTA_MODEL_DATA is nil!")
+            return
+        end
+
+        if not MTA_MODEL_DATA.SERVER_VEHICLE_MODELS then
+            clientLog("CLIENNT", "[CLIENT] ❌ MTA_MODEL_DATA.SERVER_VEHICLE_MODELS is nil!")
+            return
+        end
+
+        clientLog("CLIENNT", "[CLIENT] Found " .. #MTA_MODEL_DATA.SERVER_VEHICLE_MODELS .. " vehicle models to register")
+
+        for _, v in ipairs(MTA_MODEL_DATA.SERVER_VEHICLE_MODELS) do
+            local vehicleName = v.vehicleName or v.baseName or ("Vehicle_" .. v.cid)
+            clientLog("CLIENNT", "[CLIENT] Attempting to register: " .. vehicleName .. " (CID: " .. v.cid .. ")")
+
+            local success, realId = pcall(function()
+                return addModels:addVehicleModel({
+                    dff = "files/models/Vehicle/" .. v.dff,
+                    txd = "files/models/Vehicle/" .. v.txd,
+                    name = vehicleName,
+                })
+            end)
+
+            if success and realId then
+                local cid = v.cid -- ví dụ 30001
+                customVehicleModels[cid] = { realId = realId, name = vehicleName }
+
+                clientLog("CLIENNT", ("✅ Registered custom %s CID=%d -> realId=%d"):format(vehicleName, cid, realId))
+
+                -- Gửi mapping sang server ngay tại đây
+                triggerServerEvent("onClientRegisterCustomVehicle", resourceRoot, {
+                    cid = cid,
+                    realId = realId,
+                    baseName = vehicleName
+                })
+            else
+                clientLog("CLIENNT",
+                    "[CLIENT] ❌ Failed to register model for " .. vehicleName .. " - Error: " .. tostring(realId))
+            end
+        end
+
+        clientLog("CLIENNT", "[CLIENT] Custom vehicle registration completed!")
+    end, 2000, 1) -- Tăng delay lên 2 giây
+end)

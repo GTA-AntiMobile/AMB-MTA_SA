@@ -127,18 +127,18 @@ function getJailPosition()
 end
 
 -- Police command: /arrest
-addCommandHandler("arrest", function(player, cmd, targetName, time, ...)
+addCommandHandler("arrest", function(player, _, playerIdOrName, time, ...)
     if not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You are not a police officer!", player)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox(COLOR_YELLOW .. "Usage: /arrest [player] [time] [reason]", player)
         return
     end
     
-    local target = getPlayerFromPartialName(targetName)
+    local target = getPlayerFromPartialName(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -171,18 +171,18 @@ addCommandHandler("arrest", function(player, cmd, targetName, time, ...)
 end)
 
 -- Police command: /release
-addCommandHandler("release", function(player, cmd, targetName)
-    if not isPlayerAdmin(player, ADMIN_LEVEL_MODERATOR) and not isPlayerCop(player) then
+addCommandHandler("release", function(player, _, playerIdOrName)
+    if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) and not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You don't have permission to use this command!", player)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox(COLOR_YELLOW .. "Usage: /release [player]", player)
         return
     end
     
-    local target = getPlayerFromPartialName(targetName)
+    local target = getPlayerFromPartialName(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -200,18 +200,18 @@ addCommandHandler("release", function(player, cmd, targetName)
 end)
 
 -- Police command: /wanted
-addCommandHandler("wanted", function(player, cmd, targetName, level, ...)
+addCommandHandler("wanted", function(player, _, playerIdOrName, level, ...)
     if not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You are not a police officer!", player)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox(COLOR_YELLOW .. "Usage: /wanted [player] [level 1-6] [reason]", player)
         return
     end
     
-    local target = getPlayerFromPartialName(targetName)
+    local target = getPlayerFromPartialName(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -238,18 +238,18 @@ addCommandHandler("wanted", function(player, cmd, targetName, level, ...)
 end)
 
 -- Police command: /unwanted
-addCommandHandler("unwanted", function(player, cmd, targetName)
+addCommandHandler("unwanted", function(player, _, playerIdOrName)
     if not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You are not a police officer!", player)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox(COLOR_YELLOW .. "Usage: /unwanted [player]", player)
         return
     end
     
-    local target = getPlayerFromPartialName(targetName)
+    local target = getPlayerFromPartialName(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -271,18 +271,18 @@ addCommandHandler("unwanted", function(player, cmd, targetName)
 end)
 
 -- Police command: /ticket
-addCommandHandler("ticket", function(player, cmd, targetName, amount, ...)
+addCommandHandler("ticket", function(player, _, playerIdOrName, amount, ...)
     if not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You are not a police officer!", player)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox(COLOR_YELLOW .. "Usage: /ticket [player] [amount] [reason]", player)
         return
     end
     
-    local target = getPlayerFromPartialName(targetName)
+    local target = getPlayerFromPartialName(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -313,7 +313,7 @@ addCommandHandler("ticket", function(player, cmd, targetName, amount, ...)
 end)
 
 -- Police command: /backup
-addCommandHandler("backup", function(player, cmd, ...)
+addCommandHandler("backup", function(player, _, ...)
     if not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You are not a police officer!", player)
         return
@@ -344,18 +344,18 @@ addCommandHandler("backup", function(player, cmd, ...)
 end)
 
 -- Police command: /tazer
-addCommandHandler("tazer", function(player, cmd, targetName)
+addCommandHandler("tazer", function(player, _, playerIdOrName)
     if not isPlayerCop(player) then
         outputChatBox(COLOR_RED .. "You are not a police officer!", player)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox(COLOR_YELLOW .. "Usage: /tazer [player]", player)
         return
     end
     
-    local target = getPlayerFromPartialName(targetName)
+    local target = getPlayerFromPartialName(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return

@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug Lua File",
+      "type": "LuaHelper-Debug",
+      "request": "launch",
+      "program": "${file}",
+      "stopOnEntry": true,
+      "args": [],
+      // tuỳ chọn thêm
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
