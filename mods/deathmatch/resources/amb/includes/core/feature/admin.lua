@@ -28,18 +28,18 @@ local adminSystem = {
 }
 
 -- Suspension system
-addCommandHandler("osuspend", function(player, cmd, targetName, hours, ...)
+addCommandHandler("osuspend", function(player, _, playerIdOrName, hours, ...)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not hours or not ... then
+    if not playerIdOrName or not hours or not ... then
         outputChatBox("Su dung: /osuspend [player] [hours] [reason]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -77,7 +77,7 @@ addCommandHandler("osuspend", function(player, cmd, targetName, hours, ...)
     end, 2000, 1)
 end)
 
-addCommandHandler("ounsuspend", function(player, cmd, accountName)
+addCommandHandler("ounsuspend", function(player, _, accountName)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -106,18 +106,18 @@ addCommandHandler("ounsuspend", function(player, cmd, accountName)
 end)
 
 -- Ban system
-addCommandHandler("permaban", function(player, cmd, targetName, ...)
+addCommandHandler("permaban", function(player, _, playerIdOrName, ...)
     if not hasPermission(player, "admin", 4) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not ... then
+    if not playerIdOrName or not ... then
         outputChatBox("Su dung: /permaban [player] [reason]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -139,7 +139,7 @@ addCommandHandler("permaban", function(player, cmd, targetName, ...)
     banPlayer(target, true, false, false, player, reason)
 end)
 
-addCommandHandler("banaccount", function(player, cmd, accountName, ...)
+addCommandHandler("banaccount", function(player, _, accountName, ...)
     if not hasPermission(player, "admin", 4) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -171,7 +171,7 @@ addCommandHandler("banaccount", function(player, cmd, accountName, ...)
     outputChatBox("Account " .. accountName .. " da bi ban (offline)", player, 255, 255, 0)
 end)
 
-addCommandHandler("unban", function(player, cmd, accountName)
+addCommandHandler("unban", function(player, _, accountName)
     if not hasPermission(player, "admin", 4) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -191,7 +191,7 @@ addCommandHandler("unban", function(player, cmd, accountName)
 end)
 
 -- IP ban system
-addCommandHandler("banip", function(player, cmd, ip, ...)
+addCommandHandler("banip", function(player, _, ip, ...)
     if not hasPermission(player, "admin", 5) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -220,7 +220,7 @@ addCommandHandler("banip", function(player, cmd, ip, ...)
     end
 end)
 
-addCommandHandler("unbanip", function(player, cmd, ip)
+addCommandHandler("unbanip", function(player, _, ip)
     if not hasPermission(player, "admin", 5) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -240,18 +240,18 @@ addCommandHandler("unbanip", function(player, cmd, ip)
 end)
 
 -- IP check system
-addCommandHandler("ip", function(player, cmd, targetName)
+addCommandHandler("ip", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /ip [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -261,18 +261,18 @@ addCommandHandler("ip", function(player, cmd, targetName)
     outputChatBox("IP cua " .. getPlayerName(target) .. ": " .. ip, player, 255, 255, 0)
 end)
 
-addCommandHandler("ipcheck", function(player, cmd, targetName)
+addCommandHandler("ipcheck", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /ipcheck [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -296,18 +296,18 @@ addCommandHandler("ipcheck", function(player, cmd, targetName)
 end)
 
 -- Fine system
-addCommandHandler("fine", function(player, cmd, targetName, amount, ...)
+addCommandHandler("fine", function(player, _, playerIdOrName, amount, ...)
     if not hasPermission(player, "admin", 1) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount or not ... then
+    if not playerIdOrName or not amount or not ... then
         outputChatBox("Su dung: /fine [player] [amount] [reason]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -327,18 +327,18 @@ addCommandHandler("fine", function(player, cmd, targetName, amount, ...)
     outputChatBox("Ban bi phat $" .. fineAmount .. ". Ly do: " .. reason, target, 255, 0, 0)
 end)
 
-addCommandHandler("sfine", function(player, cmd, targetName, amount, ...)
+addCommandHandler("sfine", function(player, _, playerIdOrName, amount, ...)
     if not hasPermission(player, "admin", 1) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount or not ... then
+    if not playerIdOrName or not amount or not ... then
         outputChatBox("Su dung: /sfine [player] [amount] [reason]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -383,18 +383,18 @@ addCommandHandler("togreports", function(player)
 end)
 
 -- Weapon and vehicle commands
-addCommandHandler("giveweapon", function(player, cmd, targetName, weaponId, ammo)
+addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponId, ammo)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not weaponId then
+    if not playerIdOrName or not weaponId then
         outputChatBox("Su dung: /giveweapon [player] [weapon ID] [ammo]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -413,18 +413,18 @@ addCommandHandler("giveweapon", function(player, cmd, targetName, weaponId, ammo
     outputChatBox("Admin " .. getPlayerName(player) .. " da give ban weapon " .. weaponId, target, 255, 255, 0)
 end)
 
-addCommandHandler("destroycar", function(player, cmd, targetName)
+addCommandHandler("destroycar", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /destroycar [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -441,18 +441,18 @@ addCommandHandler("destroycar", function(player, cmd, targetName)
     outputChatBox("Xe cua ban da bi admin pha huy!", target, 255, 0, 0)
 end)
 
-addCommandHandler("blowup", function(player, cmd, targetName)
+addCommandHandler("blowup", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /blowup [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -465,18 +465,18 @@ addCommandHandler("blowup", function(player, cmd, targetName)
 end)
 
 -- Vehicle modifications
-addCommandHandler("givenos", function(player, cmd, targetName)
+addCommandHandler("givenos", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /givenos [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -493,18 +493,18 @@ addCommandHandler("givenos", function(player, cmd, targetName)
 end)
 
 -- Health and revival commands
-addCommandHandler("revive", function(player, cmd, targetName)
+addCommandHandler("revive", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 1) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /revive [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -547,18 +547,18 @@ addCommandHandler("revivenear", function(player)
     end
 end)
 
-addCommandHandler("forcedeath", function(player, cmd, targetName)
+addCommandHandler("forcedeath", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /forcedeath [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -569,7 +569,7 @@ addCommandHandler("forcedeath", function(player, cmd, targetName)
 end)
 
 -- Server announcements
-addCommandHandler("motd", function(player, cmd, ...)
+addCommandHandler("motd", function(player, _, ...)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -589,7 +589,7 @@ addCommandHandler("motd", function(player, cmd, ...)
 end)
 
 -- Whitelist system
-addCommandHandler("ipwhitelist", function(player, cmd, action, ip)
+addCommandHandler("ipwhitelist", function(player, _, action, ip)
     if not hasPermission(player, "admin", 6) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return

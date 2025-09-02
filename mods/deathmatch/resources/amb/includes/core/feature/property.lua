@@ -16,7 +16,7 @@ local propertySystem = {
 }
 
 -- House buying system
-addCommandHandler("buyhouse", function(player, cmd, houseID)
+addCommandHandler("buyhouse", function(player, _, houseID)
     if not houseID then
         outputChatBox("Su dung: /buyhouse [ID]", player, 255, 255, 255)
         outputChatBox("Hoac dung trong checkpoint cua nha de mua", player, 255, 255, 255)
@@ -71,7 +71,7 @@ addCommandHandler("buyhouse", function(player, cmd, houseID)
 end)
 
 -- Vietnamese house rental
-addCommandHandler("thuenha", function(player, cmd, action, ...)
+addCommandHandler("thuenha", function(player, _, action, ...)
     if not action then
         outputChatBox("Su dung: /thuenha [thue/traphong/listroom]", player, 255, 255, 255)
         return
@@ -98,7 +98,7 @@ addCommandHandler("thuenha", function(player, cmd, action, ...)
 end)
 
 -- Rent room system
-addCommandHandler("rentroom", function(player, cmd, roomID)
+addCommandHandler("rentroom", function(player, _, roomID)
     if not roomID then
         outputChatBox("Su dung: /rentroom [ID]", player, 255, 255, 255)
         return
@@ -262,7 +262,7 @@ addCommandHandler("shop", function(player)
 end)
 
 -- Vietnamese buy command
-addCommandHandler("mua", function(player, cmd, ...)
+addCommandHandler("mua", function(player, _, ...)
     local item = table.concat({...}, " ")
     if not item or item == "" then
         outputChatBox("Su dung: /mua [ten item]", player, 255, 255, 255)
@@ -273,7 +273,7 @@ addCommandHandler("mua", function(player, cmd, ...)
     executeCommandHandler("buy", player, "buy", ...)
 end)
 
-addCommandHandler("buy", function(player, cmd, ...)
+addCommandHandler("buy", function(player, _, ...)
     local item = table.concat({...}, " "):lower()
     
     local items = {
@@ -319,19 +319,19 @@ addCommandHandler("mailhelp", function(player)
     outputChatBox("/guithu [player] [message] - Gui thu (tieng Viet)", player, 255, 255, 255)
 end)
 
-addCommandHandler("guithu", function(player, cmd, targetName, ...)
+addCommandHandler("guithu", function(player, _, playerIdOrName, ...)
     local message = table.concat({...}, " ")
-    if not targetName or not message or message == "" then
+    if not playerIdOrName or not message or message == "" then
         outputChatBox("Su dung: /guithu [player] [noi dung]", player, 255, 255, 255)
         return
     end
     
-    executeCommandHandler("sendmail", player, "sendmail", targetName, message)
+    executeCommandHandler("sendmail", player, "sendmail", playerIdOrName, message)
 end)
 
-addCommandHandler("sendmail", function(player, cmd, targetName, ...)
+addCommandHandler("sendmail", function(player, _, playerIdOrName, ...)
     local message = table.concat({...}, " ")
-    if not targetName or not message or message == "" then
+    if not playerIdOrName or not message or message == "" then
         outputChatBox("Su dung: /sendmail [player] [message]", player, 255, 255, 255)
         return
     end
@@ -347,7 +347,7 @@ addCommandHandler("sendmail", function(player, cmd, targetName, ...)
     -- Store mail
     local mailID = propertySystem.nextMailID
     propertySystem.mailboxes[mailID] = {
-        to = targetName,
+        to = playerIdOrName,
         from = getPlayerName(player),
         message = message,
         timestamp = getRealTime().timestamp,
@@ -355,10 +355,10 @@ addCommandHandler("sendmail", function(player, cmd, targetName, ...)
     }
     propertySystem.nextMailID = propertySystem.nextMailID + 1
     
-    outputChatBox("Da gui thu cho " .. targetName .. " ($50)", player, 0, 255, 0)
+    outputChatBox("Da gui thu cho " .. playerIdOrName .. " ($50)", player, 0, 255, 0)
     
     -- Notify recipient if online
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if target then
         outputChatBox("Ban co thu moi tu " .. getPlayerName(player), target, 255, 255, 0)
         outputChatBox("Su dung /getmail de doc thu", target, 255, 255, 255)

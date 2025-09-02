@@ -19,93 +19,156 @@ local currentSpeed = 0
 local currentHealth = 100
 local currentFuel = 100
 
+-- Known custom vehicles mapping
+local knownCustomVehicles = {}
+
+-- Initialize speedometer on resource start
+addEventHandler("onClientResourceStart", resourceRoot, function()
+    -- Load custom vehicle models from newmodels_azul
+    local customModels = exports.newmodels_azul:getCustomModels()
+    if customModels and customModels.vehicles then
+        for _, vehicleModel in pairs(customModels.vehicles) do
+            knownCustomVehicles[vehicleModel.id] = vehicleModel.name
+        end
+        clientLog("CLIENNT", "✅ Loaded " .. tostring(#customModels.vehicles) .. " custom vehicles into mapping")
+    else
+        -- Fallback: manually add known custom vehicles
+        knownCustomVehicles[30001] = "Lamborghini"
+        knownCustomVehicles[30002] = "Ferrari"
+        knownCustomVehicles[30003] = "Porsche"
+        clientLog("CLIENNT", "⚠️ Custom models not loaded, using fallback mapping")
+    end
+
+    -- Force disable MTA vehicle name display
+    setPlayerHudComponentVisible("vehicle_name", false)
+    clientLog("CLIENNT", "🚗 [SPEEDOMETER] MTA vehicle name display disabled")
+end)
+
+-- Also disable when player spawns or changes vehicle
+addEventHandler("onClientPlayerSpawn", localPlayer, function()
+    setTimer(function()
+        setPlayerHudComponentVisible("vehicle_name", false)
+        clientLog("CLIENNT", "🚗 [SPEEDOMETER] Vehicle name display disabled on spawn")
+    end, 500, 1)
+end)
+
+-- Debug vehicle entry
+addEventHandler("onClientVehicleEnter", root, function(player, seat)
+    if player == localPlayer and seat == 0 then
+        local vehicle = source
+        local modelID = getElementModel(vehicle)
+
+        -- Nếu là custom vehicle thì gán tên ngay
+        if knownCustomVehicles[modelID] then
+            local name = knownCustomVehicles[modelID]
+            setElementData(vehicle, "customVehicleName", name)
+            clientLog("CLIENNT", ("🚗 [SPEEDOMETER] Entered custom vehicle: %d (%s)"):format(modelID, name))
+        else
+            -- Standard GTA vehicle
+            local defaultName = getVehicleName(vehicle) or ("Vehicle " .. modelID)
+            setElementData(vehicle, "customVehicleName", defaultName)
+            clientLog("CLIENNT", ("🚗 [SPEEDOMETER] Entered custom vehicle: %d (%s)"):format(modelID, defaultName))
+        end
+
+        -- Force update speedometer
+        currentVehicle = vehicle
+    end
+end)
+
+-- Debug vehicle exit
+addEventHandler("onClientVehicleExit", root, function(player, seat)
+    if player == localPlayer then
+        clientLog("CLIENNT", "🚶 [SPEEDOMETER] Player exited vehicle")
+        currentVehicle = nil
+    end
+end)
+
 -- Get vehicle speed in KM/H
 function getVehicleSpeed(vehicle)
     if not vehicle then return 0 end
-    
-    local vx, vy, vz = getElementVelocity(vehicle)
-    local speed = math.sqrt(vx^2 + vy^2 + vz^2) * 180 -- Convert to KM/H
-    return math.floor(speed)
-end
 
--- Custom Vehicle Name System (Client)
-function getCustomVehicleName(vehicle)
-    if not isElement(vehicle) or getElementType(vehicle) ~= "vehicle" then
-        return "Unknown Vehicle"
-    end
-    
-    -- Get vehicle model ID
-    local modelID = getElementModel(vehicle)
-    
-    -- For standard GTA vehicles (400-611), always use default names
-    if modelID >= 400 and modelID <= 611 then
-        return getVehicleName(vehicle) or ("Vehicle " .. modelID)
-    end
-    
-    -- For custom vehicles (30001+), try to get custom name
-    if modelID >= 30001 then
-        -- First check element data for temporary custom names
-        local tempName = getElementData(vehicle, "customVehicleName")
-        if tempName then
-            return tempName
-        end
-        
-        -- Try to get custom vehicle name from newmodels_azul
-        local customName = exports.newmodels_azul:getCustomModelName(modelID)
-        if customName then
-            return customName
-        end
-        
-        -- Fallback: Check if it's a registered custom vehicle
-        local customModels = exports.newmodels_azul:getCustomModels()
-        if customModels and customModels[modelID] then
-            return customModels[modelID].name or ("Custom Vehicle " .. modelID)
-        end
-        
-        -- Final fallback for custom vehicles
-        return "Custom Vehicle " .. modelID
-    end
-    
-    -- Fallback for any other vehicles
-    return getVehicleName(vehicle) or ("Vehicle " .. modelID)
+    local vx, vy, vz = getElementVelocity(vehicle)
+    local speed = math.sqrt(vx ^ 2 + vy ^ 2 + vz ^ 2) * 180 -- Convert to KM/H
+    return math.floor(speed)
 end
 
 -- Get vehicle health percentage
 function getVehicleHealthPercent(vehicle)
     if not vehicle then return 100 end
-    
+
     local health = getElementHealth(vehicle)
     return math.floor((health / 1000) * 100)
 end
 
 -- Draw speedometer
+
+-- Biến tạm lưu tên xe custom đang chờ sync
+local pendingVehicleName = nil
+local pendingVehicle = nil
+local pendingRetry = 0
+
 function drawSpeedometer()
     if not speedometerEnabled then return end
-    
+
     local player = getLocalPlayer()
     local vehicle = getPedOccupiedVehicle(player)
-    
+
     if not vehicle then
         currentVehicle = nil
+        pendingVehicleName = nil
+        pendingVehicle = nil
+        pendingRetry = 0
         return
     end
-    
+
     currentVehicle = vehicle
-    currentSpeed = getVehicleSpeed(vehicle)
-    currentHealth = getVehicleHealthPercent(vehicle)
-    
+    currentSpeed = getVehicleSpeed(currentVehicle)
+    currentHealth = getVehicleHealthPercent(currentVehicle)
+
+    local modelID = getElementModel(currentVehicle)
+    local vehicleName = tostring(getCustomVehicleName(currentVehicle) or "Unknown Vehicle")
+
+    -- Nếu là xe custom và tên trả về là fallback, thì retry lấy lại tên
+    if modelID >= 30001 and modelID < 40000 and (vehicleName == nil or (type(vehicleName) == "string" and vehicleName:find("Custom Vehicle"))) then
+        if pendingVehicle ~= currentVehicle then
+            pendingVehicle = currentVehicle
+            pendingRetry = 0
+        end
+        if pendingRetry < 5 then
+            pendingRetry = pendingRetry + 1
+            setTimer(function()
+                local nameTry = getCustomVehicleName(currentVehicle)
+                if nameTry then
+                    pendingVehicleName = tostring(nameTry)
+                end
+            end, 300, 1)
+        end
+        vehicleName = tostring(pendingVehicleName or vehicleName)
+    else
+        pendingVehicleName = nil
+        pendingVehicle = nil
+        pendingRetry = 0
+    end
+
     -- Background
     dxDrawRectangle(SPEEDO_X, SPEEDO_Y, SPEEDO_WIDTH, SPEEDO_HEIGHT, tocolor(0, 0, 0, 150))
     dxDrawRectangle(SPEEDO_X, SPEEDO_Y, SPEEDO_WIDTH, 3, tocolor(255, 165, 0, 255)) -- Orange top border
-    
-    -- Vehicle name with custom support
-    local vehicleName = getCustomVehicleName(vehicle)
-    dxDrawText(vehicleName, SPEEDO_X + 10, SPEEDO_Y + 10, SPEEDO_X + SPEEDO_WIDTH - 10, SPEEDO_Y + 30, tocolor(255, 255, 255, 255), 0.8, font, "center")
-    
+
+    -- Enhanced debug output every 30 frames (about once per second at 30 FPS)
+    if (getTickCount() % 1000) < 50 then -- Show debug roughly once per second
+        clientLog("CLIENNT",
+        "🖥️ [SPEEDOMETER RENDER] Vehicle name: " .. tostring(vehicleName) .. " (Model: " .. modelID .. ")")
+        local elementDataName = getElementData(currentVehicle, "customVehicleName")
+        clientLog("CLIENNT", "🖥️ [SPEEDOMETER RENDER] ElementData: " .. tostring(elementDataName or "None"))
+    end
+
+    dxDrawText(tostring(vehicleName), SPEEDO_X + 10, SPEEDO_Y + 10, SPEEDO_X + SPEEDO_WIDTH - 10, SPEEDO_Y + 30,
+        tocolor(255, 255, 255, 255), 0.8, font, "center")
+
     -- Speed
     dxDrawText("Speed", SPEEDO_X + 10, SPEEDO_Y + 35, 0, 0, tocolor(255, 255, 255, 255), 0.7, font)
     dxDrawText(currentSpeed .. " KM/H", SPEEDO_X + 70, SPEEDO_Y + 35, 0, 0, tocolor(0, 255, 127, 255), 0.8, font)
-    
+
     -- Health bar
     dxDrawText("Health", SPEEDO_X + 10, SPEEDO_Y + 55, 0, 0, tocolor(255, 255, 255, 255), 0.7, font)
     local healthBarWidth = 100
@@ -115,29 +178,29 @@ function drawSpeedometer()
     elseif currentHealth > 25 then
         healthColor = tocolor(255, 255, 0, 255)
     end
-    
+
     -- Health bar background
     dxDrawRectangle(SPEEDO_X + 70, SPEEDO_Y + 57, healthBarWidth, 12, tocolor(50, 50, 50, 255))
     -- Health bar fill
     dxDrawRectangle(SPEEDO_X + 70, SPEEDO_Y + 57, (healthBarWidth * currentHealth) / 100, 12, healthColor)
     -- Health percentage text
     dxDrawText(currentHealth .. "%", SPEEDO_X + 180, SPEEDO_Y + 55, 0, 0, tocolor(255, 255, 255, 255), 0.7, font)
-    
+
     -- Fuel bar (simulated)
     dxDrawText("Fuel", SPEEDO_X + 10, SPEEDO_Y + 75, 0, 0, tocolor(255, 255, 255, 255), 0.7, font)
     -- Simulate fuel decrease over time
     if not getElementData(vehicle, "fuel") then
         setElementData(vehicle, "fuel", 100)
     end
-    
-    currentFuel = getElementData(vehicle, "fuel") or 100
+
+    currentFuel = tonumber(getElementData(vehicle, "fuel")) or 100
     local fuelColor = tocolor(0, 150, 255, 255)
     if currentFuel < 25 then
         fuelColor = tocolor(255, 0, 0, 255)
     elseif currentFuel < 50 then
         fuelColor = tocolor(255, 255, 0, 255)
     end
-    
+
     -- Fuel bar background
     dxDrawRectangle(SPEEDO_X + 70, SPEEDO_Y + 77, healthBarWidth, 12, tocolor(50, 50, 50, 255))
     -- Fuel bar fill
@@ -153,7 +216,7 @@ function startSpeedometer()
     outputChatBox("🏎️ Speedometer enabled", 0, 255, 127)
 end
 
--- Stop speedometer  
+-- Stop speedometer
 function stopSpeedometer()
     removeEventHandler("onClientRender", root, drawSpeedometer)
     speedometerEnabled = false
@@ -180,10 +243,10 @@ setTimer(function()
                 local speed = getVehicleSpeed(vehicle)
                 local consumption = 0.1 + (speed * 0.001) -- Base consumption + speed factor
                 fuel = fuel - consumption
-                
+
                 if fuel < 0 then fuel = 0 end
                 setElementData(vehicle, "fuel", fuel)
-                
+
                 -- Stop engine if no fuel
                 if fuel <= 0 then
                     setVehicleEngineState(vehicle, false)

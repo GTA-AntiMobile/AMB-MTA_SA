@@ -48,10 +48,13 @@
     <script src="includes/core/feature/help.lua" type="server" />
 
     <!-- Core System Features -->
-    <script src="includes/core/communication/voice.lua" type="server" />
+    <!-- <script src="includes/core/communication/voice.lua" type="server" /> -->
     <script src="includes/core/communication/chat.lua" type="server" />
     <script src="includes/core/navigation/gps.lua" type="server" />
     <script src="includes/core/vehicles/fuel.lua" type="server" />
+    
+    <!-- Test Commands for debugging -->
+    <!-- <script src="includes/test_command.lua" type="server" /> -->
 
     <!-- Shared Utilities -->
     <script src="shared/config.lua" type="shared" />
@@ -104,8 +107,10 @@
     <!-- Client-side Features -->
     <script src="includes/client/scoreboard.lua" type="client" />
     <script src="includes/client/speedometer.lua" type="client" />
-    <script src="includes/client/voice.lua" type="client" />
+    <!-- <script src="includes/client/voice.lua" type="client" /> -->
     <script src="includes/client/gps.lua" type="client" />
+    <!-- <script src="includes/client/chatbox_config.lua" type="client" /> -->
+    <script src="includes/client/input_handler.lua" type="client" />
     <script src="includes/client/models/loader.lua" type="client" />
     <script src="includes/client/fly/flyMode.lua" type="client" />
 

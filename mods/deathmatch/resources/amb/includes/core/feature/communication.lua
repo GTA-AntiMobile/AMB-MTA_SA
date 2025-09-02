@@ -68,7 +68,7 @@ addCommandHandler("phone", function(player)
 end)
 
 -- Make phone call
-addCommandHandler("call", function(player, cmd, targetNumber)
+addCommandHandler("call", function(player, _, targetNumber)
     local phoneNumber = getElementData(player, "player.phoneNumber")
     if not phoneNumber then
         outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)
@@ -210,7 +210,7 @@ addCommandHandler("hangup", function(player)
 end)
 
 -- Send SMS
-addCommandHandler("sms", function(player, cmd, targetNumber, ...)
+addCommandHandler("sms", function(player, _, targetNumber, ...)
     local phoneNumber = getElementData(player, "player.phoneNumber")
     if not phoneNumber then
         outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)
@@ -300,7 +300,7 @@ addCommandHandler("contacts", function(player)
     end
 end)
 
-addCommandHandler("addcontact", function(player, cmd, number, ...)
+addCommandHandler("addcontact", function(player, _, number, ...)
     local phoneNumber = getElementData(player, "player.phoneNumber")
     if not phoneNumber then return end
     
@@ -321,7 +321,7 @@ addCommandHandler("addcontact", function(player, cmd, number, ...)
     outputChatBox("Da them " .. name .. " (" .. number .. ") vao danh ba", player, 0, 255, 0)
 end)
 
-addCommandHandler("removecontact", function(player, cmd, number)
+addCommandHandler("removecontact", function(player, _, number)
     local phoneNumber = getElementData(player, "player.phoneNumber")
     if not phoneNumber then return end
     
@@ -380,7 +380,7 @@ addCommandHandler("speakerphone", function(player)
 end)
 
 -- Phone plans
-addCommandHandler("phoneplan", function(player, cmd, newPlan)
+addCommandHandler("phoneplan", function(player, _, newPlan)
     local phoneNumber = getElementData(player, "player.phoneNumber")
     if not phoneNumber then return end
     
@@ -422,7 +422,7 @@ addCommandHandler("phoneplan", function(player, cmd, newPlan)
 end)
 
 -- Phone book (directory)
-addCommandHandler("phonebook", function(player, cmd, searchName)
+addCommandHandler("phonebook", function(player, _, searchName)
     if not searchName then
         outputChatBox("Su dung: /phonebook [player name]", player, 255, 255, 255)
         outputChatBox("Tim kiem so dien thoai cua player khac", player, 255, 255, 255)
@@ -488,7 +488,7 @@ addEventHandler("onPlayerChat", root, function(message, messageType)
 end)
 
 -- Emergency calls
-addCommandHandler("911", function(player, cmd, ...)
+addCommandHandler("911", function(player, _, ...)
     local phoneNumber = getElementData(player, "player.phoneNumber")
     if not phoneNumber then
         outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)

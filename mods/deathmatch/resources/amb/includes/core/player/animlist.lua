@@ -30,7 +30,7 @@ local animationCategories = {
 }
 
 -- Main animation command
-addCommandHandler("anim", function(player, cmd, category, animName)
+addCommandHandler("anim", function(player, _, category, animName)
     if not category then
         outputChatBox("=== ANIMATION SYSTEM ===", player, 255, 255, 0)
         outputChatBox("Categories: dance, greeting, emotions, actions", player, 255, 255, 255)
@@ -84,7 +84,7 @@ addCommandHandler("anim", function(player, cmd, category, animName)
 end)
 
 -- List animations in category
-addCommandHandler("animlist", function(player, cmd, category)
+addCommandHandler("animlist", function(player, _, category)
     if not category then
         outputChatBox("=== ANIMATION CATEGORIES ===", player, 255, 255, 0)
         for cat, _ in pairs(animationCategories) do
@@ -119,7 +119,7 @@ addCommandHandler("stopanim", function(player, cmd)
 end)
 
 -- Dance command shortcut
-addCommandHandler("dance", function(player, cmd, danceNum)
+addCommandHandler("dance", function(player, _, danceNum)
     local danceNumber = tonumber(danceNum) or 1
     if danceNumber < 1 or danceNumber > 4 then
         danceNumber = 1

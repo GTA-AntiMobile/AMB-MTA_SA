@@ -95,7 +95,7 @@ addCommandHandler("dealerships", function(player, cmd)
 end)
 
 -- Buy vehicle from dealership
-addCommandHandler("buyvehicle", function(player, cmd, vehicleIndex)
+addCommandHandler("buyvehicle", function(player, _, vehicleIndex)
     if not vehicleIndex then
         outputChatBox("USAGE: /buyvehicle [so_thu_tu]", player, 255, 255, 255)
         outputChatBox("Su dung /dealership de xem danh sach xe", player, 255, 255, 255)

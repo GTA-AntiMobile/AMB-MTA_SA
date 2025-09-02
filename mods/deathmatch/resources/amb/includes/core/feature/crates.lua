@@ -47,7 +47,7 @@ addCommandHandler("crates", function(player)
 end)
 
 -- Create/destroy crates (admin only)
-addCommandHandler("destroycrate", function(player, cmd, crateID)
+addCommandHandler("destroycrate", function(player, _, crateID)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -107,7 +107,7 @@ addCommandHandler("adestroycrate", function(player)
 end)
 
 -- Go to speedcam/crate location
-addCommandHandler("gotospeedcam", function(player, cmd, locationID)
+addCommandHandler("gotospeedcam", function(player, _, locationID)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -134,7 +134,7 @@ addCommandHandler("gotospeedcam", function(player, cmd, locationID)
 end)
 
 -- Go to crate
-addCommandHandler("gotocrate", function(player, cmd, crateID)
+addCommandHandler("gotocrate", function(player, _, crateID)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
@@ -157,7 +157,7 @@ addCommandHandler("gotocrate", function(player, cmd, crateID)
 end)
 
 -- Cargo operations
-addCommandHandler("cargo", function(player, cmd, action)
+addCommandHandler("cargo", function(player, _, action)
     if not hasPermission(player, "police") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return

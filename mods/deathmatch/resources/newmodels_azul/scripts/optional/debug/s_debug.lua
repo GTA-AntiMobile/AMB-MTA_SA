@@ -1,4 +1,4 @@
-addCommandHandler("testveh", function(thePlayer, cmd, id)
+addCommandHandler("testveh", function(thePlayer, _, id)
     id = tonumber(id)
     if not id then
         return outputChatBox("Syntax: /"..cmd.." <default or custom id>", thePlayer)
@@ -15,7 +15,7 @@ addCommandHandler("testveh", function(thePlayer, cmd, id)
     outputChatBox("Vehicle created with ID "..id..".", thePlayer)
 end, false, false)
 
-addCommandHandler("testobj", function(thePlayer, cmd, id)
+addCommandHandler("testobj", function(thePlayer, _, id)
     id = tonumber(id)
     if not id then
         return outputChatBox("Syntax: /"..cmd.." <default or custom id>", thePlayer)
@@ -32,7 +32,7 @@ addCommandHandler("testobj", function(thePlayer, cmd, id)
     outputChatBox("Object created with ID "..id..".", thePlayer)
 end, false, false)
 
-addCommandHandler("testped", function(thePlayer, cmd, id)
+addCommandHandler("testped", function(thePlayer, _, id)
     id = tonumber(id)
     if not id then
         return outputChatBox("Syntax: /"..cmd.." <default or custom id>", thePlayer)
@@ -49,7 +49,7 @@ addCommandHandler("testped", function(thePlayer, cmd, id)
     outputChatBox("Ped created with ID "..id..".", thePlayer)
 end, false, false)
 
-addCommandHandler("testskin", function(thePlayer, cmd, id)
+addCommandHandler("testskin", function(thePlayer, _, id)
     id = tonumber(id)
     if not id then
         return outputChatBox("Syntax: /"..cmd.." <default or custom id>", thePlayer)
@@ -67,7 +67,7 @@ addCommandHandler("testspawn", function(thePlayer)
     outputChatBox("Player spawned at current location with skin ID "..getElementModel(thePlayer)..".", thePlayer)
 end, false, false)
 
-addCommandHandler("testvehtemp", function(thePlayer, cmd, id)
+addCommandHandler("testvehtemp", function(thePlayer, _, id)
     id = tonumber(id)
     if not id then
         return outputChatBox("Syntax: /"..cmd.." <default or custom id>", thePlayer)

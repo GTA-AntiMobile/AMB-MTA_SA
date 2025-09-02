@@ -93,53 +93,6 @@ function isPlayerAdmin(player, requiredLevel)
     return result
 end
 
--- Custom Vehicle Name System
-function getCustomVehicleName(vehicle)
-    if not isElement(vehicle) or getElementType(vehicle) ~= "vehicle" then
-        return "Unknown Vehicle"
-    end
-    
-    -- Get vehicle model ID
-    local modelID = getElementModel(vehicle)
-    
-    -- For standard GTA vehicles (400-611), ALWAYS use default names
-    if modelID >= 400 and modelID <= 611 then
-        return getVehicleName(vehicle) or VEHICLE_NAMES[modelID] or ("Vehicle " .. modelID)
-    end
-    
-    -- For custom vehicles (30001+), try to get custom name
-    if modelID >= 30001 then
-        -- First check element data for temporary custom names
-        local tempName = getElementData(vehicle, "customVehicleName")
-        if tempName then
-            return tempName
-        end
-        
-        -- Try to get custom vehicle name from newmodels_azul
-        local customName = exports.newmodels_azul:getCustomModelName(modelID)
-        if customName then
-            return customName
-        end
-        
-        -- Fallback: Check if it's a registered custom vehicle
-        local customModels = exports.newmodels_azul:getCustomModels()
-        if customModels and customModels[modelID] then
-            return customModels[modelID].name or ("Custom Vehicle " .. modelID)
-        end
-        
-        -- Final fallback for custom vehicles
-        return "Custom Vehicle " .. modelID
-    end
-    
-    -- Fallback for any other vehicles (shouldn't happen normally)
-    return getVehicleName(vehicle) or ("Vehicle " .. modelID)
-end
-
--- Enhanced vehicle name function with custom support
-function getVehicleNameWithCustom(vehicle)
-    return getCustomVehicleName(vehicle)
-end
-
 -- Permission system for role-based access control with GOD support
 function hasPermission(player, permission, level)
     if not isElement(player) then return false end

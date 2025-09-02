@@ -166,18 +166,18 @@ addCommandHandler("zombieweather", function(player)
     end
 end)
 
-addCommandHandler("makezombie", function(player, cmd, targetName)
+addCommandHandler("makezombie", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /makezombie [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -193,18 +193,18 @@ addCommandHandler("makezombie", function(player, cmd, targetName)
     outputChatBox(getPlayerName(target) .. " da tro thanh zombie!", root, 255, 255, 0)
 end)
 
-addCommandHandler("unzombie", function(player, cmd, targetName)
+addCommandHandler("unzombie", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /unzombie [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -224,18 +224,18 @@ addCommandHandler("unzombie", function(player, cmd, targetName)
     outputChatBox("Ban da duoc chua khoi zombie boi admin " .. getPlayerName(player), target, 0, 255, 0)
 end)
 
-addCommandHandler("bite", function(player, cmd, targetName)
+addCommandHandler("bite", function(player, _, playerIdOrName)
     if not getElementData(player, "player.zombie") then
         outputChatBox("Chi zombie moi co the can!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /bite [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -311,18 +311,18 @@ addCommandHandler("buycure", function(player)
 end)
 
 -- Health/Armor commands
-addCommandHandler("sethp", function(player, cmd, targetName, amount)
+addCommandHandler("sethp", function(player, _, playerIdOrName, amount)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /sethp [player] [amount]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -339,7 +339,7 @@ addCommandHandler("sethp", function(player, cmd, targetName, amount)
     outputChatBox("Admin " .. getPlayerName(player) .. " da set mau cua ban thanh " .. hp, target, 255, 255, 0)
 end)
 
-addCommandHandler("setmyhp", function(player, cmd, amount)
+addCommandHandler("setmyhp", function(player, _, amount)
     if not amount then
         outputChatBox("Su dung: /setmyhp [amount]", player, 255, 255, 255)
         return
@@ -355,18 +355,18 @@ addCommandHandler("setmyhp", function(player, cmd, amount)
     outputChatBox("Da set mau cua ban thanh " .. hp, player, 0, 255, 0)
 end)
 
-addCommandHandler("setarmor", function(player, cmd, targetName, amount)
+addCommandHandler("setarmor", function(player, _, playerIdOrName, amount)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /setarmor [player] [amount]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -383,7 +383,7 @@ addCommandHandler("setarmor", function(player, cmd, targetName, amount)
     outputChatBox("Admin " .. getPlayerName(player) .. " da set giap cua ban thanh " .. armor, target, 255, 255, 0)
 end)
 
-addCommandHandler("setmyarmor", function(player, cmd, amount)
+addCommandHandler("setmyarmor", function(player, _, amount)
     if not amount then
         outputChatBox("Su dung: /setmyarmor [amount]", player, 255, 255, 255)
         return
@@ -399,7 +399,7 @@ addCommandHandler("setmyarmor", function(player, cmd, amount)
     outputChatBox("Da set giap cua ban thanh " .. armor, player, 0, 255, 0)
 end)
 
-addCommandHandler("setarmorall", function(player, cmd, amount)
+addCommandHandler("setarmorall", function(player, _, amount)
     if not hasPermission(player, "admin") then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return

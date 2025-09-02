@@ -70,7 +70,7 @@ addCommandHandler("balance", function(player)
     executeCommandHandler("taikhoan", player)
 end)
 
-addCommandHandler("guitien", function(player, cmd, amount)
+addCommandHandler("guitien", function(player, _, amount)
     if not amount then
         outputChatBox("Su dung: /guitien [so tien]", player, 255, 255, 255)
         return
@@ -137,11 +137,11 @@ addCommandHandler("guitien", function(player, cmd, amount)
     outputChatBox("So du moi: $" .. bankAccount.balance, player, 255, 255, 255)
 end)
 
-addCommandHandler("deposit", function(player, cmd, amount)
-    executeCommandHandler("guitien", player, cmd, amount)
+addCommandHandler("deposit", function(player, _, amount)
+    executeCommandHandler("guitien", player, _, amount)
 end)
 
-addCommandHandler("ruttien", function(player, cmd, amount)
+addCommandHandler("ruttien", function(player, _, amount)
     if not amount then
         outputChatBox("Su dung: /ruttien [so tien]", player, 255, 255, 255)
         return
@@ -206,12 +206,12 @@ addCommandHandler("ruttien", function(player, cmd, amount)
     outputChatBox("So du moi: $" .. bankAccount.balance, player, 255, 255, 255)
 end)
 
-addCommandHandler("withdraw", function(player, cmd, amount)
-    executeCommandHandler("ruttien", player, cmd, amount)
+addCommandHandler("withdraw", function(player, _, amount)
+    executeCommandHandler("ruttien", player, _, amount)
 end)
 
-addCommandHandler("chuyentien", function(player, cmd, targetName, amount)
-    if not targetName or not amount then
+addCommandHandler("chuyentien", function(player, _, playerIdOrName, amount)
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /chuyentien [player] [so tien]", player, 255, 255, 255)
         return
     end
@@ -222,7 +222,7 @@ addCommandHandler("chuyentien", function(player, cmd, targetName, amount)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -288,23 +288,23 @@ addCommandHandler("chuyentien", function(player, cmd, targetName, amount)
     outputChatBox("So du moi: $" .. targetAccount.balance, target, 255, 255, 255)
 end)
 
-addCommandHandler("wiretransfer", function(player, cmd, targetName, amount)
-    executeCommandHandler("chuyentien", player, cmd, targetName, amount)
+addCommandHandler("wiretransfer", function(player, _, playerIdOrName, amount)
+    executeCommandHandler("chuyentien", player, _, playerIdOrName, amount)
 end)
 
 -- Admin banking commands
-addCommandHandler("aguitien", function(player, cmd, targetName, amount)
+addCommandHandler("aguitien", function(player, _, playerIdOrName, amount)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /aguitien [player] [amount]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -329,18 +329,18 @@ addCommandHandler("aguitien", function(player, cmd, targetName, amount)
     outputChatBox("Admin " .. getPlayerName(player) .. " da them $" .. addAmount .. " vao tai khoan cua ban", target, 255, 255, 0)
 end)
 
-addCommandHandler("aruttien", function(player, cmd, targetName, amount)
+addCommandHandler("aruttien", function(player, _, playerIdOrName, amount)
     if not hasPermission(player, "admin", 3) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /aruttien [player] [amount]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -366,18 +366,18 @@ addCommandHandler("aruttien", function(player, cmd, targetName, amount)
     outputChatBox("Admin " .. getPlayerName(player) .. " da tru $" .. removeAmount .. " tu tai khoan cua ban", target, 255, 255, 0)
 end)
 
-addCommandHandler("ataikhoan", function(player, cmd, targetName)
+addCommandHandler("ataikhoan", function(player, _, playerIdOrName)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName then
+    if not playerIdOrName then
         outputChatBox("Su dung: /ataikhoan [player]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -419,7 +419,7 @@ addCommandHandler("ataikhoan", function(player, cmd, targetName)
 end)
 
 -- Business system
-addCommandHandler("shopbusinessname", function(player, cmd, ...)
+addCommandHandler("shopbusinessname", function(player, _, ...)
     if not ... then
         outputChatBox("Su dung: /shopbusinessname [business name]", player, 255, 255, 255)
         return
@@ -471,7 +471,7 @@ addCommandHandler("shoptokens", function(player)
     outputChatBox("Su dung: /buytoken [item number]", player, 255, 255, 255)
 end)
 
-addCommandHandler("buytoken", function(player, cmd, itemId)
+addCommandHandler("buytoken", function(player, _, itemId)
     if not itemId then
         executeCommandHandler("shoptokens", player)
         return
@@ -521,18 +521,18 @@ addCommandHandler("buytoken", function(player, cmd, itemId)
 end)
 
 -- Token giving system
-addCommandHandler("givetoken", function(player, cmd, targetName, amount)
+addCommandHandler("givetoken", function(player, _, playerIdOrName, amount)
     if not hasPermission(player, "admin", 2) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
     
-    if not targetName or not amount then
+    if not playerIdOrName or not amount then
         outputChatBox("Su dung: /givetoken [player] [amount]", player, 255, 255, 255)
         return
     end
     
-    local target = getPlayerFromName(targetName)
+    local target = getPlayerFromName(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return

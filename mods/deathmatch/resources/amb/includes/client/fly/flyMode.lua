@@ -1,7 +1,7 @@
 -- client/fly_client.lua
 
-local flySpeed = 1.0
-local verticalSpeed = 0.7
+local flySpeed = 0.8
+local verticalSpeed = 0.6
 local verticalOffset = 5.0
 local isFlying = false
 
@@ -9,11 +9,43 @@ local isFlying = false
 addEvent("flyMode:set", true)
 addEventHandler("flyMode:set", localPlayer, function(enabled)
     isFlying = enabled
-    toggleControl("jump", not enabled)
-    toggleControl("sprint", not enabled)
-    toggleControl("fire", not enabled)
-    toggleControl("enter_exit", not enabled)
-    -- setElementCollisionsEnabled(localPlayer, not enabled) -- nếu muốn xuyên tường
+    
+    if enabled then
+        -- Disable collision with world but keep collision with other players/vehicles
+        setElementCollisionsEnabled(localPlayer, false)
+        -- Disable physics
+        setElementFrozen(localPlayer, true)
+        -- Disable controls
+        toggleControl("jump", false)
+        toggleControl("sprint", false)
+        toggleControl("fire", false)
+        toggleControl("enter_exit", false)
+        toggleControl("crouch", false)
+        
+        -- Set initial position safely above ground
+        local x, y, z = getElementPosition(localPlayer)
+        local groundZ = getGroundPosition(x, y, z + 1000)
+        if groundZ then
+            setElementPosition(localPlayer, x, y, math.max(z, groundZ + verticalOffset))
+        end
+    else
+        -- Re-enable everything
+        setElementCollisionsEnabled(localPlayer, true)
+        setElementFrozen(localPlayer, false)
+        toggleControl("jump", true)
+        toggleControl("sprint", true)
+        toggleControl("fire", true)
+        toggleControl("enter_exit", true)
+        toggleControl("crouch", true)
+        
+        -- Land safely
+        local x, y, z = getElementPosition(localPlayer)
+        local groundZ = getGroundPosition(x, y, z + 1000)
+        if groundZ then
+            setElementPosition(localPlayer, x, y, groundZ + 1.0)
+        end
+        setElementVelocity(localPlayer, 0, 0, 0)
+    end
 end)
 
 -- bay mỗi frame
@@ -29,6 +61,7 @@ addEventHandler("onClientRender", root, function()
 
     local moveX, moveY, moveZ = 0, 0, 0
 
+    -- Movement controls
     if getKeyState("w") then
         moveX = moveX + dirX * flySpeed
         moveY = moveY + dirY * flySpeed
@@ -50,19 +83,49 @@ addEventHandler("onClientRender", root, function()
         moveY = moveY + rightY * flySpeed
     end
 
-    if getKeyState("space") then moveZ = moveZ + verticalSpeed end
-    if getKeyState("lctrl") then moveZ = moveZ - verticalSpeed end
-
-    if moveX ~= 0 or moveY ~= 0 or moveZ ~= 0 then
-        setElementPosition(localPlayer, x + moveX, y + moveY, z + moveZ)
+    -- Vertical movement
+    if getKeyState("space") then 
+        moveZ = moveZ + verticalSpeed 
+    end
+    if getKeyState("lctrl") then 
+        moveZ = moveZ - verticalSpeed 
     end
 
-    local groundZ = getGroundPosition(x, y, z)
+    -- Calculate new position
+    local newX, newY, newZ = x + moveX, y + moveY, z + moveZ
+    
+    -- Ensure minimum height above ground
+    local groundZ = getGroundPosition(newX, newY, newZ + 100)
     if groundZ then
-        z = math.max(z + moveZ, groundZ + verticalOffset)
-    else
-        z = z + moveZ
+        newZ = math.max(newZ, groundZ + verticalOffset)
     end
+    
+    -- Apply movement only if there's actual movement
+    if moveX ~= 0 or moveY ~= 0 or moveZ ~= 0 then
+        setElementPosition(localPlayer, newX, newY, newZ)
+        -- Reset velocity to prevent physics interference
+        setElementVelocity(localPlayer, 0, 0, 0)
+    end
+end)
 
-    setElementVelocity(localPlayer, moveX, moveY, moveZ)
+-- Emergency landing on F12
+addEventHandler("onClientKey", root, function(key, press)
+    if key == "F12" and press and isFlying then
+        outputChatBox("🚨 Emergency landing activated!", 255, 255, 0)
+        triggerServerEvent("flyMode:emergencyLanding", localPlayer)
+    end
+end)
+
+-- Prevent fall damage while flying
+addEventHandler("onClientPlayerDamage", localPlayer, function()
+    if isFlying then
+        cancelEvent()
+    end
+end)
+
+-- Auto-disable fly if player gets in vehicle
+addEventHandler("onClientPlayerVehicleEnter", localPlayer, function()
+    if isFlying then
+        triggerServerEvent("flyMode:autoDisable", localPlayer)
+    end
 end)

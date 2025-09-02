@@ -89,15 +89,25 @@ addCommandHandler("tp", function(player, _, playerIdOrName)
     local interior = getElementInterior(target)
     local dimension = getElementDimension(target)
 
-    setElementPosition(player, x + 1, y, z)
-    setElementInterior(player, interior)
-    setElementDimension(player, dimension)
-
-    outputChatBox("Ban da teleport den " .. getPlayerName(target), player, 255, 255, 0)
+    -- Check if player is in a vehicle
+    local vehicle = getPedOccupiedVehicle(player)
+    if vehicle then
+        -- Teleport the vehicle with player
+        setElementPosition(vehicle, x + 2, y, z + 1) -- Offset a bit to avoid collision
+        setElementInterior(vehicle, interior)
+        setElementDimension(vehicle, dimension)
+        outputChatBox("Ban da teleport cung xe den " .. getPlayerName(target), player, 255, 255, 0)
+    else
+        -- Teleport just the player
+        setElementPosition(player, x + 1, y, z)
+        setElementInterior(player, interior)
+        setElementDimension(player, dimension)
+        outputChatBox("Ban da teleport den " .. getPlayerName(target), player, 255, 255, 0)
+    end
 
     -- Log action
     if logAdminAction then
-        logAdminAction(player, "TP", getPlayerName(target), "Teleported to player")
+        logAdminAction(player, "TP", getPlayerName(target), "Teleported to player" .. (vehicle and " (with vehicle)" or ""))
     end
 end)
 
@@ -123,16 +133,27 @@ addCommandHandler("gethere", function(player, _, playerIdOrName)
     local interior = getElementInterior(player)
     local dimension = getElementDimension(player)
 
-    setElementPosition(target, x + 1, y, z)
-    setElementInterior(target, interior)
-    setElementDimension(target, dimension)
-
-    outputChatBox("Ban da goi " .. getPlayerName(target) .. " den ben minh", player, 255, 255, 0)
-    outputChatBox("Ban da bi admin " .. getPlayerName(player) .. " goi den", target, 255, 255, 0)
+    -- Check if target is in a vehicle
+    local vehicle = getPedOccupiedVehicle(target)
+    if vehicle then
+        -- Teleport the vehicle with target
+        setElementPosition(vehicle, x + 2, y, z + 1) -- Offset a bit to avoid collision
+        setElementInterior(vehicle, interior)
+        setElementDimension(vehicle, dimension)
+        outputChatBox("Ban da goi " .. getPlayerName(target) .. " cung xe den ben minh", player, 255, 255, 0)
+        outputChatBox("Ban da bi admin " .. getPlayerName(player) .. " goi cung xe den", target, 255, 255, 0)
+    else
+        -- Teleport just the target
+        setElementPosition(target, x + 1, y, z)
+        setElementInterior(target, interior)
+        setElementDimension(target, dimension)
+        outputChatBox("Ban da goi " .. getPlayerName(target) .. " den ben minh", player, 255, 255, 0)
+        outputChatBox("Ban da bi admin " .. getPlayerName(player) .. " goi den", target, 255, 255, 0)
+    end
 
     -- Log action
     if logAdminAction then
-        logAdminAction(player, "GETHERE", getPlayerName(target), "Teleported player to admin")
+        logAdminAction(player, "GETHERE", getPlayerName(target), "Teleported player to admin" .. (vehicle and " (with vehicle)" or ""))
     end
 
     incrementCommandStat("adminCommands")

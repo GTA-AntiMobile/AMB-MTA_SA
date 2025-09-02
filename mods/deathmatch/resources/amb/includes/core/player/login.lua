@@ -14,7 +14,10 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
     if row then
         local hashed = WP_Hash(password)
         if row.Key == hashed then
+            -- Send success response to client (client will close login window)
             triggerClientEvent(client, "onLoginResponse", root, true, "Login successful!")
+            
+            -- Send welcome message ONLY ONCE to avoid duplication
             outputChatBox("🎉 Welcome back, " .. username .. "!", client, 0, 255, 0)
             outputDebugString("✅ [LOGIN] Player " .. username .. " logged in successfully")
             
