@@ -2,7 +2,6 @@
 -- AMB MTA:SA - Family/Gang System
 -- Gang management and warfare
 -- ================================
-
 -- Family/Gang data structure
 local families = {}
 local familyWars = {}
@@ -20,52 +19,56 @@ local familyRanks = {
 -- Default families
 local defaultFamilies = {
     ["Grove Street"] = {
-        color = { 0, 255, 0 },
-        spawn = { 2495.1, -1687.4, 13.5 },
-        territory = { { 2400, -1800, 2600, -1600 } },
+        color = {0, 255, 0},
+        spawn = {2495.1, -1687.4, 13.5},
+        territory = {{2400, -1800, 2600, -1600}},
         maxMembers = 25,
-        vehicles = { 567, 536, 575, 534 },  -- Savanna, Blade, Broadway, Remington
-        weapons = { 22, 24, 25, 28, 30, 31 }, -- Pistol, Deagle, Shotgun, Uzi, AK, M4
-        headquarters = { 2495.1, -1687.4, 13.5 }
+        vehicles = {567, 536, 575, 534}, -- Savanna, Blade, Broadway, Remington
+        weapons = {22, 24, 25, 28, 30, 31}, -- Pistol, Deagle, Shotgun, Uzi, AK, M4
+        headquarters = {2495.1, -1687.4, 13.5}
     },
     ["Ballas"] = {
-        color = { 255, 0, 255 },
-        spawn = { 2000.8, -1114.4, 26.6 },
-        territory = { { 1900, -1200, 2100, -1000 } },
+        color = {255, 0, 255},
+        spawn = {2000.8, -1114.4, 26.6},
+        territory = {{1900, -1200, 2100, -1000}},
         maxMembers = 25,
-        vehicles = { 567, 536, 575, 534 },
-        weapons = { 22, 24, 25, 28, 30, 31 },
-        headquarters = { 2000.8, -1114.4, 26.6 }
+        vehicles = {567, 536, 575, 534},
+        weapons = {22, 24, 25, 28, 30, 31},
+        headquarters = {2000.8, -1114.4, 26.6}
     },
     ["Vagos"] = {
-        color = { 255, 255, 0 },
-        spawn = { 2787.8, -1926.1, 13.5 },
-        territory = { { 2700, -2000, 2900, -1800 } },
+        color = {255, 255, 0},
+        spawn = {2787.8, -1926.1, 13.5},
+        territory = {{2700, -2000, 2900, -1800}},
         maxMembers = 25,
-        vehicles = { 567, 536, 575, 534 },
-        weapons = { 22, 24, 25, 28, 30, 31 },
-        headquarters = { 2787.8, -1926.1, 13.5 }
+        vehicles = {567, 536, 575, 534},
+        weapons = {22, 24, 25, 28, 30, 31},
+        headquarters = {2787.8, -1926.1, 13.5}
     },
     ["Aztecas"] = {
-        color = { 0, 255, 255 },
-        spawn = { 1672.1, -2335.0, 13.5 },
-        territory = { { 1600, -2400, 1800, -2200 } },
+        color = {0, 255, 255},
+        spawn = {1672.1, -2335.0, 13.5},
+        territory = {{1600, -2400, 1800, -2200}},
         maxMembers = 25,
-        vehicles = { 567, 536, 575, 534 },
-        weapons = { 22, 24, 25, 28, 30, 31 },
-        headquarters = { 1672.1, -2335.0, 13.5 }
+        vehicles = {567, 536, 575, 534},
+        weapons = {22, 24, 25, 28, 30, 31},
+        headquarters = {1672.1, -2335.0, 13.5}
     }
 }
 
 -- Create a family
 function createFamily(name, leader, color)
-    if families[name] then return false end
+    if families[name] then
+        return false
+    end
 
     families[name] = {
         name = name,
         leader = leader,
-        members = { [leader] = 5 }, -- Leader starts as Boss (rank 5)
-        color = color or { 255, 255, 255 },
+        members = {
+            [leader] = 5
+        }, -- Leader starts as Boss (rank 5)
+        color = color or {255, 255, 255},
         money = 0,
         created = getRealTime().timestamp,
         territory = {},
@@ -83,13 +86,21 @@ end
 
 -- Invite player to family
 function invitePlayerToFamily(family, player, inviter)
-    if not families[family] then return false end
-    if families[family].members[player] then return false end
-    if table.count(families[family].members) >= families[family].maxMembers then return false end
+    if not families[family] then
+        return false
+    end
+    if families[family].members[player] then
+        return false
+    end
+    if table.count(families[family].members) >= families[family].maxMembers then
+        return false
+    end
 
     -- Check if inviter has permission (rank 3+)
     local inviterRank = families[family].members[inviter] or 0
-    if inviterRank < 3 then return false end
+    if inviterRank < 3 then
+        return false
+    end
 
     families[family].members[player] = 0 -- Start as Associate
     setElementData(getPlayerFromNameOrId(player), "family", family)
@@ -100,15 +111,23 @@ end
 
 -- Remove player from family
 function removePlayerFromFamily(family, player, remover)
-    if not families[family] then return false end
-    if not families[family].members[player] then return false end
+    if not families[family] then
+        return false
+    end
+    if not families[family].members[player] then
+        return false
+    end
 
     -- Check permissions
     local removerRank = families[family].members[remover] or 0
     local playerRank = families[family].members[player] or 0
 
-    if remover ~= player and removerRank <= playerRank then return false end
-    if families[family].leader == player then return false end -- Can't remove leader
+    if remover ~= player and removerRank <= playerRank then
+        return false
+    end
+    if families[family].leader == player then
+        return false
+    end -- Can't remove leader
 
     families[family].members[player] = nil
     local playerElement = getPlayerFromNameOrId(player)
@@ -137,9 +156,8 @@ addCommandHandler("families", function(player)
     for name, data in pairs(families) do
         count = count + 1
         local memberCount = table.count(data.members)
-        outputChatBox(
-        COLOR_WHITE .. count .. ". " .. name .. " (Leader: " .. data.leader .. ", Members: " .. memberCount .. ")",
-            player)
+        outputChatBox(COLOR_WHITE .. count .. ". " .. name .. " (Leader: " .. data.leader .. ", Members: " ..
+                          memberCount .. ")", player)
     end
     if count == 0 then
         outputChatBox(COLOR_GRAY .. "No families found.", player)
@@ -154,7 +172,7 @@ addCommandHandler("fam", function(player, _, ...)
         return
     end
 
-    local message = table.concat({ ... }, " ")
+    local message = table.concat({...}, " ")
     if not message or #message == 0 then
         outputChatBox(COLOR_YELLOW .. "Usage: /fam [message]", player)
         return
@@ -212,8 +230,8 @@ addCommandHandler("finvite", function(player, _, playerIdOrName)
         outputChatBox(COLOR_GREEN .. "Welcome to the family!", target)
 
         -- Notify family
-        local message = COLOR_YELLOW ..
-        getPlayerName(target) .. " has joined the family (invited by " .. getPlayerName(player) .. ")"
+        local message = COLOR_YELLOW .. getPlayerName(target) .. " has joined the family (invited by " ..
+                            getPlayerName(player) .. ")"
         for memberName, _ in pairs(families[family].members) do
             local member = getPlayerFromNameOrId(memberName)
             if member and member ~= target then
@@ -262,7 +280,8 @@ addCommandHandler("fkick", function(player, _, playerIdOrName)
         end
 
         -- Notify family
-        local message = COLOR_YELLOW .. playerIdOrName .. " has been kicked from the family by " .. getPlayerName(player)
+        local message = COLOR_YELLOW .. playerIdOrName .. " has been kicked from the family by " ..
+                            getPlayerName(player)
         for memberName, _ in pairs(families[family].members) do
             local member = getPlayerFromNameOrId(memberName)
             if member and member ~= target then
@@ -364,8 +383,8 @@ addCommandHandler("fpromote", function(player, _, playerIdOrName)
     local newRankName = familyRanks[currentRank + 1]
     outputChatBox(COLOR_GREEN .. "You promoted " .. playerIdOrName .. " to " .. newRankName .. ".", player)
     if target then
-        outputChatBox(
-        COLOR_GREEN .. "You have been promoted to " .. newRankName .. " by " .. getPlayerName(player) .. ".", target)
+        outputChatBox(COLOR_GREEN .. "You have been promoted to " .. newRankName .. " by " .. getPlayerName(player) ..
+                          ".", target)
     end
 end)
 
@@ -411,8 +430,8 @@ addCommandHandler("fdemote", function(player, _, playerIdOrName)
     local newRankName = familyRanks[currentRank - 1]
     outputChatBox(COLOR_GREEN .. "You demoted " .. playerIdOrName .. " to " .. newRankName .. ".", player)
     if target then
-        outputChatBox(
-        COLOR_ORANGE .. "You have been demoted to " .. newRankName .. " by " .. getPlayerName(player) .. ".", target)
+        outputChatBox(COLOR_ORANGE .. "You have been demoted to " .. newRankName .. " by " .. getPlayerName(player) ..
+                          ".", target)
     end
 end)
 
@@ -451,18 +470,25 @@ addCommandHandler("fwar", function(player, _, targetFamily)
     end
 
     -- Initialize war data
-    if not familyWars[family] then familyWars[family] = {} end
-    if not familyWars[targetFamily] then familyWars[targetFamily] = {} end
+    if not familyWars[family] then
+        familyWars[family] = {}
+    end
+    if not familyWars[targetFamily] then
+        familyWars[targetFamily] = {}
+    end
 
     familyWars[family][targetFamily] = {
         started = getRealTime().timestamp,
-        kills = { [family] = 0, [targetFamily] = 0 }
+        kills = {
+            [family] = 0,
+            [targetFamily] = 0
+        }
     }
     familyWars[targetFamily][family] = familyWars[family][targetFamily]
 
     -- Notify both families
     local warMessage = COLOR_RED .. "WAR DECLARED! " .. COLOR_WHITE .. family .. " vs " .. targetFamily
-    for _, fam in ipairs({ family, targetFamily }) do
+    for _, fam in ipairs({family, targetFamily}) do
         for memberName, _ in pairs(families[fam].members) do
             local member = getPlayerFromNameOrId(memberName)
             if member then
@@ -484,4 +510,3 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end
 end)
 
-outputDebugString("[AMB] Family System loaded successfully!")
