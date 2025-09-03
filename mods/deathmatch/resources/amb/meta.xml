@@ -21,7 +21,6 @@
     <script src="includes/defines.lua" type="server" />
 
     <!-- Core Systems -->
-    <script src="includes/core/models/loader.lua" type="server" />
     <script src="includes/core/admin/players.lua" type="server" />
     <script src="includes/core/admin/commands.lua" type="server" />
     <script src="includes/core/admin/vehicles.lua" type="server" />
@@ -111,7 +110,6 @@
     <script src="includes/client/gps.lua" type="client" />
     <!-- <script src="includes/client/chatbox_config.lua" type="client" /> -->
     <script src="includes/client/input_handler.lua" type="client" />
-    <script src="includes/client/models/loader.lua" type="client" />
     <script src="includes/client/fly/flyMode.lua" type="client" />
 
     <!-- Client events -->

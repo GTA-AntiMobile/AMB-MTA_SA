@@ -138,7 +138,7 @@ addCommandHandler("arrest", function(player, _, playerIdOrName, time, ...)
         return
     end
     
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -182,7 +182,7 @@ addCommandHandler("release", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -211,7 +211,7 @@ addCommandHandler("wanted", function(player, _, playerIdOrName, level, ...)
         return
     end
     
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -249,7 +249,7 @@ addCommandHandler("unwanted", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -282,7 +282,7 @@ addCommandHandler("ticket", function(player, _, playerIdOrName, amount, ...)
         return
     end
     
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -355,7 +355,7 @@ addCommandHandler("tazer", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return

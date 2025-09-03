@@ -358,7 +358,7 @@ addCommandHandler("sendmail", function(player, _, playerIdOrName, ...)
     outputChatBox("Da gui thu cho " .. playerIdOrName .. " ($50)", player, 0, 255, 0)
     
     -- Notify recipient if online
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if target then
         outputChatBox("Ban co thu moi tu " .. getPlayerName(player), target, 255, 255, 0)
         outputChatBox("Su dung /getmail de doc thu", target, 255, 255, 255)

@@ -43,7 +43,7 @@ addCommandHandler("newgvip", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -75,7 +75,7 @@ addCommandHandler("renewgvip", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -368,7 +368,7 @@ addCommandHandler("processorder", function(player, _, orderId)
     outputChatBox(getPlayerName(player) .. " has processed shop order ID " .. orderId .. " from " .. order.playerName, root, 255, 255, 0)
     
     -- Try to notify the customer if online
-    local customer = getPlayerFromName(order.playerName)
+    local customer = getPlayerFromNameOrId(order.playerName)
     if customer then
         outputChatBox("Order #" .. orderId .. " cua ban da duoc xu ly boi " .. getPlayerName(player), customer, 0, 255, 0)
         outputChatBox("Admin se lien he voi ban de giao hang", customer, 255, 255, 255)
@@ -405,7 +405,7 @@ addCommandHandler("denyorder", function(player, _, orderId)
     outputChatBox(getPlayerName(player) .. " has denied shop order ID " .. orderId .. " from " .. order.playerName, root, 255, 255, 0)
     
     -- Refund customer if online
-    local customer = getPlayerFromName(order.playerName)
+    local customer = getPlayerFromNameOrId(order.playerName)
     if customer then
         givePlayerMoney(customer, order.price)
         outputChatBox("Order #" .. orderId .. " cua ban da bi tu choi", customer, 255, 0, 0)

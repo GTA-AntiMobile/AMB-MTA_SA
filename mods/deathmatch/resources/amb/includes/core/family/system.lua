@@ -75,8 +75,8 @@ function createFamily(name, leader, color)
     }
 
     -- Set player family
-    setElementData(getPlayerFromName(leader), "family", name)
-    setElementData(getPlayerFromName(leader), "familyRank", 5)
+    setElementData(getPlayerFromNameOrId(leader), "family", name)
+    setElementData(getPlayerFromNameOrId(leader), "familyRank", 5)
 
     return true
 end
@@ -92,8 +92,8 @@ function invitePlayerToFamily(family, player, inviter)
     if inviterRank < 3 then return false end
 
     families[family].members[player] = 0 -- Start as Associate
-    setElementData(getPlayerFromName(player), "family", family)
-    setElementData(getPlayerFromName(player), "familyRank", 0)
+    setElementData(getPlayerFromNameOrId(player), "family", family)
+    setElementData(getPlayerFromNameOrId(player), "familyRank", 0)
 
     return true
 end
@@ -111,7 +111,7 @@ function removePlayerFromFamily(family, player, remover)
     if families[family].leader == player then return false end -- Can't remove leader
 
     families[family].members[player] = nil
-    local playerElement = getPlayerFromName(player)
+    local playerElement = getPlayerFromNameOrId(player)
     if playerElement then
         setElementData(playerElement, "family", nil)
         setElementData(playerElement, "familyRank", nil)
@@ -168,7 +168,7 @@ addCommandHandler("fam", function(player, _, ...)
 
     -- Send to all family members
     for memberName, _ in pairs(families[family].members) do
-        local member = getPlayerFromName(memberName)
+        local member = getPlayerFromNameOrId(memberName)
         if member then
             outputChatBox(chatMessage, member)
         end
@@ -194,7 +194,7 @@ addCommandHandler("finvite", function(player, _, playerIdOrName)
         return
     end
 
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(COLOR_RED .. "Player not found!", player)
         return
@@ -215,7 +215,7 @@ addCommandHandler("finvite", function(player, _, playerIdOrName)
         local message = COLOR_YELLOW ..
         getPlayerName(target) .. " has joined the family (invited by " .. getPlayerName(player) .. ")"
         for memberName, _ in pairs(families[family].members) do
-            local member = getPlayerFromName(memberName)
+            local member = getPlayerFromNameOrId(memberName)
             if member and member ~= target then
                 outputChatBox(message, member)
             end
@@ -244,7 +244,7 @@ addCommandHandler("fkick", function(player, _, playerIdOrName)
         return
     end
 
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if target then
         playerIdOrName = getPlayerName(target)
     end
@@ -264,7 +264,7 @@ addCommandHandler("fkick", function(player, _, playerIdOrName)
         -- Notify family
         local message = COLOR_YELLOW .. playerIdOrName .. " has been kicked from the family by " .. getPlayerName(player)
         for memberName, _ in pairs(families[family].members) do
-            local member = getPlayerFromName(memberName)
+            local member = getPlayerFromNameOrId(memberName)
             if member and member ~= target then
                 outputChatBox(message, member)
             end
@@ -293,7 +293,7 @@ addCommandHandler("fquit", function(player)
         -- Notify family
         local message = COLOR_YELLOW .. getPlayerName(player) .. " left the family"
         for memberName, _ in pairs(families[family].members) do
-            local member = getPlayerFromName(memberName)
+            local member = getPlayerFromNameOrId(memberName)
             if member then
                 outputChatBox(message, member)
             end
@@ -315,7 +315,7 @@ addCommandHandler("fmembers", function(player)
         count = count + 1
         local rankName = familyRanks[rank] or "Unknown"
         local status = "Offline"
-        if getPlayerFromName(memberName) then
+        if getPlayerFromNameOrId(memberName) then
             status = "Online"
         end
         outputChatBox(COLOR_WHITE .. count .. ". " .. memberName .. " (" .. rankName .. ") - " .. status, player)
@@ -340,7 +340,7 @@ addCommandHandler("fpromote", function(player, _, playerIdOrName)
         return
     end
 
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if target then
         playerIdOrName = getPlayerName(target)
     end
@@ -387,7 +387,7 @@ addCommandHandler("fdemote", function(player, _, playerIdOrName)
         return
     end
 
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if target then
         playerIdOrName = getPlayerName(target)
     end
@@ -464,7 +464,7 @@ addCommandHandler("fwar", function(player, _, targetFamily)
     local warMessage = COLOR_RED .. "WAR DECLARED! " .. COLOR_WHITE .. family .. " vs " .. targetFamily
     for _, fam in ipairs({ family, targetFamily }) do
         for memberName, _ in pairs(families[fam].members) do
-            local member = getPlayerFromName(memberName)
+            local member = getPlayerFromNameOrId(memberName)
             if member then
                 outputChatBox(warMessage, member)
             end

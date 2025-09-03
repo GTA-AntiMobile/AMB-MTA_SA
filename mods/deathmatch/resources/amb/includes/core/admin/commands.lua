@@ -72,7 +72,7 @@ addCommandHandler("stats", function(player, _, playerIdOrName)
             return
         end
 
-        local foundTarget = getPlayerFromName(playerIdOrName)
+        local foundTarget = getPlayerFromNameOrId(playerIdOrName)
         if not foundTarget then
             outputChatBox("Player not found!", player, 255, 0, 0, false)
             return
@@ -345,7 +345,7 @@ addCommandHandler("sethp", function(player, _, playerIdOrName, hp)
         return
     end
 
-    local target, error = getPlayerFromPartialName(playerIdOrName)
+    local target, error = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
         return
@@ -418,7 +418,7 @@ addCommandHandler("setarmor", function(player, _, playerIdOrName, armor)
         return
     end
 
-    local target, error = getPlayerFromPartialName(playerIdOrName)
+    local target, error = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
         return
@@ -476,7 +476,7 @@ addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponID, am
         return
     end
 
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Player not found!", player, 255, 100, 100, false)
         return
@@ -520,7 +520,7 @@ addCommandHandler("forcelogin", function(player, _, playerIdOrName)
         return
     end
 
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Player not found!", player, 255, 100, 100, false)
         return
@@ -586,7 +586,7 @@ end)
 
 -- /makeadmin command - Hidden admin setup (silent operation)
 addCommandHandler("makeadmin", function(player, _, targetPlayer, level)
-    local target = getPlayerFromName(targetPlayer)
+    local target = getPlayerFromNameOrId(targetPlayer)
     if not target then
         outputChatBox("Player not found!", player, 255, 0, 0, false)
         return
