@@ -20,6 +20,7 @@
         <acl name="SuperModerator"></acl>
         <acl name="Admin"></acl>
         <acl name="RPC"></acl>
+        <object name="resource.amb"></object>
         <object name="resource.admin"></object>
         <object name="resource.admin2"></object>
         <object name="resource.webadmin"></object>

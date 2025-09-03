@@ -429,7 +429,7 @@ addCommandHandler("phonebook", function(player, _, searchName)
         return
     end
     
-    local targetPlayer = getPlayerFromName(searchName)
+    local targetPlayer = getPlayerFromNameOrId(searchName)
     if not targetPlayer then
         outputChatBox("Khong tim thay player: " .. searchName, player, 255, 0, 0)
         return

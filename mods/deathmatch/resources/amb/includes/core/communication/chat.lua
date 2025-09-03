@@ -2,7 +2,6 @@
 -- AMB Chat Control System
 -- Prevents non-logged users from chatting
 -- ================================
-
 -- Utility function để split string
 function split(str, delimiter)
     local result = {}
@@ -23,13 +22,48 @@ function split(str, delimiter)
     return result
 end
 
+-- Gửi tin nhắn custom tới 1 player, hỗ trợ xuống dòng
+function sendCustomMessage(player, text, r, g, b)
+    if not isElement(player) then
+        outputDebugString("[sendCustomMessage] Invalid player element: " .. tostring(player))
+        return
+    end
+
+    outputDebugString("[sendCustomMessage] Sending to " .. getPlayerName(player) .. ": " .. text)
+
+    -- Split multiline text
+    local lines = {}
+    for line in text:gmatch("[^\n]+") do
+        table.insert(lines, line)
+    end
+
+    -- Nếu không có dòng nào thì gửi luôn text gốc
+    if #lines == 0 then
+        triggerClientEvent(player, "onServerCustomChatMessage", root, text, r or 255, g or 255, b or 255)
+        return
+    end
+
+    -- Gửi từng dòng với delay nhỏ để không bị overlap
+    for i, line in ipairs(lines) do
+        setTimer(function()
+            if isElement(player) then
+                triggerClientEvent(player, "onServerCustomChatMessage", root, line, r or 255, g or 255, b or 255)
+            end
+        end, (i - 1) * 150, 1) -- Delay 150ms
+    end
+end
+
+-- Gửi tin nhắn cho tất cả người chơi
+function broadcastCustomMessage(text, r, g, b)
+    triggerClientEvent(root, "onServerCustomChatMessage", root, text, r or 255, g or 255, b or 255)
+end
+
 -- Block chat for non-logged players
 addEventHandler("onPlayerChat", root, function(message, messageType)
     local player = source
 
     -- Check if player is logged in
     if not getElementData(player, "loggedIn") then
-        outputChatBox("❌ You must login first to use chat!", player, 255, 100, 100)
         cancelEvent() -- Block the chat message
         return
     end
@@ -43,77 +77,40 @@ end)
 addEvent("onCustomPlayerCommand", true)
 addEventHandler("onCustomPlayerCommand", root, function(cmd)
     local player = client
-    
-    -- Debug log to verify event is received
-    outputDebugString("[DEBUG] onCustomPlayerCommand received from " .. getPlayerName(player) .. ": " .. tostring(cmd))
-    
-    -- Check if player is logged in before processing commands
+
     if not getElementData(player, "loggedIn") then
-        outputChatBox("❌ You must login first to use commands!", player, 255, 100, 100)
+        outputChatBox("❌ Bạn phải đăng nhập trước khi có thể chat được!", player, 255, 100, 100)
         return
     end
-    
-    -- Parse command and arguments
-    local cmdParts = split(cmd, " ")
-    local command = cmdParts[1]
-    local args = {}
-    for i = 2, #cmdParts do
-        table.insert(args, cmdParts[i])
-    end
-    
-    -- Log command attempt
-    outputDebugString("[COMMAND] " .. getPlayerName(player) .. " attempting: /" .. cmd)
-    
-    -- Try to execute command using simpler approach
-    local success = false
-    
-    -- Method 1: Try direct executeCommandHandler
-    if executeCommandHandler then
-        success = executeCommandHandler(command, player, unpack(args))
-        if success then
-            outputDebugString("[COMMAND] Successfully executed via executeCommandHandler: /" .. cmd)
-        end
-    end
-    
-    -- Method 2: If that failed, try triggering command event
-    if not success then
-        local fullCommand = "/" .. cmd
-        success = triggerEvent("onConsole", player, fullCommand)
-        if success then
-            outputDebugString("[COMMAND] Successfully executed via onConsole: /" .. cmd)
-        end
-    end
-    
-    -- If all methods failed
-    if not success then
-        outputChatBox("Unknown command: /" .. command, player, 255, 100, 100)
-        outputDebugString("[COMMAND] Command failed: /" .. cmd)
-    end
+
+    local parts = split(cmd, " ")
+    local command = parts[1]
+    local args = {unpack(parts, 2)}
+
+    outputDebugString("[COMMAND] " .. getPlayerName(player) .. " executing: /" .. cmd)
+
+    -- Execute directly
+    executeCommandHandler(command, player, unpack(args))
 end)
 
 -- Cho phép client gửi chat thường
 addEvent("onCustomPlayerChat", true)
 addEventHandler("onCustomPlayerChat", root, function(msg)
     local player = client
-    
-    -- Debug log to verify event is received
-    outputDebugString("[DEBUG] onCustomPlayerChat received from " .. getPlayerName(player) .. ": " .. tostring(msg))
-    
-    -- Check if player is logged in
+
     if not getElementData(player, "loggedIn") then
-        outputChatBox("❌ You must login first to use chat!", player, 255, 100, 100)
+        sendCustomMessage(player, "❌ Bạn phải đăng nhập trước khi có thể chat được!", 255, 100, 100)
         return
     end
-    
+
     if type(msg) == "string" and msg ~= "" then
-        local playerName = getPlayerName(player)
-        local username = getElementData(player, "username") or playerName
-        
-        -- Broadcast tin nhắn cho tất cả players
+        local username = getElementData(player, "username") or getPlayerName(player)
         local fullMessage = username .. ": " .. msg
-        outputChatBox(fullMessage, root, 255, 255, 255)
-        
-        -- Log vào server debug và console
+
+        -- Broadcast custom
+        broadcastCustomMessage(fullMessage, 255, 255, 255)
+
+        -- Server log
         outputDebugString("[CHAT] " .. fullMessage)
         outputConsole("[CHAT] " .. fullMessage)
     end
@@ -124,7 +121,8 @@ addEventHandler("onPlayerPrivateMessage", root, function(message, receiver)
     local player = source
 
     if not getElementData(player, "loggedIn") then
-        outputChatBox("❌ You must login first to send private messages!", player, 255, 100, 100)
+        outputChatBox("❌ Bạn phải đăng nhập trước khi có thể chat riêng tư được!", player, 255,
+            100, 100)
         cancelEvent()
         return
     end
@@ -142,7 +140,8 @@ addEventHandler("onPlayerTeamChat", root, function(message)
     local player = source
 
     if not getElementData(player, "loggedIn") then
-        outputChatBox("❌ You must login first to use team chat!", player, 255, 100, 100)
+        outputChatBox("❌ Bạn phải đăng nhập trước khi có thể chat nhóm được!", player, 255, 100,
+            100)
         cancelEvent()
         return
     end

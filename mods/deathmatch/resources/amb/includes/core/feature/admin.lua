@@ -39,7 +39,7 @@ addCommandHandler("osuspend", function(player, _, playerIdOrName, hours, ...)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -117,7 +117,7 @@ addCommandHandler("permaban", function(player, _, playerIdOrName, ...)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -251,7 +251,7 @@ addCommandHandler("ip", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -272,7 +272,7 @@ addCommandHandler("ipcheck", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -307,7 +307,7 @@ addCommandHandler("fine", function(player, _, playerIdOrName, amount, ...)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -338,7 +338,7 @@ addCommandHandler("sfine", function(player, _, playerIdOrName, amount, ...)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -394,7 +394,7 @@ addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponId, am
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -424,7 +424,7 @@ addCommandHandler("destroycar", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -452,7 +452,7 @@ addCommandHandler("blowup", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -476,7 +476,7 @@ addCommandHandler("givenos", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -504,7 +504,7 @@ addCommandHandler("revive", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -558,7 +558,7 @@ addCommandHandler("forcedeath", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return

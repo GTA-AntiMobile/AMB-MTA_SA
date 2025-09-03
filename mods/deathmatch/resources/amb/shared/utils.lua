@@ -1,6 +1,5 @@
 -- AMB Roleplay Shared Utilities
 -- Common utility functions used across client and server
-
 -- String Utilities
 function string.split(str, delimiter)
     local result = {}
@@ -130,11 +129,7 @@ end
 -- Color Utilities
 function hexToRGB(hex)
     hex = hex:gsub("#", "")
-    return {
-        tonumber(hex:sub(1, 2), 16),
-        tonumber(hex:sub(3, 4), 16),
-        tonumber(hex:sub(5, 6), 16)
-    }
+    return {tonumber(hex:sub(1, 2), 16), tonumber(hex:sub(3, 4), 16), tonumber(hex:sub(5, 6), 16)}
 end
 
 function rgbToHex(r, g, b)
@@ -143,11 +138,9 @@ end
 
 function interpolateColor(color1, color2, factor)
     factor = math.clamp(factor, 0, 1)
-    return {
-        math.floor(color1[1] + (color2[1] - color1[1]) * factor),
-        math.floor(color1[2] + (color2[2] - color1[2]) * factor),
-        math.floor(color1[3] + (color2[3] - color1[3]) * factor)
-    }
+    return {math.floor(color1[1] + (color2[1] - color1[1]) * factor),
+            math.floor(color1[2] + (color2[2] - color1[2]) * factor),
+            math.floor(color1[3] + (color2[3] - color1[3]) * factor)}
 end
 
 -- Time Utilities
@@ -170,10 +163,18 @@ function formatDuration(seconds)
     local secs = seconds % 60
 
     local parts = {}
-    if days > 0 then table.insert(parts, days .. " day" .. (days ~= 1 and "s" or "")) end
-    if hours > 0 then table.insert(parts, hours .. " hour" .. (hours ~= 1 and "s" or "")) end
-    if minutes > 0 then table.insert(parts, minutes .. " minute" .. (minutes ~= 1 and "s" or "")) end
-    if secs > 0 then table.insert(parts, secs .. " second" .. (secs ~= 1 and "s" or "")) end
+    if days > 0 then
+        table.insert(parts, days .. " day" .. (days ~= 1 and "s" or ""))
+    end
+    if hours > 0 then
+        table.insert(parts, hours .. " hour" .. (hours ~= 1 and "s" or ""))
+    end
+    if minutes > 0 then
+        table.insert(parts, minutes .. " minute" .. (minutes ~= 1 and "s" or ""))
+    end
+    if secs > 0 then
+        table.insert(parts, secs .. " second" .. (secs ~= 1 and "s" or ""))
+    end
 
     if #parts == 0 then
         return "0 seconds"
@@ -245,13 +246,17 @@ end
 
 -- Position Utilities
 function isPlayerNearPosition(player, x, y, z, radius)
-    if not isElement(player) then return false end
+    if not isElement(player) then
+        return false
+    end
     local px, py, pz = getElementPosition(player)
     return math.distance3D(px, py, pz, x, y, z) <= radius
 end
 
 function getClosestPlayer(player, maxDistance)
-    if not isElement(player) then return nil end
+    if not isElement(player) then
+        return nil
+    end
 
     local px, py, pz = getElementPosition(player)
     local closestPlayer = nil
@@ -274,7 +279,9 @@ end
 
 -- Random Utilities
 function getRandomElement(t)
-    if #t == 0 then return nil end
+    if #t == 0 then
+        return nil
+    end
     return t[math.random(#t)]
 end
 
@@ -308,7 +315,9 @@ end
 
 function readFileContents(path)
     local file = fileOpen(path)
-    if not file then return nil end
+    if not file then
+        return nil
+    end
 
     local content = fileRead(file, fileGetSize(file))
     fileClose(file)
@@ -317,7 +326,9 @@ end
 
 function writeFileContents(path, content)
     local file = fileCreate(path)
-    if not file then return false end
+    if not file then
+        return false
+    end
 
     fileWrite(file, content)
     fileClose(file)
@@ -364,7 +375,7 @@ end
 -- Debug Utilities
 function debugPrint(...)
     if DEBUG_MODE then
-        outputDebugString("[AMB DEBUG] " .. table.concat({ ... }, " "))
+        outputDebugString("[AMB DEBUG] " .. table.concat({...}, " "))
     end
 end
 
@@ -436,7 +447,8 @@ local function scanVehicleFolderStructure()
                     dffPath = dffFile,
                     txdPath = txdFile
                 })
-                outputDebugString("[SCAN] ✅ Found: " .. folderName .. " (ID: " .. modelId .. ") -> Base: " .. baseModel)
+                outputDebugString("[SCAN] ✅ Found: " .. folderName .. " (ID: " .. modelId .. ") -> Base: " ..
+                                      baseModel)
             end
         end
     end
@@ -450,12 +462,10 @@ local function scanVehicleFolderStructure()
             outputDebugString("[SCAN] Found base directory: " .. baseModel)
 
             -- Try to find subdirectories by checking common patterns
-            local commonNames = {
-                "Lamborghini", "BMW", "BMW 2010", "BMW 2020", "Audi", "Mercedes", "Ferrari",
-                "Porsche", "Toyota", "Honda", "Nissan", "Mazda", "Subaru", "Mitsubishi",
-                "Volkswagen", "Ford", "Chevrolet", "Dodge", "Jeep", "Hyundai", "Kia",
-                "Sport", "Luxury", "Custom", "Tuned", "Modified", "Racing", "Drift"
-            }
+            local commonNames = {"Lamborghini", "BMW", "BMW 2010", "BMW 2020", "Audi", "Mercedes", "Ferrari", "Porsche",
+                                 "Toyota", "Honda", "Nissan", "Mazda", "Subaru", "Mitsubishi", "Volkswagen", "Ford",
+                                 "Chevrolet", "Dodge", "Jeep", "Hyundai", "Kia", "Sport", "Luxury", "Custom", "Tuned",
+                                 "Modified", "Racing", "Drift"}
 
             for _, folderName in ipairs(commonNames) do
                 local folderPath = basePath .. "/" .. folderName
@@ -489,11 +499,19 @@ local function scanVehicleFolderStructure()
         outputDebugString("[SCAN] No vehicles found, trying direct scan...")
 
         -- Direct check for your exact structure
-        local directPaths = {
-            { path = ":newmodels_azul/models/vehicle/411/Lamborghini", base = 411, name = "Lamborghini" },
-            { path = ":newmodels_azul/models/vehicle/412/BMW",         base = 412, name = "BMW" },
-            { path = ":newmodels_azul/models/vehicle/412/BMW 2010",    base = 412, name = "BMW 2010" }
-        }
+        local directPaths = {{
+            path = ":newmodels_azul/models/vehicle/411/Lamborghini",
+            base = 411,
+            name = "Lamborghini"
+        }, {
+            path = ":newmodels_azul/models/vehicle/412/BMW",
+            base = 412,
+            name = "BMW"
+        }, {
+            path = ":newmodels_azul/models/vehicle/412/BMW 2010",
+            base = 412,
+            name = "BMW 2010"
+        }}
 
         for _, pathInfo in ipairs(directPaths) do
             scanPath(pathInfo.path, pathInfo.base, pathInfo.name)
@@ -523,7 +541,6 @@ function getNewmodelsAvailableModels()
         local customModels = exports["newmodels_azul"]:getCustomModels()
 
         if customModels and next(customModels) then
-            outputDebugString("[LISTCV] Using newmodels_azul exports")
             for id, modelData in pairs(customModels) do
                 if modelData.type == "vehicle" then
                     table.insert(models.vehicles, {
@@ -545,7 +562,6 @@ function getNewmodelsAvailableModels()
                     })
                 end
             end
-            outputDebugString("[LISTCV] Loaded " .. #models.vehicles .. " vehicles from exports")
             return models
         end
     end
@@ -559,7 +575,9 @@ end
 
 -- Custom Vehicle Name System - Improved with /cv logic
 function getCustomVehicleName(vehicle)
-    if not isElement(vehicle) then return "Unknown Vehicle" end
+    if not isElement(vehicle) then
+        return "Unknown Vehicle"
+    end
     local id = getElementData(vehicle, "customVehicleID") or getElementModel(vehicle)
     -- Xe custom
     if id >= 30001 and id < 40000 then

@@ -6,7 +6,6 @@
 -- Migration: COMPLETE (1,182/1,182 commands) ✅
 -- New Features: Enhanced Client Systems (Scoreboard, GPS, Voice, Fuel) ✨
 -- ================================================================
-
 -- Global server configuration
 SERVER_CONFIG = {
     name = "AMB MTA:SA Production",
@@ -19,8 +18,8 @@ SERVER_CONFIG = {
 -- Resource start event handler (MAIN ENTRY POINT)
 addEventHandler("onResourceStart", resourceRoot, function()
     -- Single startup message to prevent spam
-    outputServerLog("AMB MTA:SA v" ..
-        SERVER_CONFIG.version .. " started - " .. SERVER_CONFIG.commands_migrated .. " commands ready")
+    outputServerLog("AMB MTA:SA v" .. SERVER_CONFIG.version .. " started - " .. SERVER_CONFIG.commands_migrated ..
+                        " commands ready")
 
     if SERVER_CONFIG.debug_mode then
         outputDebugString("[AMB] Debug mode enabled", 3)
@@ -113,6 +112,27 @@ end)
 
 -- Server ready event for other modules to hook into
 addEvent("onAMBServerReady", false)
+
+-- Client log handler - receive logs from client and write to dedicated client.log file
+addEvent("onClientLogMessage", true)
+addEventHandler("onClientLogMessage", root, function(logMessage)
+    local playerName = getPlayerName(client) or "Unknown"
+
+    -- Write to both server log and dedicated client log file
+    outputServerLog("[CLIENT:" .. playerName .. "] " .. logMessage)
+
+    -- Also write to dedicated client.log file in resource folder
+    local file = fileOpen("logs/client.log", false)
+    if not file then
+        file = fileCreate("logs/client.log")
+    end
+
+    if file then
+        fileSetPos(file, fileGetSize(file)) -- Move to end of file
+        fileWrite(file, "[CLIENT:" .. playerName .. "] " .. logMessage .. "\n")
+        fileClose(file)
+    end
+end)
 
 -- Display server information
 outputDebugString("=== AMB ROLEPLAY SERVER v1.1.2-production ===")

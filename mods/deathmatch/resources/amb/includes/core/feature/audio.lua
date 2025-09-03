@@ -28,7 +28,7 @@ addCommandHandler("setboombox", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return

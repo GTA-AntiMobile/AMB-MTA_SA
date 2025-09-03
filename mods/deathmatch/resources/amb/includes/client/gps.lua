@@ -78,7 +78,7 @@ function navigateToPlayer(playerName)
         return
     end
     
-    local targetPlayer = getPlayerFromName(playerName)
+    local targetPlayer = getPlayerFromNameOrId(playerName)
     if not targetPlayer then
         outputChatBox("❌ Player '" .. playerName .. "' not found", 255, 100, 100)
         return

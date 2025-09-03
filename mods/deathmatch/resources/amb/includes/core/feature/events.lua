@@ -177,7 +177,7 @@ addCommandHandler("makezombie", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -204,7 +204,7 @@ addCommandHandler("unzombie", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -235,7 +235,7 @@ addCommandHandler("bite", function(player, _, playerIdOrName)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -322,7 +322,7 @@ addCommandHandler("sethp", function(player, _, playerIdOrName, amount)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
@@ -366,7 +366,7 @@ addCommandHandler("setarmor", function(player, _, playerIdOrName, amount)
         return
     end
     
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return

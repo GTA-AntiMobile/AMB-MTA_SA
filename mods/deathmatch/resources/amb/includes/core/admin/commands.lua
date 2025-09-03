@@ -3,7 +3,6 @@
 -- Migrated from server/commands.lua for better organization
 -- Uses centralized ADMIN_LEVELS from shared/enums.lua
 -- ========================================
-
 -- Debug flag for command registration
 local DEBUG_COMMANDS = true
 
@@ -16,7 +15,9 @@ end
 
 -- Permission check function with GOD level support
 local function isPlayerAdmin(player, requiredLevel)
-    if not isElement(player) then return false end
+    if not isElement(player) then
+        return false
+    end
 
     -- Try to get adminLevel from ElementData first (more reliable)
     local adminLevel = getElementData(player, "adminLevel")
@@ -27,8 +28,9 @@ local function isPlayerAdmin(player, requiredLevel)
         adminLevel = playerData and playerData.adminLevel or 0
     end
 
-    outputDebugString("[ADMIN] Player " ..
-        getPlayerName(player) .. " has adminLevel: " .. adminLevel .. ", required: " .. requiredLevel)
+    outputDebugString(
+        "[ADMIN] Player " .. getPlayerName(player) .. " has adminLevel: " .. adminLevel .. ", required: " ..
+            requiredLevel)
 
     -- GOD level có toàn quyền
     if adminLevel == ADMIN_LEVELS.GOD then
@@ -72,7 +74,7 @@ addCommandHandler("stats", function(player, _, playerIdOrName)
             return
         end
 
-        local foundTarget = getPlayerFromName(playerIdOrName)
+        local foundTarget = getPlayerFromNameOrId(playerIdOrName)
         if not foundTarget then
             outputChatBox("Player not found!", player, 255, 0, 0, false)
             return
@@ -136,8 +138,8 @@ addCommandHandler("cv", function(player, _, idStr)
     else
         -- Standard GTA SA vehicles (400-611)
         if cid < 400 or cid > 611 then
-            outputChatBox("❌ Invalid vehicle ID! Use 400-611 for standard vehicles or 30000+ for custom", player, 255, 0,
-                0)
+            outputChatBox("❌ Invalid vehicle ID! Use 400-611 for standard vehicles or 30000+ for custom", player, 255,
+                0, 0)
             return
         end
         vehicle = createVehicle(cid, x, y, z, 0, 0, rotZ)
@@ -169,8 +171,6 @@ addCommandHandler("cv", function(player, _, idStr)
             setElementData(vehicle, "customVehicleID", cid)
             outputDebugString("[CV] Set custom name: " .. customName .. " for vehicle " .. cid)
         end
-
-        outputDebugString("[CV] " .. getPlayerName(player) .. " created vehicle " .. cid)
     end
 end)
 
@@ -313,8 +313,8 @@ addCommandHandler("createobject", function(player, _, objectIDStr)
     else
         -- Standard GTA SA objects (1-18000)
         if objectID < 1 or objectID >= 19000 then
-            outputChatBox("❌ Invalid object ID! Use 1-18000 for standard objects or 19000+ for custom", player, 255, 0, 0,
-                false)
+            outputChatBox("❌ Invalid object ID! Use 1-18000 for standard objects or 19000+ for custom", player, 255,
+                0, 0, false)
             return
         end
         object = createObject(objectID, x, y, z, 0, 0, rot)
@@ -345,7 +345,7 @@ addCommandHandler("sethp", function(player, _, playerIdOrName, hp)
         return
     end
 
-    local target, error = getPlayerFromPartialName(playerIdOrName)
+    local target, error = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
         return
@@ -375,8 +375,8 @@ addCommandHandler("sethp", function(player, _, playerIdOrName, hp)
     setElementHealth(target, healthAmount)
     outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s health cho " .. healthAmount .. ".", player, 255,
         255, 255, false)
-    outputDebugString("[ADMIN] " ..
-        getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s health to " .. healthAmount)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s health to " ..
+                          healthAmount)
 end)
 
 -- /setmyhp command - Set own health (matches SA-MP logic)
@@ -418,7 +418,7 @@ addCommandHandler("setarmor", function(player, _, playerIdOrName, armor)
         return
     end
 
-    local target, error = getPlayerFromPartialName(playerIdOrName)
+    local target, error = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
         return
@@ -431,10 +431,10 @@ addCommandHandler("setarmor", function(player, _, playerIdOrName, armor)
     end
 
     setPedArmor(target, armorAmount)
-    outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s armor cho " .. armorAmount .. ".", player, 255, 255,
-        255, false)
-    outputDebugString("[ADMIN] " ..
-        getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s armor to " .. armorAmount)
+    outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s armor cho " .. armorAmount .. ".", player, 255,
+        255, 255, false)
+    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s armor to " ..
+                          armorAmount)
 end)
 
 -- /setmyarmor command - Set own armor (matches SA-MP logic)
@@ -476,7 +476,7 @@ addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponID, am
         return
     end
 
-    local target = getPlayerFromName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Player not found!", player, 255, 100, 100, false)
         return
@@ -500,14 +500,10 @@ addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponID, am
     outputChatBox(
         "Gave " .. getPlayerName(target) .. " weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo",
         player, 100, 255, 100, false)
-    outputChatBox(
-        "You received weapon " ..
-        weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo from " .. getPlayerName(player), target, 100, 255,
-        100,
-        false)
-    outputDebugString("[AMB Admin] " ..
-        getPlayerName(player) ..
-        " gave " .. getPlayerName(target) .. " weapon " .. weaponID .. " with " .. ammo .. " ammo")
+    outputChatBox("You received weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo from " ..
+                      getPlayerName(player), target, 100, 255, 100, false)
+    outputDebugString("[AMB Admin] " .. getPlayerName(player) .. " gave " .. getPlayerName(target) .. " weapon " ..
+                          weaponID .. " with " .. ammo .. " ammo")
 end) -- /forcelogin command - Force close login window for stuck players
 addCommandHandler("forcelogin", function(player, _, playerIdOrName)
     if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
@@ -520,7 +516,7 @@ addCommandHandler("forcelogin", function(player, _, playerIdOrName)
         return
     end
 
-    local target = getPlayerFromPartialName(playerIdOrName)
+    local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Player not found!", player, 255, 100, 100, false)
         return
@@ -586,7 +582,7 @@ end)
 
 -- /makeadmin command - Hidden admin setup (silent operation)
 addCommandHandler("makeadmin", function(player, _, targetPlayer, level)
-    local target = getPlayerFromName(targetPlayer)
+    local target = getPlayerFromNameOrId(targetPlayer)
     if not target then
         outputChatBox("Player not found!", player, 255, 0, 0, false)
         return
@@ -624,8 +620,8 @@ addCommandHandler("makeadmin", function(player, _, targetPlayer, level)
     outputChatBox("Your admin level has been updated to " .. level .. " (" .. levelName .. ")", target, 100, 255, 100,
         false)
     -- Silent debug log only
-    outputDebugString("[AMB Admin] Admin level set: " ..
-        getPlayerName(target) .. " -> " .. level .. " (" .. levelName .. ")")
+    outputDebugString(
+        "[AMB Admin] Admin level set: " .. getPlayerName(target) .. " -> " .. level .. " (" .. levelName .. ")")
 end)
 
 -- ========================================
@@ -671,7 +667,7 @@ addCommandHandler("dn", function(player, command)
     if vehicle and getVehicleOccupant(vehicle, 0) == player then
         -- Player is driver - move the vehicle down and reset speed
         setElementPosition(vehicle, x, y, z - 2) -- SA-MP uses -2, not -5
-        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        setElementVelocity(vehicle, 0, 0, 0) -- Reset vehicle speed like SA-MP
         outputChatBox("Vehicle moved down 2 units.", player, 100, 255, 100, false)
         outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /dn command (vehicle)")
     else
@@ -696,7 +692,7 @@ addCommandHandler("lt", function(player, command)
     if vehicle and getVehicleOccupant(vehicle, 0) == player then
         -- Player is driver - move the vehicle left and reset speed
         setElementPosition(vehicle, x - 2, y, z) -- SA-MP uses -2, not -5
-        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        setElementVelocity(vehicle, 0, 0, 0) -- Reset vehicle speed like SA-MP
         outputChatBox("Vehicle moved left 2 units.", player, 100, 255, 100, false)
         outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /lt command (vehicle)")
     else
@@ -721,7 +717,7 @@ addCommandHandler("rt", function(player, command)
     if vehicle and getVehicleOccupant(vehicle, 0) == player then
         -- Player is driver - move the vehicle right and reset speed
         setElementPosition(vehicle, x + 2, y, z) -- SA-MP uses +2, not +5
-        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        setElementVelocity(vehicle, 0, 0, 0) -- Reset vehicle speed like SA-MP
         outputChatBox("Vehicle moved right 2 units.", player, 100, 255, 100, false)
         outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /rt command (vehicle)")
     else
@@ -746,7 +742,7 @@ addCommandHandler("fd", function(player, command)
     if vehicle and getVehicleOccupant(vehicle, 0) == player then
         -- Player is driver - move the vehicle forward and reset speed
         setElementPosition(vehicle, x, y + 2, z) -- SA-MP uses +2, not +5
-        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        setElementVelocity(vehicle, 0, 0, 0) -- Reset vehicle speed like SA-MP
         outputChatBox("Vehicle moved forward 2 units.", player, 100, 255, 100, false)
         outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /fd command (vehicle)")
     else
@@ -771,7 +767,7 @@ addCommandHandler("bk", function(player, command)
     if vehicle and getVehicleOccupant(vehicle, 0) == player then
         -- Player is driver - move the vehicle backward and reset speed
         setElementPosition(vehicle, x, y - 2, z) -- SA-MP uses -2, not -5
-        setElementVelocity(vehicle, 0, 0, 0)     -- Reset vehicle speed like SA-MP
+        setElementVelocity(vehicle, 0, 0, 0) -- Reset vehicle speed like SA-MP
         outputChatBox("Vehicle moved backward 2 units.", player, 100, 255, 100, false)
         outputDebugString("[ADMIN] " .. getPlayerName(player) .. " used /bk command (vehicle)")
     else
@@ -858,7 +854,4 @@ addEventHandler("flyMode:autoDisable", root, function()
 end)
 
 -- Admin commands loaded notification
-debugLog("Admin commands system loaded successfully!")
-debugLog("Commands registered: test, hello, cv, listcv, stats, and " .. tostring(25) .. " more commands")
-outputDebugString("[ADMIN_CMD] Commands system loaded successfully at " .. getRealTime().timestamp)
-outputDebugString("[AMB] Admin Commands loaded successfully!")
+outputDebugString("[ADMIN_CMD] 30 commands loaded")

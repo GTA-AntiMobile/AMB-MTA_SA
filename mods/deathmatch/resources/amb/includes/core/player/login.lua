@@ -1,7 +1,6 @@
 -- ================================================================
 -- AMB MTA:SA - Login & Register Handler
 -- ================================================================
-
 -- Player login
 addEvent("onPlayerLoginRequest", true)
 addEventHandler("onPlayerLoginRequest", root, function(username, password)
@@ -16,11 +15,10 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
         if row.Key == hashed then
             -- Send success response to client (client will close login window)
             triggerClientEvent(client, "onLoginResponse", root, true, "Login successful!")
-            
+
             -- Send welcome message ONLY ONCE to avoid duplication
             outputChatBox("🎉 Welcome back, " .. username .. "!", client, 0, 255, 0)
-            outputDebugString("✅ [LOGIN] Player " .. username .. " logged in successfully")
-            
+
             -- Set all player data for scoreboard and systems FIRST
             setElementData(client, "playerName", username)
             setElementData(client, "username", username)
@@ -30,20 +28,20 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
             setElementData(client, "vipLevel", tonumber(row.VIPLevel) or 0)
             setElementData(client, "playerMoney", tonumber(row.Money) or 5000)
             setElementData(client, "bankMoney", tonumber(row.Bank) or 20000)
-            
+
             -- Keep existing Player ID assigned by onPlayerJoin (SA-MP style 0-based slot system)
             -- Don't override with database ID or serial
-            
+
             -- Spawn player at saved position using database function
             dbSpawnPlayer(client, row)
-            
+
             -- Set additional stats
             setElementHealth(client, tonumber(row.pHealth) or 100)
             setPedArmor(client, tonumber(row.pArmor) or 0)
             setElementInterior(client, tonumber(row.Int) or 0)
             setElementDimension(client, tonumber(row.VirtualWorld) or 0)
             setElementFrozen(client, false)
-            
+
             -- Enable controls & HUD
             toggleAllControls(client, true)
             setPlayerHudComponentVisible(client, "all", true)
