@@ -52,9 +52,6 @@
     <script src="includes/core/navigation/gps.lua" type="server" />
     <script src="includes/core/vehicles/fuel.lua" type="server" />
 
-    <!-- Test Commands for debugging -->
-    <script src="includes/test_command.lua" type="server" />
-
     <!-- Shared Utilities -->
     <script src="shared/config.lua" type="shared" />
     <script src="shared/enums.lua" type="shared" />
