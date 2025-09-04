@@ -2,7 +2,6 @@
 -- AMB MTA:SA - Communication & Phone System
 -- Migrated from SA-MP open.mp server
 -- ================================
-
 -- Phone and communication systems
 local phoneSystem = {
     phones = {},
@@ -14,9 +13,21 @@ local phoneSystem = {
     nextPhoneNumber = 1000000,
     callCost = 50, -- per minute
     phonePlans = {
-        basic = {name = "Basic Plan", monthlyFee = 100, freeMinutes = 60},
-        premium = {name = "Premium Plan", monthlyFee = 300, freeMinutes = 200},
-        unlimited = {name = "Unlimited Plan", monthlyFee = 500, freeMinutes = 999999}
+        basic = {
+            name = "Basic Plan",
+            monthlyFee = 100,
+            freeMinutes = 60
+        },
+        premium = {
+            name = "Premium Plan",
+            monthlyFee = 300,
+            freeMinutes = 200
+        },
+        unlimited = {
+            name = "Unlimited Plan",
+            monthlyFee = 500,
+            freeMinutes = 999999
+        }
     }
 }
 
@@ -26,7 +37,7 @@ addEventHandler("onPlayerJoin", root, function()
     if not getElementData(source, "player.phoneNumber") then
         local phoneNumber = phoneSystem.nextPhoneNumber
         phoneSystem.nextPhoneNumber = phoneSystem.nextPhoneNumber + 1
-        
+
         setElementData(source, "player.phoneNumber", phoneNumber)
         phoneSystem.phones[phoneNumber] = source
         phoneSystem.contacts[phoneNumber] = {}
@@ -38,7 +49,7 @@ addEventHandler("onPlayerJoin", root, function()
             minutesUsed = 0,
             lastBill = getRealTime().timestamp
         }
-        
+
         outputChatBox("Ban da nhan duoc so dien thoai: " .. phoneNumber, source, 0, 255, 0)
         outputChatBox("Su dung /phone de xem cac lenh dien thoai", source, 255, 255, 255)
     end
@@ -51,11 +62,12 @@ addCommandHandler("phone", function(player)
         outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)
         return
     end
-    
+
     local settings = phoneSystem.settings[phoneNumber]
     outputChatBox("=== DIEN THOAI ===", player, 255, 255, 0)
     outputChatBox("So cua ban: " .. phoneNumber, player, 255, 255, 255)
-    outputChatBox("Goi cuoc: " .. settings.plan .. " (" .. settings.minutesUsed .. " phut da dung)", player, 255, 255, 255)
+    outputChatBox("Goi cuoc: " .. settings.plan .. " (" .. settings.minutesUsed .. " phut da dung)", player, 255, 255,
+        255)
     outputChatBox("Commands:", player, 255, 255, 255)
     outputChatBox("/call [number] - Goi dien", player, 200, 200, 200)
     outputChatBox("/hangup - Tat may", player, 200, 200, 200)
@@ -74,47 +86,47 @@ addCommandHandler("call", function(player, _, targetNumber)
         outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)
         return
     end
-    
+
     if not targetNumber then
         outputChatBox("Su dung: /call [phone number]", player, 255, 255, 255)
         return
     end
-    
+
     targetNumber = tonumber(targetNumber)
     if not targetNumber or not phoneSystem.phones[targetNumber] then
         outputChatBox("So dien thoai khong hop le hoac khong ton tai!", player, 255, 0, 0)
         return
     end
-    
+
     local target = phoneSystem.phones[targetNumber]
     if not isElement(target) then
         outputChatBox("Nguoi dung khong online!", player, 255, 0, 0)
         return
     end
-    
+
     if target == player then
         outputChatBox("Ban khong the goi cho chinh minh!", player, 255, 0, 0)
         return
     end
-    
+
     -- Check if already in call
     if phoneSystem.calls[phoneNumber] then
         outputChatBox("Ban dang trong cuoc goi khac!", player, 255, 0, 0)
         return
     end
-    
+
     if phoneSystem.calls[targetNumber] then
         outputChatBox("May ban goi dang ban!", player, 255, 0, 0)
         return
     end
-    
+
     -- Check privacy settings
     local targetSettings = phoneSystem.settings[targetNumber]
     if targetSettings.privacy then
         outputChatBox("May ban goi da tat nhan cuoc goi!", player, 255, 0, 0)
         return
     end
-    
+
     -- Create call
     phoneSystem.calls[phoneNumber] = {
         caller = player,
@@ -123,10 +135,10 @@ addCommandHandler("call", function(player, _, targetNumber)
         status = "ringing"
     }
     phoneSystem.calls[targetNumber] = phoneSystem.calls[phoneNumber]
-    
+
     outputChatBox("Dang goi den " .. targetNumber .. "...", player, 255, 255, 0)
     outputChatBox("Cuoc goi tu " .. phoneNumber .. " - /pickup de nghe may hoac /hangup de tu choi", target, 255, 255, 0)
-    
+
     -- Auto hangup after 30 seconds if not picked up
     setTimer(function()
         if phoneSystem.calls[phoneNumber] and phoneSystem.calls[phoneNumber].status == "ringing" then
@@ -141,28 +153,30 @@ end)
 -- Pick up phone
 addCommandHandler("pickup", function(player)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local call = phoneSystem.calls[phoneNumber]
     if not call or call.status ~= "ringing" or call.callee ~= player then
         outputChatBox("Khong co cuoc goi nao!", player, 255, 0, 0)
         return
     end
-    
+
     call.status = "active"
     call.startTime = getRealTime().timestamp
-    
+
     outputChatBox("Cuoc goi bat dau - /hangup de tat may", call.caller, 0, 255, 0)
     outputChatBox("Cuoc goi bat dau - /hangup de tat may", call.callee, 0, 255, 0)
-    
+
     -- Start charging per minute
     call.chargeTimer = setTimer(function()
         if phoneSystem.calls[phoneNumber] and phoneSystem.calls[phoneNumber].status == "active" then
             local callerPhone = getElementData(call.caller, "player.phoneNumber")
             local callerSettings = phoneSystem.settings[callerPhone]
-            
+
             callerSettings.minutesUsed = callerSettings.minutesUsed + 1
-            
+
             -- Check if over free minutes
             local plan = phoneSystem.phonePlans[callerSettings.plan]
             if callerSettings.minutesUsed > plan.freeMinutes then
@@ -182,27 +196,29 @@ end)
 -- Hang up phone
 addCommandHandler("hangup", function(player)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local call = phoneSystem.calls[phoneNumber]
     if not call then
         outputChatBox("Ban khong dang trong cuoc goi nao!", player, 255, 0, 0)
         return
     end
-    
+
     local otherPlayer = (call.caller == player) and call.callee or call.caller
     local otherNumber = getElementData(otherPlayer, "player.phoneNumber")
-    
+
     if call.chargeTimer then
         killTimer(call.chargeTimer)
     end
-    
+
     phoneSystem.calls[phoneNumber] = nil
     phoneSystem.calls[otherNumber] = nil
-    
+
     outputChatBox("Cuoc goi da ket thuc", player, 255, 255, 0)
     outputChatBox("Cuoc goi da ket thuc", otherPlayer, 255, 255, 0)
-    
+
     if call.status == "active" then
         local duration = getRealTime().timestamp - call.startTime
         outputChatBox("Thoi gian goi: " .. math.floor(duration / 60) .. " phut", call.caller, 255, 255, 255)
@@ -216,45 +232,45 @@ addCommandHandler("sms", function(player, _, targetNumber, ...)
         outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)
         return
     end
-    
+
     if not targetNumber or not ... then
         outputChatBox("Su dung: /sms [phone number] [message]", player, 255, 255, 255)
         return
     end
-    
+
     local message = table.concat({...}, " ")
     targetNumber = tonumber(targetNumber)
-    
+
     if not targetNumber or not phoneSystem.phones[targetNumber] then
         outputChatBox("So dien thoai khong hop le!", player, 255, 0, 0)
         return
     end
-    
+
     local target = phoneSystem.phones[targetNumber]
     if not isElement(target) then
         outputChatBox("Nguoi dung khong online!", player, 255, 0, 0)
         return
     end
-    
+
     -- Check money for SMS
     if getPlayerMoney(player) < 10 then
         outputChatBox("Ban khong du tien gui SMS! (Chi phi: $10)", player, 255, 0, 0)
         return
     end
-    
+
     takePlayerMoney(player, 10)
-    
+
     -- Store message
     if not phoneSystem.messages[targetNumber] then
         phoneSystem.messages[targetNumber] = {}
     end
-    
+
     table.insert(phoneSystem.messages[targetNumber], {
         from = phoneNumber,
         message = message,
         time = getRealTime().timestamp
     })
-    
+
     outputChatBox("SMS gui thanh cong den " .. targetNumber, player, 0, 255, 0)
     outputChatBox("SMS tu " .. phoneNumber .. ": " .. message, target, 255, 255, 0)
     outputChatBox("Su dung /checkmessages de xem tat ca tin nhan", target, 200, 200, 200)
@@ -263,14 +279,16 @@ end)
 -- Check messages
 addCommandHandler("checkmessages", function(player)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local messages = phoneSystem.messages[phoneNumber]
     if not messages or #messages == 0 then
         outputChatBox("Ban khong co tin nhan nao!", player, 255, 255, 0)
         return
     end
-    
+
     outputChatBox("=== TIN NHAN ===", player, 255, 255, 0)
     for i = math.max(1, #messages - 10), #messages do -- Show last 10 messages
         local msg = messages[i]
@@ -282,14 +300,16 @@ end)
 -- Contacts system
 addCommandHandler("contacts", function(player)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local contacts = phoneSystem.contacts[phoneNumber]
     if not contacts or not next(contacts) then
         outputChatBox("Danh ba trong! Su dung /addcontact de them", player, 255, 255, 0)
         return
     end
-    
+
     outputChatBox("=== DANH BA ===", player, 255, 255, 0)
     for number, name in pairs(contacts) do
         local status = "Offline"
@@ -302,34 +322,38 @@ end)
 
 addCommandHandler("addcontact", function(player, _, number, ...)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     if not number or not ... then
         outputChatBox("Su dung: /addcontact [phone number] [name]", player, 255, 255, 255)
         return
     end
-    
+
     local name = table.concat({...}, " ")
     number = tonumber(number)
-    
+
     if not number then
         outputChatBox("So dien thoai khong hop le!", player, 255, 0, 0)
         return
     end
-    
+
     phoneSystem.contacts[phoneNumber][number] = name
     outputChatBox("Da them " .. name .. " (" .. number .. ") vao danh ba", player, 0, 255, 0)
 end)
 
 addCommandHandler("removecontact", function(player, _, number)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     if not number then
         outputChatBox("Su dung: /removecontact [phone number]", player, 255, 255, 255)
         return
     end
-    
+
     number = tonumber(number)
     if phoneSystem.contacts[phoneNumber][number] then
         local name = phoneSystem.contacts[phoneNumber][number]
@@ -343,14 +367,16 @@ end)
 -- Phone privacy
 addCommandHandler("phoneprivacy", function(player)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local settings = phoneSystem.settings[phoneNumber]
     settings.privacy = not settings.privacy
-    
+
     local status = settings.privacy and "BAT" or "TAT"
     outputChatBox("Che do rieng tu da duoc " .. status, player, 255, 255, 0)
-    
+
     if settings.privacy then
         outputChatBox("Ban se khong nhan duoc cuoc goi tu so la!", player, 255, 255, 255)
     else
@@ -361,20 +387,22 @@ end)
 -- Speakerphone
 addCommandHandler("speakerphone", function(player)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local call = phoneSystem.calls[phoneNumber]
     if not call or call.status ~= "active" then
         outputChatBox("Ban khong dang trong cuoc goi nao!", player, 255, 0, 0)
         return
     end
-    
+
     local settings = phoneSystem.settings[phoneNumber]
     settings.speakerphone = not settings.speakerphone
-    
+
     local status = settings.speakerphone and "BAT" or "TAT"
     outputChatBox("Loa ngoai da duoc " .. status, player, 255, 255, 0)
-    
+
     local otherPlayer = (call.caller == player) and call.callee or call.caller
     outputChatBox(getPlayerName(player) .. " da " .. status .. " loa ngoai", otherPlayer, 255, 255, 0)
 end)
@@ -382,10 +410,12 @@ end)
 -- Phone plans
 addCommandHandler("phoneplan", function(player, _, newPlan)
     local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local settings = phoneSystem.settings[phoneNumber]
-    
+
     if not newPlan then
         outputChatBox("=== GOI CUOC HIEN TAI ===", player, 255, 255, 0)
         local currentPlan = phoneSystem.phonePlans[settings.plan]
@@ -393,30 +423,31 @@ addCommandHandler("phoneplan", function(player, _, newPlan)
         outputChatBox("Phi hang thang: $" .. currentPlan.monthlyFee, player, 255, 255, 255)
         outputChatBox("Phut mien phi: " .. currentPlan.freeMinutes, player, 255, 255, 255)
         outputChatBox("Phut da dung: " .. settings.minutesUsed, player, 255, 255, 255)
-        
+
         outputChatBox("=== GOI CUOC CO SAN ===", player, 255, 255, 0)
         for planId, plan in pairs(phoneSystem.phonePlans) do
-            outputChatBox(planId .. ": " .. plan.name .. " ($" .. plan.monthlyFee .. "/thang, " .. plan.freeMinutes .. " phut)", player, 200, 200, 200)
+            outputChatBox(planId .. ": " .. plan.name .. " ($" .. plan.monthlyFee .. "/thang, " .. plan.freeMinutes ..
+                              " phut)", player, 200, 200, 200)
         end
         outputChatBox("Su dung: /phoneplan [plan] de doi goi", player, 255, 255, 255)
         return
     end
-    
+
     if not phoneSystem.phonePlans[newPlan] then
         outputChatBox("Goi cuoc khong hop le!", player, 255, 0, 0)
         return
     end
-    
+
     local plan = phoneSystem.phonePlans[newPlan]
     if getPlayerMoney(player) < plan.monthlyFee then
         outputChatBox("Ban khong du tien doi goi cuoc! Can: $" .. plan.monthlyFee, player, 255, 0, 0)
         return
     end
-    
+
     takePlayerMoney(player, plan.monthlyFee)
     settings.plan = newPlan
     settings.minutesUsed = 0 -- Reset usage
-    
+
     outputChatBox("Da doi thanh goi " .. plan.name, player, 0, 255, 0)
     outputChatBox("Phi: $" .. plan.monthlyFee .. " - Phut mien phi: " .. plan.freeMinutes, player, 255, 255, 255)
 end)
@@ -428,50 +459,56 @@ addCommandHandler("phonebook", function(player, _, searchName)
         outputChatBox("Tim kiem so dien thoai cua player khac", player, 255, 255, 255)
         return
     end
-    
+
     local targetPlayer = getPlayerFromNameOrId(searchName)
     if not targetPlayer then
         outputChatBox("Khong tim thay player: " .. searchName, player, 255, 0, 0)
         return
     end
-    
+
     local targetPhone = getElementData(targetPlayer, "player.phoneNumber")
     if not targetPhone then
         outputChatBox(getPlayerName(targetPlayer) .. " khong co dien thoai!", player, 255, 0, 0)
         return
     end
-    
+
     -- Check if target allows phone book lookup
     local targetSettings = phoneSystem.settings[targetPhone]
     if targetSettings.privacy then
         outputChatBox("So dien thoai cua " .. getPlayerName(targetPlayer) .. " duoc bao mat!", player, 255, 0, 0)
         return
     end
-    
+
     outputChatBox("So dien thoai cua " .. getPlayerName(targetPlayer) .. ": " .. targetPhone, player, 0, 255, 0)
 end)
 
 -- Handle phone chat during calls
 addEventHandler("onPlayerChat", root, function(message, messageType)
-    if messageType ~= 0 then return end -- Only normal chat
-    
+    if messageType ~= 0 then
+        return
+    end -- Only normal chat
+
     local phoneNumber = getElementData(source, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     local call = phoneSystem.calls[phoneNumber]
-    if not call or call.status ~= "active" then return end
-    
+    if not call or call.status ~= "active" then
+        return
+    end
+
     -- If in active call, send message to both players
     local otherPlayer = (call.caller == source) and call.callee or call.caller
     local settings = phoneSystem.settings[phoneNumber]
-    
+
     cancelEvent() -- Cancel normal chat
-    
+
     if settings.speakerphone then
         -- Speakerphone: nearby players can hear
         outputChatBox("(Phone) " .. getPlayerName(source) .. ": " .. message, source, 255, 255, 0)
         outputChatBox("(Phone) " .. getPlayerName(source) .. ": " .. message, otherPlayer, 255, 255, 0)
-        
+
         -- Let nearby players hear
         local x, y, z = getElementPosition(source)
         local nearbyPlayers = getElementsWithinRange(x, y, z, 10, "player")
@@ -487,58 +524,88 @@ addEventHandler("onPlayerChat", root, function(message, messageType)
     end
 end)
 
--- Emergency calls
-addCommandHandler("911", function(player, _, ...)
-    local phoneNumber = getElementData(player, "player.phoneNumber")
-    if not phoneNumber then
-        outputChatBox("Ban khong co dien thoai!", player, 255, 0, 0)
+-- Emergency call command
+addCommandHandler("911", function(player, cmd, ...)
+    local playerData = getElementData(player, "playerData") or {}
+
+    -- Kiểm tra player có điện thoại và đang bật
+    if not playerData.phone or not playerData.phoneOn then
+        outputChatBox("❌ Bạn cần điện thoại để gọi 911.", player, 255, 100, 100)
         return
     end
-    
+
+    -- Lấy message
     local message = table.concat({...}, " ")
     if not message or message == "" then
-        outputChatBox("Su dung: /911 [emergency message]", player, 255, 255, 255)
+        outputChatBox("📌 Sử dụng: /911 [tin nhắn khẩn cấp]", player, 255, 255, 255)
         return
     end
-    
+
+    -- Vị trí player
     local x, y, z = getElementPosition(player)
-    local location = "X: " .. math.floor(x) .. " Y: " .. math.floor(y)
-    
-    -- Send to all cops
-    for _, cop in ipairs(getElementsByType("player")) do
-        if hasPermission(cop, "police") then
-            outputChatBox("=== CUOC GOI KHAN CAP 911 ===", cop, 255, 0, 0)
-            outputChatBox("Tu: " .. getPlayerName(player) .. " (SDT: " .. phoneNumber .. ")", cop, 255, 255, 255)
-            outputChatBox("Vi tri: " .. location, cop, 255, 255, 255)
-            outputChatBox("Tin nhan: " .. message, cop, 255, 255, 255)
+
+    -- Tạo emergency call
+    local emergencyID = getServerData("nextEmergencyID") or 1
+    setServerData("nextEmergencyID", emergencyID + 1)
+
+    local emergencyData = {
+        caller = getPlayerName(player),
+        message = message,
+        x = x,
+        y = y,
+        z = z,
+        time = getRealTime().timestamp
+    }
+    setServerData("emergency_" .. emergencyID, emergencyData)
+
+    -- Thông báo cho player
+    outputChatBox(string.format("🚨 Emergency call #%d sent!", emergencyID), player, 255, 255, 0)
+
+    -- Gửi cho tất cả Emergency Services
+    local sentTo = 0
+    for _, responder in ipairs(getElementsByType("player")) do
+        local responderData = getElementData(responder, "playerData") or {}
+        local job = responderData.job
+        if job == "Police" or job == "Medic" or job == "Firefighter" then
+            outputChatBox(string.format("🚨 EMERGENCY #%d: %s", emergencyID, message), responder, 255, 0, 0)
+            outputChatBox(string.format("🚨 Caller: %s at (%.1f, %.1f, %.1f)", getPlayerName(player), x, y, z),
+                responder, 255, 100, 100)
+            outputChatBox("🚨 Use /respond [id] to respond", responder, 255, 255, 0)
+            sentTo = sentTo + 1
         end
     end
-    
-    outputChatBox("Cuoc goi khan cap 911 da duoc gui!", player, 255, 255, 0)
-    outputChatBox("Canh sat se den ho tro ban som", player, 255, 255, 255)
+
+    if sentTo == 0 then
+        outputChatBox("❌ Không có emergency services nào online.", player, 255, 100, 100)
+    end
+
+    -- Debug log server
+    outputDebugString(string.format("[911] #%d by %s: %s", emergencyID, getPlayerName(player), message))
 end)
 
 -- Cleanup on player quit
 addEventHandler("onPlayerQuit", root, function()
     local phoneNumber = getElementData(source, "player.phoneNumber")
-    if not phoneNumber then return end
-    
+    if not phoneNumber then
+        return
+    end
+
     -- End any active calls
     local call = phoneSystem.calls[phoneNumber]
     if call then
         local otherPlayer = (call.caller == source) and call.callee or call.caller
         local otherNumber = getElementData(otherPlayer, "player.phoneNumber")
-        
+
         if call.chargeTimer then
             killTimer(call.chargeTimer)
         end
-        
+
         phoneSystem.calls[phoneNumber] = nil
         phoneSystem.calls[otherNumber] = nil
-        
+
         outputChatBox("Cuoc goi da bi ngat ket noi", otherPlayer, 255, 0, 0)
     end
-    
+
     phoneSystem.phones[phoneNumber] = nil
 end)
 

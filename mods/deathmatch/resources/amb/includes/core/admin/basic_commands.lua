@@ -4,35 +4,11 @@
 -- Purpose: Essential admin commands migrated from SA-MP
 -- Version: 1.0.0
 -- Author: AMB Team
-
--- 🔧 Admin Level Check Function
-function isAdmin(player, level)
-    if not isElement(player) then return false end
-
-    -- Try to get adminLevel from ElementData first (matches main system)
-    local adminLevel = getElementData(player, "adminLevel")
-
-    -- Fallback to playerData if ElementData not set
-    if not adminLevel then
-        local playerData = getElementData(player, "playerData")
-        adminLevel = playerData and playerData.adminLevel or 0
-    else
-        adminLevel = tonumber(adminLevel) or 0
-    end
-
-    -- GOD level có toàn quyền
-    if adminLevel == ADMIN_LEVELS.GOD then
-        return true
-    end
-
-    return adminLevel >= level
-end
-
 -- 📝 Send Admin Message
 function sendAdminMessage(message)
     outputServerLog("[ADMIN] " .. message)
     for _, player in ipairs(getElementsByType("player")) do
-        if isAdmin(player, 1) then
+        if isPlayerAdmin(player, 1) then
             outputChatBox("🛡️ [ADMIN] " .. message, player, 255, 100, 100)
         end
     end
@@ -40,7 +16,7 @@ end
 
 -- 💰 Money & Stats Commands
 addCommandHandler("givemoney", function(player, _, playerIdOrName, amount)
-    if not isAdmin(player, 3) then
+    if not isPlayerAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -71,7 +47,7 @@ addCommandHandler("givemoney", function(player, _, playerIdOrName, amount)
 end)
 
 addCommandHandler("setmoney", function(player, _, playerIdOrName, amount)
-    if not isAdmin(player, 3) then
+    if not isPlayerAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -96,78 +72,97 @@ addCommandHandler("setmoney", function(player, _, playerIdOrName, amount)
 
     setPlayerMoney(targetPlayer, money)
     outputChatBox("✅ Set " .. getPlayerName(targetPlayer) .. "'s money to $" .. money, player, 0, 255, 0)
-    outputChatBox("💰 Your money was set to $" .. money .. " by admin " .. getPlayerName(player), targetPlayer, 0, 255,
-        100)
+    outputChatBox("💰 Your money was set to $" .. money .. " by admin " .. getPlayerName(player), targetPlayer, 0,
+        255, 100)
 
     sendAdminMessage(getPlayerName(player) .. " set " .. getPlayerName(targetPlayer) .. "'s money to $" .. money)
 end)
 
 -- 🩺 Health & Armor Commands
 addCommandHandler("sethp", function(player, _, playerIdOrName, health)
-    if not isAdmin(player, 2) then
-        outputChatBox("❌ Access denied!", player, 255, 0, 0)
+    -- Kiểm tra quyền admin cấp 2 trở lên
+    if not isPlayerAdmin(player, 2) then
+        outputChatBox("❌ Bạn không có quyền sử dụng lệnh này!", player, 255, 0, 0)
         return
     end
 
+    -- Kiểm tra đầu vào
     if not playerIdOrName or not health then
-        outputChatBox("Usage: /sethp [player] [health]", player, 255, 255, 0)
+        outputChatBox("Sử dụng: /sethp [player] [máu 0-100]", player, 255, 255, 0)
         return
     end
 
+    -- Tìm player theo ID hoặc tên
     local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
-    local hp = tonumber(health)
-
     if not targetPlayer then
-        outputChatBox("❌ Player not found!", player, 255, 0, 0)
+        outputChatBox("❌ Không tìm thấy người chơi!", player, 255, 0, 0)
         return
     end
 
+    -- Kiểm tra giá trị máu
+    local hp = tonumber(health)
     if not hp or hp < 0 or hp > 100 then
-        outputChatBox("❌ Health must be between 0-100!", player, 255, 0, 0)
+        outputChatBox("❌ Giá trị máu phải từ 0-100!", player, 255, 0, 0)
         return
     end
 
-    setElementHealth(targetPlayer, hp)
-    outputChatBox("✅ Set " .. getPlayerName(targetPlayer) .. "'s health to " .. hp, player, 0, 255, 0)
-    outputChatBox("🩺 Your health was set to " .. hp .. " by admin " .. getPlayerName(player), targetPlayer, 0, 255, 100)
+    -- Check jail time (simulate SA-MP pJailTime check)
+    local targetJailTime = getElementData(targetPlayer, "player.jailTime") or 0
+    if targetJailTime >= 1 then
+        outputChatBox("Bạn không thể thiết lập HP cho người ở tù OOC!", player, 255, 255, 255, false)
+        return
+    end
 
-    sendAdminMessage(getPlayerName(player) .. " set " .. getPlayerName(targetPlayer) .. "'s health to " .. hp)
+    -- Admin protection check (like SA-MP)
+    local playerAdminLevel = getElementData(player, "adminLevel") or 0
+    local targetAdminLevel = getElementData(targetPlayer, "adminLevel") or 0
+    if targetAdminLevel >= playerAdminLevel and targetPlayer ~= player then
+        outputChatBox("Bạn không thể làm điều này trên 1 Admin cấp cao!", player, 255, 100, 100, false)
+        return
+    end
+
+    -- Thiết lập máu cho player
+    setElementHealth(targetPlayer, hp)
+    outputChatBox("✅ Bạn đã thiết lập máu cho " .. getPlayerName(targetPlayer) .. ": " .. hp .. ".", player,
+        0, 255, 0)
+    outputChatBox("🩺 Máu của bạn đã được admin " .. getPlayerName(player) .. " thiết lập thành " ..
+                      hp, targetPlayer, 0, 255, 100)
+
+    -- Gửi thông báo admin
+    sendAdminMessage(getPlayerName(player) .. " đã hồi " .. hp .. " máu cho " .. getPlayerName(targetPlayer))
 end)
 
 addCommandHandler("setarmor", function(player, _, playerIdOrName, armor)
-    if not isAdmin(player, 2) then
-        outputChatBox("❌ Access denied!", player, 255, 0, 0)
+    if not isPlayerAdmin(player, 2) then
+        outputChatBox("❌ Bạn không được phép sử dụng lệnh này!", player, 255, 0, 0)
         return
     end
-
     if not playerIdOrName or not armor then
-        outputChatBox("Usage: /setarmor [player] [armor]", player, 255, 255, 0)
+        outputChatBox("Sử dụng: /setarmor [player] [armor]", player, 255, 255, 255)
         return
     end
-
     local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
     local arm = tonumber(armor)
-
     if not targetPlayer then
-        outputChatBox("❌ Player not found!", player, 255, 0, 0)
+        outputChatBox("❌ Không tìm thấy người chơi!", player, 255, 0, 0)
         return
     end
-
     if not arm or arm < 0 or arm > 100 then
-        outputChatBox("❌ Armor must be between 0-100!", player, 255, 0, 0)
+        outputChatBox("❌ Giáp phải từ 0-100!", player, 255, 0, 0)
         return
     end
-
     setPedArmor(targetPlayer, arm)
-    outputChatBox("✅ Set " .. getPlayerName(targetPlayer) .. "'s armor to " .. arm, player, 0, 255, 0)
-    outputChatBox("🛡️ Your armor was set to " .. arm .. " by admin " .. getPlayerName(player), targetPlayer, 0, 255, 100)
-
+    outputChatBox("Bạn đã thiết lập armor cho " .. getPlayerName(targetPlayer) .. ": " .. arm .. ".", player, 0,
+        255, 0)
+    outputChatBox(
+        "🛡️ Armor của bạn đã được admin " .. getPlayerName(player) .. " thiết lập thành " .. arm,
+        targetPlayer, 0, 255, 100)
     sendAdminMessage(getPlayerName(player) .. " set " .. getPlayerName(targetPlayer) .. "'s armor to " .. arm)
 end)
 
 -- 🎭 Skin Commands
 addCommandHandler("changeskin", function(player, _, playerIdOrName, skinId)
-    if not isAdmin(player, 2) then
+    if not isPlayerAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -233,24 +228,24 @@ addCommandHandler("changeskin", function(player, _, playerIdOrName, skinId)
         -- Save to database immediately
         local username = getElementData(targetPlayer, "username")
         if username then
-            local dbConn = getDatabaseConnection and getDatabaseConnection() or db_connection
+            local dbConn = getDatabaseConnection and getDatabaseConnection()
             if dbConn then
                 dbExec(dbConn, "UPDATE accounts SET Model = ? WHERE Username = ?", skin, username)
-                outputDebugString("[CHANGESKIN] Saved skin " ..
-                skin .. " to database for " .. getPlayerName(targetPlayer))
+                outputDebugString("[CHANGESKIN] Saved skin " .. skin .. " to database for " ..
+                                      getPlayerName(targetPlayer))
             else
                 outputChatBox("⚠️ Database not available - skin won't persist after restart", player, 255, 255, 0)
             end
         end
 
-        outputChatBox("✅ Set " .. getPlayerName(targetPlayer) .. "'s skin to " .. skin .. " (" .. skinType .. ")", player,
-            0, 255, 0)
+        outputChatBox("✅ Set " .. getPlayerName(targetPlayer) .. "'s skin to " .. skin .. " (" .. skinType .. ")",
+            player, 0, 255, 0)
         if targetPlayer ~= player then
-            outputChatBox("🎭 Your skin was changed to " .. skin .. " by admin " .. getPlayerName(player), targetPlayer, 0,
-                255, 100)
+            outputChatBox("🎭 Your skin was changed to " .. skin .. " by admin " .. getPlayerName(player),
+                targetPlayer, 0, 255, 100)
         end
-        sendAdminMessage(getPlayerName(player) ..
-        " changed " .. getPlayerName(targetPlayer) .. "'s skin to " .. skin .. " (" .. skinType .. ")")
+        sendAdminMessage(getPlayerName(player) .. " changed " .. getPlayerName(targetPlayer) .. "'s skin to " .. skin ..
+                             " (" .. skinType .. ")")
     else
         outputChatBox("❌ Invalid skin ID: " .. skin, player, 255, 0, 0)
     end
@@ -258,7 +253,7 @@ end)
 
 -- 🚀 Jetpack Command
 addCommandHandler("jetpack", function(player, _, playerIdOrName)
-    if not isAdmin(player, 2) then
+    if not isPlayerAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -293,7 +288,7 @@ end)
 
 -- � Respawn/Revival Commands
 addCommandHandler("hoisinh", function(player, _, playerIdOrName)
-    if not isAdmin(player, 1) then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -355,7 +350,7 @@ end)
 -- Note: /goto command moved to players.lua for better admin integration
 -- ❄️ Freeze/Unfreeze Commands
 addCommandHandler("freeze", function(player, _, playerIdOrName)
-    if not isAdmin(player, 2) then
+    if not isPlayerAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -382,7 +377,7 @@ addCommandHandler("freeze", function(player, _, playerIdOrName)
 end)
 
 addCommandHandler("unfreeze", function(player, _, playerIdOrName)
-    if not isAdmin(player, 2) then
+    if not isPlayerAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -412,7 +407,7 @@ end)
 local spectateData = {}
 
 addCommandHandler("spec", function(player, _, playerIdOrName)
-    if not isAdmin(player, 1) then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -451,13 +446,14 @@ addCommandHandler("spec", function(player, _, playerIdOrName)
     setElementAlpha(player, 0) -- Make invisible
     setElementFrozen(player, true)
 
-    outputChatBox("👁️ Now spectating " .. getPlayerName(targetPlayer) .. " | Use /specoff to stop", player, 255, 255, 0)
+    outputChatBox("👁️ Now spectating " .. getPlayerName(targetPlayer) .. " | Use /specoff to stop", player, 255,
+        255, 0)
 
     sendAdminMessage(getPlayerName(player) .. " is spectating " .. getPlayerName(targetPlayer))
 end)
 
 addCommandHandler("specoff", function(player, _)
-    if not isAdmin(player, 1) then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -485,7 +481,7 @@ end)
 
 -- 🌤️ Weather & Time Commands
 addCommandHandler("thoitiet", function(player, _, weatherId)
-    if not isAdmin(player, 3) then
+    if not isPlayerAdmin(player, 3) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -513,7 +509,7 @@ end)
 
 -- ⚠️ Kick & Ban Commands
 addCommandHandler("kick", function(player, _, playerIdOrName, ...)
-    if not isAdmin(player, 2) then
+    if not isPlayerAdmin(player, 2) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -524,7 +520,7 @@ addCommandHandler("kick", function(player, _, playerIdOrName, ...)
     end
 
     local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
-    local reason = table.concat({ ... }, " ") or "No reason specified"
+    local reason = table.concat({...}, " ") or "No reason specified"
 
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
@@ -533,15 +529,15 @@ addCommandHandler("kick", function(player, _, playerIdOrName, ...)
 
     local targetName = getPlayerName(targetPlayer)
 
-    outputChatBox("⚠️ " .. targetName .. " was kicked by " .. getPlayerName(player) .. " | Reason: " .. reason, root, 255,
-        100, 100)
+    outputChatBox("⚠️ " .. targetName .. " was kicked by " .. getPlayerName(player) .. " | Reason: " .. reason,
+        root, 255, 100, 100)
     outputServerLog("[KICK] " .. getPlayerName(player) .. " kicked " .. targetName .. " | Reason: " .. reason)
 
     kickPlayer(targetPlayer, reason)
 end)
 
 addCommandHandler("ban", function(player, _, playerIdOrName, ...)
-    if not isAdmin(player, 4) then
+    if not isPlayerAdmin(player, 4) then
         outputChatBox("❌ Access denied!", player, 255, 0, 0)
         return
     end
@@ -552,7 +548,7 @@ addCommandHandler("ban", function(player, _, playerIdOrName, ...)
     end
 
     local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
-    local reason = table.concat({ ... }, " ") or "No reason specified"
+    local reason = table.concat({...}, " ") or "No reason specified"
 
     if not targetPlayer then
         outputChatBox("❌ Player not found!", player, 255, 0, 0)
@@ -562,29 +558,154 @@ addCommandHandler("ban", function(player, _, playerIdOrName, ...)
     local targetName = getPlayerName(targetPlayer)
     local targetSerial = getPlayerSerial(targetPlayer)
 
-    outputChatBox("🔨 " .. targetName .. " was banned by " .. getPlayerName(player) .. " | Reason: " .. reason, root, 255,
-        0, 0)
-    outputServerLog("[BAN] " ..
-    getPlayerName(player) .. " banned " .. targetName .. " (Serial: " .. targetSerial .. ") | Reason: " .. reason)
+    outputChatBox("🔨 " .. targetName .. " was banned by " .. getPlayerName(player) .. " | Reason: " .. reason, root,
+        255, 0, 0)
+    outputServerLog("[BAN] " .. getPlayerName(player) .. " banned " .. targetName .. " (Serial: " .. targetSerial ..
+                        ") | Reason: " .. reason)
 
     banPlayer(targetPlayer, false, false, true, getRootElement(), reason)
 end)
 
--- 📋 Admin Help Command
-addCommandHandler("acmds", function(player, _)
-    if not isAdmin(player, 1) then
-        outputChatBox("❌ Access denied!", player, 255, 0, 0)
-        return
+-- 🚓 Speed Camera System
+setTimer(function()
+    for _, vehicle in ipairs(getElementsByType("vehicle")) do
+        local driver = getVehicleOccupant(vehicle, 0)
+        if driver then
+            local x, y, z = getElementPosition(vehicle)
+
+            -- Check all speed cameras in range - SAFE CHECK
+            if speedCameras and type(speedCameras) == "table" then
+                for _, camera in pairs(speedCameras) do
+                local distance = getDistanceBetweenPoints3D(x, y, z, camera.x, camera.y, camera.z)
+
+                if distance <= 15.0 then -- Speed camera range
+                    local vx, vy, vz = getElementVelocity(vehicle)
+                    local speed = math.sqrt(vx ^ 2 + vy ^ 2 + vz ^ 2) * 180 -- Convert to km/h
+
+                    if speed > camera.speedLimit then
+                        -- Speed violation detected
+                        local violation = {
+                            player = driver,
+                            vehicle = vehicle,
+                            speed = math.floor(speed),
+                            speedLimit = camera.speedLimit,
+                            cameraID = camera.id,
+                            location = {x, y, z}
+                        }
+
+                        handleSpeedViolation(violation)
+                    end
+                end
+            end
+            end
+        end
+    end
+end, 2000, 0)
+
+-- Handle speed violation
+function handleSpeedViolation(violation)
+    local player = violation.player
+    local playerName = getPlayerName(player)
+
+    local message = string.format("Speed Camera Violation: %s - Speed: %d km/h (Limit: %d) - Camera ID: %d", playerName,
+        violation.speed, violation.speedLimit, violation.cameraID)
+
+    -- Notify all police officers
+    for _, cop in ipairs(getElementsByType("player")) do
+        local job = getElementData(cop, "player.job")
+        if job == 1 then -- Police job
+            outputChatBox(message, cop, 255, 255, 0)
+        end
     end
 
-    outputChatBox("━━━━━━━━━━ 🛡️ ADMIN COMMANDS ━━━━━━━━━━", player, 100, 255, 100)
-    outputChatBox("Level 1: /goto, /spec, /specoff, /hoisinh, /respawn", player, 255, 255, 255)
-    outputChatBox("Level 2: /sethp, /setarmor, /jetpack, /fly, /gethere, /freeze, /unfreeze, /kick, /changeskin", player,
-        255, 255, 255)
-    outputChatBox("Level 3: /givemoney, /setmoney, /weather, /time", player, 255, 255, 255)
-    outputChatBox("Level 4: /ban", player, 255, 255, 255)
-    outputChatBox("Vehicle: /veh, /deleteveh, /listveh, /deleteallveh", player, 255, 255, 255)
-    outputChatBox("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", player, 100, 255, 100)
+    -- Log violation
+    outputDebugString("[SPEEDCAM] " .. message)
+
+    -- Optionally issue automatic ticket (if enabled)
+    local autoTicket = getElementData(player, "server.autoSpeedTickets")
+    if autoTicket then
+        local fine = (violation.speed - violation.speedLimit) * 50 -- $50 per km/h over limit
+        if fine > 5000 then
+            fine = 5000
+        end -- Max fine
+
+        local playerMoney = getElementData(player, "player.money") or 0
+        setElementData(player, "player.money", playerMoney - fine)
+
+        outputChatBox(string.format("Auto Speed Ticket: $%d - Speed: %d km/h (Limit: %d)", fine, violation.speed,
+            violation.speedLimit), player, 255, 100, 100)
+    end
+end
+
+-- SPEEDCAM COMMANDS INTEGRATION
+local speedCameras = {}
+local nextCameraID = 1
+
+local function loadSpeedCameras()
+    local query = "SELECT * FROM speed_cameras"
+    local dbConn = getDatabaseConnection and getDatabaseConnection()
+    if dbConn then
+        dbQuery(function(queryHandle)
+            local result = dbPoll(queryHandle, 0)
+            if result then
+                for _, row in ipairs(result) do
+                    speedCameras[row.id] = {
+                        id = row.id,
+                        x = row.x,
+                        y = row.y,
+                        z = row.z,
+                        speedLimit = row.speed_limit,
+                        creator = row.creator,
+                        created = row.created_date
+                    }
+                    if row.id >= nextCameraID then
+                        nextCameraID = row.id + 1
+                    end
+                end
+                -- outputDebugString("[SPEEDCAM] Loaded " .. #result .. " speed cameras")
+            else
+                outputDebugString("[SPEEDCAM] No speed cameras found in database")
+            end
+        end, dbConn, query)
+    else
+        outputDebugString("[SPEEDCAM] Database not available - cannot load speed cameras", 2)
+    end
+end
+-- Initialize speed camera system
+addEventHandler("onResourceStart", resourceRoot, function()
+    local dbConn = getDatabaseConnection and getDatabaseConnection()
+    if dbConn then
+        dbExec(dbConn, [[
+            CREATE TABLE IF NOT EXISTS speed_cameras (
+                id INTEGER PRIMARY KEY,
+                x REAL NOT NULL,
+                y REAL NOT NULL,
+                z REAL NOT NULL,
+                speed_limit INTEGER NOT NULL,
+                creator TEXT NOT NULL,
+                created_date INTEGER NOT NULL
+            )
+        ]])
+    else
+        outputDebugString("[SPEEDCAM] Database not available - cannot create speed_cameras table", 2)
+    end
+    loadSpeedCameras()
 end)
 
-outputServerLog("[ADMIN] Admin Commands System loaded successfully!")
+-- 📋 Admin Help Command
+if not isPlayerAdmin(player, 1) then
+    outputChatBox("❌ Access denied!", player, 255, 0, 0)
+    return
+end
+
+outputChatBox("━━━━━━━━━━ 🛡️ ADMIN COMMANDS ━━━━━━━━━━", player, 100, 255,
+    100)
+outputChatBox("Level 1: /goto, /spec, /specoff, /hoisinh, /respawn", player, 255, 255, 255)
+outputChatBox("Level 2: /sethp, /setarmor, /jetpack, /fly, /gethere, /freeze, /unfreeze, /kick, /changeskin", player,
+    255, 255, 255)
+outputChatBox("Level 3: /givemoney, /setmoney, /weather, /time", player, 255, 255, 255)
+outputChatBox("Level 4: /ban", player, 255, 255, 255)
+outputChatBox("Vehicle: /veh, /deleteveh, /listveh, /deleteallveh", player, 255, 255, 255)
+outputChatBox(
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    player, 100, 255, 100)

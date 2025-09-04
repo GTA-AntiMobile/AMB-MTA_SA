@@ -207,14 +207,403 @@ function addJobExperience(player, amount)
     local newLevel = math.floor(currentExp / 1000) + 1
     if newLevel > currentLevel then
         setElementData(player, "jobLevel", newLevel)
-        outputChatBox(COLOR_GREEN .. "Job Level Up! You are now level " .. newLevel .. "!", player)
-
         -- Level bonus
         local bonus = newLevel * 500
         givePlayerMoney(player, bonus)
         outputChatBox(COLOR_YELLOW .. "Level bonus: $" .. formatMoney(bonus), player)
     end
 end
+
+-- Job chat command
+addCommandHandler("j", function(player, cmd, ...)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if not playerData.job or playerData.job == "" then
+        outputChatBox("❌ Bạn không có công việc.", player, 255, 100, 100)
+        return
+    end
+
+    local message = table.concat({...}, " ")
+    if not message or message == "" then
+        outputChatBox("Sử dụng: /j [tin nhắn]", player, 255, 255, 255)
+        return
+    end
+
+    local playerName = getPlayerName(player)
+    local jobName = playerData.job
+
+    -- Send to all job members
+    for _, targetPlayer in ipairs(getElementsByType("player")) do
+        local targetData = getElementData(targetPlayer, "playerData")
+        if targetData and targetData.job == jobName then
+            outputChatBox(string.format("👷 [%s] %s: %s", jobName, playerName, message), targetPlayer, 255, 255, 100)
+        end
+    end
+end)
+
+-- Taxi driver commands
+addCommandHandler("taxi", function(player, cmd, action, playerIdOrName)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if playerData.job ~= "Taxi Driver" then
+        outputChatBox("❌ Bạn không phải là tài xế taxi.", player, 255, 100, 100)
+        return
+    end
+
+    if not action then
+        outputChatBox("Sử dụng: /taxi [accept/fare/help]", player, 255, 255, 255)
+        return
+    end
+
+    if action == "accept" then
+        if not playerIdOrName then
+            outputChatBox("Sử dụng: /taxi accept [player_id]", player, 255, 255, 255)
+            return
+        end
+
+        local targetPlayer = getPlayerFromNameOrId(playerIdOrName)
+        if not targetPlayer then
+            outputChatBox("❌ Không tìm thấy người chơi.", player, 255, 100, 100)
+            return
+        end
+
+        local targetData = getElementData(targetPlayer, "playerData") or {}
+        if not targetData.taxiRequest then
+            outputChatBox("❌ Người chơi khôn gọi taxi.", player, 255, 100, 100)
+            return
+        end
+
+        -- Accept taxi request
+        targetData.taxiDriver = player
+        playerData.taxiCustomer = targetPlayer
+        setElementData(player, "playerData", playerData)
+        setElementData(targetPlayer, "playerData", targetData)
+
+        outputChatBox(string.format("✅ Đã nhận taxi request từ %s.", getPlayerName(targetPlayer)), player, 0,
+            255, 0)
+        outputChatBox(string.format("🚕 Taxi driver %s đã nhận request của bạn.", getPlayerName(player)),
+            targetPlayer, 255, 255, 100)
+
+    elseif action == "fare" then
+        local customer = playerData.taxiCustomer
+        if not customer or not isElement(customer) then
+            outputChatBox("❌ Bạn không có khách hàn nào.", player, 255, 100, 100)
+            return
+        end
+
+        local fare = math.random(50, 200)
+        local customerData = getElementData(customer, "playerData") or {}
+
+        if (customerData.money or 0) < fare then
+            outputChatBox("❌ Khách hàng không có đủ tiền.", player, 255, 100, 100)
+            return
+        end
+
+        -- Transfer money
+        customerData.money = (customerData.money or 0) - fare
+        playerData.money = (playerData.money or 0) + fare
+
+        setElementData(player, "playerData", playerData)
+        setElementData(customer, "playerData", customerData)
+
+        outputChatBox(string.format("💰 Đã nhận $%d từ khách hàng.", fare), player, 0, 255, 0)
+        outputChatBox(string.format("💰 Đã trả $%d cho taxi driver.", fare), customer, 255, 255, 100)
+
+        -- Clear taxi relationship
+        playerData.taxiCustomer = nil
+        customerData.taxiDriver = nil
+        setElementData(player, "playerData", playerData)
+        setElementData(customer, "playerData", customerData)
+    end
+end)
+
+-- Call taxi command
+addCommandHandler("calltaxi", function(player)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if playerData.taxiRequest then
+        outputChatBox("❌ Bạn đã gọi taxi rồi.", player, 255, 100, 100)
+        return
+    end
+
+    playerData.taxiRequest = true
+    setElementData(player, "playerData", playerData)
+
+    -- Notify all taxi drivers
+    local taxiDrivers = 0
+    for _, taxiDriver in ipairs(getElementsByType("player")) do
+        local driverData = getElementData(taxiDriver, "playerData")
+        if driverData and driverData.job == "Taxi Driver" then
+            outputChatBox(string.format("🚕 TAXI REQUEST: %s (ID:%d) cần taxi!", getPlayerName(player),
+                getElementData(player, "playerID") or 0), taxiDriver, 255, 255, 0)
+            taxiDrivers = taxiDrivers + 1
+        end
+    end
+
+    if taxiDrivers > 0 then
+        outputChatBox(string.format("🚕 Đã gửi taxi request đến %d drivers.", taxiDrivers), player, 255, 255,
+            100)
+    else
+        outputChatBox("❌ Không có taxi driver nào online.", player, 255, 100, 100)
+        playerData.taxiRequest = false
+        setElementData(player, "playerData", playerData)
+    end
+end)
+
+-- Mechanic commands
+addCommandHandler("repair", function(player, _, playerIdOrName)
+    local playerData = getElementData(player, "playerData") or {}
+    if playerData.job ~= "Mechanic" then
+        outputChatBox("❌ Bạn không phải là thợ sửa xe.", player, 255, 0, 0)
+        return
+    end
+
+    local targetPlayer = player
+    if playerIdOrName then
+        targetPlayer = getPlayerFromNameOrId(playerIdOrName)
+    end
+
+    if not targetPlayer then
+        outputChatBox("❌ Người chơi không tìm thấy!", player, 255, 0, 0)
+        return
+    end
+
+    local vehicle = getPedOccupiedVehicle(targetPlayer)
+    if not vehicle then
+        outputChatBox("❌ Bạn đang không ngồi trên xe.", player, 255, 0, 0)
+        return
+    end
+
+    -- Check distance if repairing someone else
+    if targetPlayer ~= player then
+        local px, py, pz = getElementPosition(player)
+        local vx, vy, vz = getElementPosition(vehicle)
+        if getDistanceBetweenPoints3D(px, py, pz, vx, vy, vz) > 8 then
+            outputChatBox("❌ Xe ở quá xa để sửa.", player, 255, 0, 0)
+            return
+        end
+    end
+
+    -- Repair vehicle
+    fixVehicle(vehicle)
+    setVehicleEngineState(vehicle, true)
+
+    local fee = 200
+    local targetData = getElementData(targetPlayer, "playerData") or {}
+
+    if targetPlayer ~= player then
+        if (targetData.money or 0) < fee then
+            outputChatBox("❌ Khách hàng không đủ tiền ($200).", player, 255, 0, 0)
+            return
+        end
+        -- Transfer money
+        targetData.money = (targetData.money or 0) - fee
+        playerData.money = (playerData.money or 0) + fee
+        setElementData(targetPlayer, "playerData", targetData)
+        setElementData(player, "playerData", playerData)
+        outputChatBox("✅ Đã sửa xe cho " .. getPlayerName(targetPlayer) .. " và đã nhận $" .. fee .. ".",
+            player, 0, 255, 0)
+        outputChatBox("🔧 Xe của bạn đã được sửa bởi thợ sửa xe " .. getPlayerName(player) ..
+                          " với giá $" .. fee .. ".", targetPlayer, 0, 255, 100)
+    else
+        outputChatBox("✅ Xe của bạn đã được sửa thành công.", player, 0, 255, 0)
+    end
+end)
+
+-- Trucker commands
+addCommandHandler("loadcargo", function(player)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if playerData.job ~= "Trucker" then
+        outputChatBox("❌ Bạn không phải là trucker.", player, 255, 100, 100)
+        return
+    end
+
+    local vehicle = getPedOccupiedVehicle(player)
+    if not vehicle then
+        outputChatBox("❌ Bạn không ở trong xe.", player, 255, 100, 100)
+        return
+    end
+
+    local vehModel = getElementModel(vehicle)
+    local truckModels = {403, 414, 443, 515, 514}
+    local isTruck = false
+    for _, model in ipairs(truckModels) do
+        if vehModel == model then
+            isTruck = true
+            break
+        end
+    end
+
+    if not isTruck then
+        outputChatBox("❌ Bạn cần xe truck để load cargo.", player, 255, 100, 100)
+        return
+    end
+
+    if getElementData(vehicle, "cargo") then
+        outputChatBox("❌ Xe đã có cargo rồi.", player, 255, 100, 100)
+        return
+    end
+
+    -- Load cargo
+    local cargoTypes = {"Food", "Electronics", "Clothing", "Furniture", "Medicine"}
+    local cargoType = cargoTypes[math.random(#cargoTypes)]
+    local cargoValue = math.random(500, 2000)
+
+    setElementData(vehicle, "cargo", {
+        type = cargoType,
+        value = cargoValue,
+        loaded = getRealTime().timestamp
+    })
+
+    outputChatBox(string.format("📦 Đã load cargo: %s (Value: $%d)", cargoType, cargoValue), player, 0, 255, 0)
+end)
+
+addCommandHandler("unloadcargo", function(player)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if playerData.job ~= "Trucker" then
+        outputChatBox("❌ Bạn không phải là trucker.", player, 255, 100, 100)
+        return
+    end
+
+    local vehicle = getPedOccupiedVehicle(player)
+    if not vehicle then
+        outputChatBox("❌ Bạn không ở trong xe.", player, 255, 100, 100)
+        return
+    end
+
+    local cargo = getElementData(vehicle, "cargo")
+    if not cargo then
+        outputChatBox("❌ Xe không có cargo.", player, 255, 100, 100)
+        return
+    end
+
+    -- Pay for delivery
+    local payment = cargo.value
+    playerData.money = (playerData.money or 0) + payment
+    setElementData(player, "playerData", playerData)
+
+    -- Remove cargo
+    removeElementData(vehicle, "cargo")
+
+    outputChatBox(string.format("✅ Đã unload cargo và nhận $%d!", payment), player, 0, 255, 0)
+end)
+
+-- Medic commands
+addCommandHandler("heal", function(player, cmd, playerIdOrName)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if playerData.job ~= "Medic" then
+        outputChatBox("❌ Bạn không phải là medic.", player, 255, 100, 100)
+        return
+    end
+
+    local targetPlayer = player
+    if playerIdOrName then
+        targetPlayer = getPlayerFromNameOrId(playerIdOrName)
+    end
+
+    if not targetPlayer then
+        outputChatBox("❌ Không tìm thấy người chơi.", player, 255, 100, 100)
+        return
+    end
+
+    -- Check distance
+    if targetPlayer ~= player then
+        local px, py, pz = getElementPosition(player)
+        local tx, ty, tz = getElementPosition(targetPlayer)
+        if getDistanceBetweenPoints3D(px, py, pz, tx, ty, tz) > 3 then
+            outputChatBox("❌ Bạn quá xa để heal.", player, 255, 100, 100)
+            return
+        end
+    end
+
+    -- Heal player
+    setElementHealth(targetPlayer, 100)
+
+    local fee = 100
+    local targetData = getElementData(targetPlayer, "playerData") or {}
+
+    if targetPlayer ~= player then
+        if (targetData.money or 0) < fee then
+            outputChatBox("❌ Benh nhan khong co du tien ($100).", player, 255, 100, 100)
+            return
+        end
+
+        -- Transfer money
+        targetData.money = (targetData.money or 0) - fee
+        playerData.money = (playerData.money or 0) + fee
+        setElementData(targetPlayer, "playerData", targetData)
+        setElementData(player, "playerData", playerData)
+
+        outputChatBox(string.format("🏥 Da heal %s va nhan $%d.", getPlayerName(targetPlayer), fee), player, 0, 255, 0)
+        outputChatBox(string.format("🏥 Ban da duoc medic %s heal voi gia $%d.", getPlayerName(player), fee),
+            targetPlayer, 255, 255, 100)
+    else
+        outputChatBox("🏥 Da heal ban.", player, 0, 255, 0)
+    end
+end)
+
+-- Pilot commands
+addCommandHandler("takeoff", function(player, cmd, destination)
+    local playerData = getElementData(player, "playerData") or {}
+
+    if playerData.job ~= "Pilot" then
+        outputChatBox("❌ Ban khong phai la pilot.", player, 255, 100, 100)
+        return
+    end
+
+    local vehicle = getPedOccupiedVehicle(player)
+    if not vehicle then
+        outputChatBox("❌ Ban khong o trong aircraft.", player, 255, 100, 100)
+        return
+    end
+
+    local vehModel = getElementModel(vehicle)
+    local aircraftModels = {592, 577, 511, 512, 593, 520, 553, 476, 519, 460}
+    local isAircraft = false
+    for _, model in ipairs(aircraftModels) do
+        if vehModel == model then
+            isAircraft = true
+            break
+        end
+    end
+
+    if not isAircraft then
+        outputChatBox("❌ Ban can aircraft de fly.", player, 255, 100, 100)
+        return
+    end
+
+    if not destination then
+        outputChatBox("Su dung: /fly [ls/sf/lv]", player, 255, 255, 255)
+        return
+    end
+
+    local airports = {
+        ls = {1958.2, -2181.7, 13.5, "Los Santos Airport"},
+        sf = {-1212.9, -98.3, 14.1, "San Fierro Airport"},
+        lv = {1685.0, 1447.8, 10.8, "Las Venturas Airport"}
+    }
+
+    local airport = airports[string.lower(destination)]
+    if not airport then
+        outputChatBox("❌ Invalid destination. Use: ls, sf, lv", player, 255, 100, 100)
+        return
+    end
+
+    outputChatBox(string.format("✈️ Flying to %s...", airport[4]), player, 0, 255, 0)
+
+    -- Add waypoint or auto-pilot logic here
+    setElementData(vehicle, "flightDestination", {
+        x = airport[1],
+        y = airport[2],
+        z = airport[3],
+        name = airport[4]
+    })
+end)
+
+outputDebugString("[AMB] Jobs system loaded - 13 commands")
 
 -- Job command: /jobs
 addCommandHandler("jobs", function(player)

@@ -114,7 +114,7 @@ function dbSavePlayer(player)
         UPDATE accounts SET 
         SPos_x=?, SPos_y=?, SPos_z=?, SPos_r=?,
         Model=?, Money=?, pHealth=?, pArmor=?,
-        `Int`=?, VirtualWorld=?
+        `Int`=?, VirtualWorld=?, AdminLevel=?
         WHERE Username=?
     ]],
         x, y, z, rot, skin, money, health, armor, interior, dim, username)
@@ -144,7 +144,7 @@ function dbSpawnPlayer(player, accountData)
     local spawnSkin = skin
     if skin >= 20001 and skin <= 29999 then
         spawnSkin = 299 -- Use default skin for spawning
-        outputDebugString("[SPAWN] Will spawn with default skin 299, then apply custom skin " .. skin)
+        -- outputDebugString("[SPAWN] Will spawn with default skin 299, then apply custom skin " .. skin)
     end
     
     -- Actually spawn the player at the saved position
@@ -163,7 +163,7 @@ function dbSpawnPlayer(player, accountData)
             if customModels[skin] and customModels[skin].type == "ped" then
                 local success = exports["newmodels_azul"]:setElementCustomModel(player, skin)
                 if success then
-                    outputDebugString("[SKIN] Restored custom ped (ID: " .. tostring(skin) .. ", Name: " .. (customModels[skin].name or "Unknown") .. ") for player " .. getPlayerName(player))
+                    -- outputDebugString("[SKIN] Restored custom ped (ID: " .. tostring(skin) .. ", Name: " .. (customModels[skin].name or "Unknown") .. ") for player " .. getPlayerName(player))
                     setElementData(player, "customSkinID", skin)
                 else
                     outputDebugString("[SKIN] Failed to restore custom ped " .. tostring(skin) .. ", using fallback", 2)

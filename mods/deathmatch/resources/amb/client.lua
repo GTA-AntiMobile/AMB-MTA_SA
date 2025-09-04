@@ -215,3 +215,12 @@ addEventHandler("onClientLoadCustomSkin", root, function(customSkinID)
         engineReplaceModel(dff, baseSkinID)
     end
 end)
+
+addEventHandler("onResourceStart", resourceRoot, loadBanks)
+addEvent("onAdminLevelChanged", true)
+addEventHandler("onAdminLevelChanged", root, function(newLevel)
+    local level = tonumber(newLevel) or 0
+    outputChatBox("🚨 Admin level cua ban da duoc cap len: " .. level, 255, 200, 0)
+    -- Cập nhật HUD / icon admin ở đây nếu có
+    -- playSoundFrontEnd(44) -- ví dụ
+end)

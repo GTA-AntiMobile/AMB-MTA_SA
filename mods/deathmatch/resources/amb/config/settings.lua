@@ -35,9 +35,6 @@ PAYDAY_AMOUNT = 1000
 PAYDAY_INTERVAL = 1800000 -- 30 minutes in milliseconds
 BANK_INTEREST_RATE = 0.02 -- 2% per payday
 
--- Admin Settings (Reference to shared/enums.lua)
--- ADMIN_LEVELS được định nghĩa trong shared/enums.lua để tránh trùng lặp
-
 -- VIP Settings
 VIP_LEVELS = {
     [1] = "Bronze VIP",

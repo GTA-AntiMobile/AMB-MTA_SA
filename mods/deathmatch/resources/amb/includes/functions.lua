@@ -146,18 +146,6 @@ function hasPermission(player, permission, level)
     return false
 end
 
-function formatMoney(amount)
-    local formatted = tostring(amount)
-    local k
-    while true do
-        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-        if k == 0 then
-            break
-        end
-    end
-    return formatted
-end
-
 function sendMessageToAdmins(message, minLevel)
     minLevel = minLevel or ADMIN_LEVELS.MODERATOR
     for _, player in ipairs(getElementsByType("player")) do
@@ -378,6 +366,30 @@ function dumpTable(table, player)
     else
         print(result)
     end
+end
+
+banks = {} -- global table lưu thông tin banks
+function loadBanks()
+    local file = fileOpen("data/properties/banks.txt")
+    if not file then
+        outputDebugString("Failed to open banks.txt")
+        return
+    end
+
+    while not fileIsEOF(file) do
+        local line = fileRead(file, 1024)
+        line = line:gsub(";.*", ""):gsub("%s+", "") -- bỏ comment & space
+        if line ~= "" then
+            local modelID, x, y, z, rot, int, dim = line:match(
+                "([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+)")
+            if modelID then
+                table.insert(banks, {tonumber(x), tonumber(y), tonumber(z), tonumber(int), tonumber(dim)})
+            end
+        end
+    end
+
+    fileClose(file)
+    outputDebugString("Loaded " .. #banks .. " banks from banks.txt")
 end
 
 print("🔧 Functions loaded")

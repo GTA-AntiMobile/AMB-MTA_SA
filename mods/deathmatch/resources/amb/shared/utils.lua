@@ -194,24 +194,6 @@ function formatTimeStamp(timestamp, format)
     return os.date(format, timestamp)
 end
 
--- Money Utilities
-function formatMoney(amount)
-    local formatted = tostring(math.abs(amount))
-    local k = 1
-    while k < #formatted do
-        if k % 3 == 1 and k > 1 then
-            formatted = formatted:sub(1, -k) .. "," .. formatted:sub(-k + 1)
-        end
-        k = k + 1
-    end
-
-    if amount < 0 then
-        return "-$" .. formatted
-    else
-        return "$" .. formatted
-    end
-end
-
 function parseMoney(str)
     str = str:gsub("[$,]", "")
     return tonumber(str) or 0
@@ -602,42 +584,29 @@ function getCustomVehicleName(vehicle)
     return "Unknown Vehicle " .. id
 end
 
--- function getCustomVehicleName(vehicle)
---     if not isElement(vehicle) then return "Unknown Vehicle" end
+-- Kiểm tra khoảng cách đến bank/ATM
+function isPlayerNearBankOrATM(player)
+    local x, y, z = getElementPosition(player)
+    for _, bank in ipairs(banks) do
+        local bx, by, bz = bank[1], bank[2], bank[3]
+        if getDistanceBetweenPoints3D(x, y, z, bx, by, bz) <= 15 then
+            return true
+        end
+    end
+    return false
+end
 
---     local customName
---     local id = getElementData(vehicle, "customVehicleID")
---     if not id then
---         id = getElementModel(vehicle)
---     end
-
---     -- Custom vehicles (30000+) - use same logic as /cv command
---     if id >= 30001 and id < 40000 then
---         local models = getNewmodelsAvailableModels()
---         for _, customVehicle in ipairs(models.vehicles) do
---             if id == customVehicle.id then
---                 customName = customVehicle.name
-
---             end
---             -- customName = getElementData(vehicle, "customVehicleName")
---         end
---         -- Try to get name from newmodels_azul
---         if customName then
---             return customName
---         end
-
---         -- Fallback for custom vehicles
---         return "Custom Vehicle " .. id
---     end
-
---     -- Standard GTA vehicles (400-611)
---     if id >= 400 and id <= 611 then
---         return getVehicleName(vehicle) or ("Vehicle " .. id)
---     end
-
---     -- Final fallback
---     return "Unknown Vehicle " .. id
--- end
+function formatMoney(amount)
+    local formatted = tostring(amount)
+    local k
+    while true do
+        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+        if k == 0 then
+            break
+        end
+    end
+    return formatted
+end
 
 -- Export utilities to global namespace
 _G.AMB_UTILS = {
