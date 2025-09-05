@@ -7,6 +7,8 @@
 -- New Features: Enhanced Client Systems (Scoreboard, GPS, Voice, Fuel) ✨
 -- ================================================================
 -- Global server configuration
+-- Load player cleanup logic
+require("includes/core/player/cleanup.lua")
 SERVER_CONFIG = {
     name = "AMB MTA:SA Production",
     version = "1.0.0-production",
@@ -35,79 +37,17 @@ addEventHandler("onResourceStart", resourceRoot, function()
     end, 2000, 1)
 end)
 
--- -- Custom command event handler
--- addEvent("onCustomCommand", true)
--- addEventHandler("onCustomCommand", root, function(command)
---     local player = client
---     if not player or not isElement(player) then return end
-
---     local playerName = getPlayerName(player)
---     outputServerLog("[CUSTOM_COMMAND] " .. playerName .. ": /" .. command)
-
---     -- Parse command và arguments
---     local parts = {}
---     for part in string.gmatch(command, "%S+") do
---         table.insert(parts, part)
---     end
-
---     if #parts > 0 then
---         local cmd = parts[1]
---         local args = {}
---         for i = 2, #parts do
---             table.insert(args, parts[i])
---         end
-
---         -- Handle specific commands manually
---         if cmd == "cv" then
---             local idStr = args[1]
---             local cid = tonumber(idStr)
---             if not cid then
---                 outputChatBox("Usage: /cv [modelID]", player, 255, 0, 0)
---                 outputChatBox("Use /listcv to see available models", player, 255, 255, 0)
---                 return
---             end
-
---             local x, y, z = getElementPosition(player)
---             local _, _, rotZ = getElementRotation(player)
---             local radRot = math.rad(rotZ)
---             x = x + 5.0 * math.sin(radRot)
---             y = y + 5.0 * math.cos(radRot)
-
---             local vehicle
-
---             -- Use newmodels_azul for custom vehicles (30000+)
---             if cid >= 30000 and cid < 40000 then
---                 local newmodelsResource = getResourceFromName("newmodels_azul")
---                 if newmodelsResource and getResourceState(newmodelsResource) == "running" then
---                     vehicle = exports["newmodels_azul"]:createVehicle(cid, x, y, z, 0, 0, rotZ)
---                     if vehicle then
---                         outputChatBox("✅ Custom vehicle " .. cid .. " created!", player, 0, 255, 0)
---                     else
---                         outputChatBox("❌ Failed to create custom vehicle " .. cid, player, 255, 0, 0)
---                     end
---                 else
---                     outputChatBox("❌ newmodels_azul resource not running", player, 255, 0, 0)
---                 end
---             else
---                 -- Regular vehicle
---                 vehicle = createVehicle(cid, x, y, z, 0, 0, rotZ)
---                 if vehicle then
---                     outputChatBox("✅ Vehicle " .. cid .. " created!", player, 0, 255, 0)
---                 else
---                     outputChatBox("❌ Invalid vehicle ID: " .. cid, player, 255, 0, 0)
---                 end
---             end
---         elseif cmd == "test" then
---             outputChatBox("✅ Test command works! Custom chat system working.", player, 0, 255, 0)
---         else
---             outputChatBox("⚠️ Unknown command: /" .. _, player, 255, 100, 100)
---         end
---     end
--- end)
-
 -- Resource stop event handler
 addEventHandler("onResourceStop", resourceRoot, function()
     outputServerLog("AMB MTA:SA v1.1.2-production stopped")
+    -- Auto logout all players and trigger client force logout
+    for _, player in ipairs(getElementsByType("player")) do
+        setElementData(player, "loggedIn", false)
+        triggerClientEvent(player, "onForceLogout", player)
+        -- Nếu có biến khác như "username", "adminLevel" cũng nên xóa hoặc reset
+        -- setElementData(player, "username", nil)
+        -- setElementData(player, "adminLevel", nil)
+    end
 end)
 
 -- Server ready event for other modules to hook into

@@ -1,7 +1,4 @@
--- ================================================================
--- AMB MTA:SA - Login & Register Handler
--- ================================================================
--- Player login
+require("includes/core/database.lua")
 addEvent("onPlayerLoginRequest", true)
 addEventHandler("onPlayerLoginRequest", root, function(username, password)
     if not username or not password then
@@ -13,8 +10,8 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
     if row then
         local hashed = WP_Hash(password)
         if row.Key == hashed then
-            -- Send success response to client (client will close login window)
-            triggerClientEvent(client, "onLoginResponse", root, true, "Login successful!")
+            -- Send success response to client, kèm dữ liệu account
+            triggerClientEvent(client, "onLoginResponse", root, true, "Login successful!", row)
 
             -- Send welcome message ONLY ONCE to avoid duplication
             outputChatBox("🎉 Welcome back, " .. username .. "!", client, 0, 255, 0)
@@ -28,23 +25,7 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
             setElementData(client, "vipLevel", tonumber(row.VIPLevel) or 0)
             setElementData(client, "playerMoney", tonumber(row.Money) or 5000)
             setElementData(client, "bankMoney", tonumber(row.Bank) or 20000)
-
-            -- Keep existing Player ID assigned by onPlayerJoin (SA-MP style 0-based slot system)
-            -- Don't override with database ID or serial
-
-            -- Spawn player at saved position using database function
-            dbSpawnPlayer(client, row)
-
-            -- Set additional stats
-            setElementHealth(client, tonumber(row.pHealth) or 100)
-            setPedArmor(client, tonumber(row.pArmor) or 0)
-            setElementInterior(client, tonumber(row.Int) or 0)
-            setElementDimension(client, tonumber(row.VirtualWorld) or 0)
-            setElementFrozen(client, false)
-
-            -- Enable controls & HUD
-            toggleAllControls(client, true)
-            setPlayerHudComponentVisible(client, "all", true)
+            -- Không spawn player ở đây nữa, client sẽ gửi yêu cầu spawn sau khi đóng modal login
         else
             triggerClientEvent(client, "onLoginResponse", root, false, "Wrong password")
             outputDebugString("❌ [LOGIN] Wrong password for " .. username)
@@ -53,6 +34,21 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
         triggerClientEvent(client, "onLoginResponse", root, false, "Account not found")
         outputDebugString("❌ [LOGIN] Account not found: " .. username)
     end
+-- Nhận yêu cầu spawn từ client sau khi login thành công
+addEvent("onPlayerSpawnRequest", true)
+addEventHandler("onPlayerSpawnRequest", root, function(accountData)
+    if not client or not accountData then return end
+    dbSpawnPlayer(client, accountData)
+    -- Set additional stats
+    setElementHealth(client, tonumber(accountData.pHealth) or 100)
+    setPedArmor(client, tonumber(accountData.pArmor) or 0)
+    setElementInterior(client, tonumber(accountData.Int) or 0)
+    setElementDimension(client, tonumber(accountData.VirtualWorld) or 0)
+    setElementFrozen(client, false)
+    -- Enable controls & HUD
+    toggleAllControls(client, true)
+    setPlayerHudComponentVisible(client, "all", true)
+end)
 end)
 
 -- Player register

@@ -1,12 +1,13 @@
 -- ================================================================
 -- AMB MTA:SA - Database Module
 -- ================================================================
-
 local db_connection = nil
 
 -- Hash password (MD5)
 function WP_Hash(password)
-    if not password then return "" end
+    if not password then
+        return ""
+    end
     return md5(password)
 end
 
@@ -21,6 +22,7 @@ function initDatabase()
     local cfg = DATABASE_CONFIG.mysql
     local connStr = string.format("dbname=%s;host=%s;port=%d", cfg.database, cfg.host, cfg.port)
     db_connection = dbConnect("mysql", connStr, cfg.user, cfg.password, "share=1")
+    _G.db_connection = db_connection
 
     if db_connection then
         -- createAccountsTable() -- Commented out - using existing database from original.sql
@@ -33,7 +35,9 @@ end
 
 -- Create accounts table if not exists
 function createAccountsTable()
-    if not db_connection then return end
+    if not db_connection then
+        return
+    end
     local query = [[
         CREATE TABLE IF NOT EXISTS accounts (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,7 +67,9 @@ end
 
 -- Load account data
 function dbLoadPlayerData(username)
-    if not db_connection then return nil end
+    if not db_connection then
+        return nil
+    end
     local qh = dbQuery(db_connection, "SELECT * FROM accounts WHERE Username=? LIMIT 1", username)
     local result = dbPoll(qh, -1)
     if result and #result > 0 then
@@ -74,27 +80,30 @@ end
 
 -- Create account
 function dbCreateAccount(username, password)
-    if not db_connection then return false, "DB not connected" end
+    if not db_connection then
+        return false, "DB not connected"
+    end
     if dbLoadPlayerData(username) then
         return false, "Username already exists"
     end
     local hashed = WP_Hash(password)
-    local success = dbExec(db_connection,
-        "INSERT INTO accounts (Username, `Key`) VALUES (?, ?)",
-        username, hashed
-    )
+    local success = dbExec(db_connection, "INSERT INTO accounts (Username, `Key`) VALUES (?, ?)", username, hashed)
     return success, success and "Account created" or "Failed to create account"
 end
 
 -- Save player
 function dbSavePlayer(player)
-    if not db_connection or not isElement(player) then return end
+    if not db_connection or not isElement(player) then
+        return
+    end
     local username = getElementData(player, "username")
-    if not username then return end
+    if not username then
+        return
+    end
 
-    local x,y,z = getElementPosition(player)
-    local _,_,rot = getElementRotation(player)
-    
+    local x, y, z = getElementPosition(player)
+    local _, _, rot = getElementRotation(player)
+
     -- Get skin using newmodels system to handle custom skins properly
     local skin = 299 -- default fallback
     local newmodelsResource = getResourceFromName("newmodels_azul")
@@ -103,7 +112,7 @@ function dbSavePlayer(player)
     else
         skin = getElementModel(player)
     end
-    
+
     local money = getPlayerMoney(player)
     local health = getElementHealth(player)
     local armor = getPedArmor(player)
@@ -116,13 +125,14 @@ function dbSavePlayer(player)
         Model=?, Money=?, pHealth=?, pArmor=?,
         `Int`=?, VirtualWorld=?, AdminLevel=?
         WHERE Username=?
-    ]],
-        x, y, z, rot, skin, money, health, armor, interior, dim, username)
+    ]], x, y, z, rot, skin, money, health, armor, interior, dim, username)
 end
 
 -- Spawn player from DB
 function dbSpawnPlayer(player, accountData)
-    if not isElement(player) or not accountData then return end
+    if not isElement(player) or not accountData then
+        return
+    end
     local x = tonumber(accountData.SPos_x) or 1642.9
     local y = tonumber(accountData.SPos_y) or -2237.6
     local z = tonumber(accountData.SPos_z) or 13.5
@@ -134,26 +144,26 @@ function dbSpawnPlayer(player, accountData)
     if (x == 0 and y == 0 and z == 0) then
         x, y, z, rot = 1642.9, -2237.6, 13.5, 0
     end
-    
+
     local skin = accountData.Model or 299
-    
+
     -- Fade camera before spawning
     fadeCamera(player, false, 0.0)
-    
+
     -- For custom skins (20001+), spawn with default skin first, then apply custom model
     local spawnSkin = skin
     if skin >= 20001 and skin <= 29999 then
         spawnSkin = 299 -- Use default skin for spawning
         -- outputDebugString("[SPAWN] Will spawn with default skin 299, then apply custom skin " .. skin)
     end
-    
+
     -- Actually spawn the player at the saved position
     spawnPlayer(player, x, y, z, rot, spawnSkin, interior, dimension)
-    
+
     -- Set player properties
     setElementInterior(player, interior)
     setElementDimension(player, dimension)
-    
+
     -- Check if it's a custom skin using newmodels_azul
     if skin >= 20001 and skin <= 29999 then
         -- Custom skin: apply using newmodels_azul
@@ -180,7 +190,8 @@ function dbSpawnPlayer(player, accountData)
     else
         -- Standard GTA skin (0-312) - already applied during spawn
         if skin >= 0 and skin <= 312 then
-            outputDebugString("[SKIN] Spawned standard skin (ID: " .. tostring(skin) .. ") for player " .. getPlayerName(player))
+            outputDebugString("[SKIN] Spawned standard skin (ID: " .. tostring(skin) .. ") for player " ..
+                                  getPlayerName(player))
         else
             outputDebugString("[SKIN] Invalid skin ID " .. tostring(skin) .. ", using default", 2)
             setElementModel(player, 299)
@@ -190,19 +201,19 @@ function dbSpawnPlayer(player, accountData)
             removeElementData(player, "customSkinID")
         end
     end
-    
+
     -- Restore player stats
     local health = tonumber(accountData.pHealth) or 100
     local armor = tonumber(accountData.pArmor) or 0
     local money = tonumber(accountData.Money) or 5000
-    
+
     setElementHealth(player, health)
     setPedArmor(player, armor)
     setPlayerMoney(player, money)
-    
+
     -- Set camera and fade back
     setCameraTarget(player, player)
-    
+
     -- Delay fade in để đảm bảo mọi thứ đã load
     setTimer(function()
         if isElement(player) then
@@ -212,21 +223,29 @@ function dbSpawnPlayer(player, accountData)
 end
 
 -- Exports
-function getDatabaseConnection() return db_connection end
-function isDatabaseConnected() return db_connection ~= nil end
+function getDatabaseConnection()
+    return db_connection
+end
+function isDatabaseConnected()
+    return db_connection ~= nil
+end
 
 -- Resource start/stop
 addEventHandler("onResourceStart", resourceRoot, initDatabase)
 addEventHandler("onResourceStop", resourceRoot, function()
-    for _,p in ipairs(getElementsByType("player")) do
-        if getElementData(p,"loggedIn") then dbSavePlayer(p) end
+    for _, p in ipairs(getElementsByType("player")) do
+        if getElementData(p, "loggedIn") then
+            dbSavePlayer(p)
+        end
     end
-    if db_connection then destroyElement(db_connection) end
+    if db_connection then
+        destroyElement(db_connection)
+    end
 end)
 
 -- Quit server
 addEventHandler("onPlayerQuit", root, function()
-    if getElementData(source,"loggedIn") then
+    if getElementData(source, "loggedIn") then
         dbSavePlayer(source)
     end
 end)

@@ -26,6 +26,7 @@
     <script src="includes/core/admin/vehicles.lua" type="server" />
     <script src="includes/core/admin/basic_commands.lua" type="server" />
     <script src="includes/core/player/login.lua" type="server" />
+    <script src="includes/core/player/cleanup.lua" type="server" />
     <script src="includes/core/player/animlist.lua" type="server" />
     <script src="includes/core/vehicle/dealership.lua" type="server" />
     <script src="includes/core/police/system.lua" type="server" />
@@ -149,6 +150,7 @@
     <event name="onCustomPlayerChat" />
     <event name="onCustomPlayerCommand" />
     <event name="onServerCustomChatMessage" />
+    <event name="onForceLogout" />
 
 
     <!-- Settings -->

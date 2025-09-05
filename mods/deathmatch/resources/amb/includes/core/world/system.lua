@@ -6,7 +6,7 @@
 addCommandHandler("time", function(player, cmd, hour, minute)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 3 then
+    if isPlayerAdmin(player, 3) then
         outputChatBox("❌ Ban can admin level 3 de thay doi gio.", player, 255, 100, 100)
         return
     end
@@ -35,7 +35,7 @@ end)
 addCommandHandler("gravity", function(player, cmd, gravityLevel)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 4 then
+    if isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban can admin level 4 de thay doi gravity.", player, 255, 100, 100)
         return
     end
@@ -61,7 +61,7 @@ end)
 addCommandHandler("gamespeed", function(player, cmd, speed)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 4 then
+    if isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban can admin level 4 de thay doi game speed.", player, 255, 100, 100)
         return
     end
@@ -87,7 +87,7 @@ end)
 addCommandHandler("waveheight", function(player, cmd, height)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 3 then
+    if isPlayerAdmin(player, 3) then
         outputChatBox("❌ Ban can admin level 3 de thay doi wave height.", player, 255, 100, 100)
         return
     end
@@ -113,7 +113,7 @@ end)
 addCommandHandler("worldproperty", function(player, cmd, property, state)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 5 then
+    if isPlayerAdmin(player, 5) then
         outputChatBox("❌ Ban can admin level 5 de thay doi world properties.", player, 255, 100, 100)
         return
     end
@@ -158,7 +158,7 @@ end)
 addCommandHandler("explode", function(player, cmd, x, y, z, type)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 4 then
+    if isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban can admin level 4 de tao explosion.", player, 255, 100, 100)
         return
     end
@@ -194,7 +194,7 @@ end)
 addCommandHandler("clearworld", function(player)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 4 then
+    if isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban can admin level 4 de clear world effects.", player, 255, 100, 100)
         return
     end
@@ -220,7 +220,7 @@ end)
 addCommandHandler("createobj", function(player, cmd, modelID, ...)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 3 then
+    if isPlayerAdmin(player, 3) then
         outputChatBox("❌ Ban can admin level 3 de tao object.", player, 255, 100, 100)
         return
     end
@@ -281,7 +281,7 @@ end)
 addCommandHandler("nearobj", function(player, cmd, radius)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 2 then
+    if isPlayerAdmin(player, 2) then
         outputChatBox("❌ Ban can admin level 2 de xem object gan ban.", player, 255, 100, 100)
         return
     end
@@ -340,7 +340,7 @@ end)
 addCommandHandler("delobj", function(player, cmd, radius)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 4 then
+    if isPlayerAdmin(player, 4) then
         outputChatBox("❌ Ban can admin level 4 de xoa object.", player, 255, 100, 100)
         return
     end

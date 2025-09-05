@@ -110,9 +110,9 @@ addEventHandler("onCustomPlayerCommand", root, function(cmd)
     -- end
 
     -- Kiểm tra command có tồn tại không
-    if not registeredCommands[cmd] then
+    if not registeredCommands[parts[1]] then
         cancelEvent()
-        outputChatBox("⚠️ Lệnh '" .. cmd .. "' không tồn tại!", source, 255, 50, 50)
+        outputChatBox("⚠️ Lệnh '" .. parts[1] .. "' không tồn tại!", source, 255, 50, 50)
     end
 
     -- MTA executeCommandHandler format: executeCommandHandler(commandName, responsibleElement, [arg1, arg2, ...])
@@ -122,7 +122,7 @@ addEventHandler("onCustomPlayerCommand", root, function(cmd)
     else
         -- Convert args to single string như MTA mong đợi
         local argString = table.concat(args, " ")
-        outputDebugString("[CHAT] Final arg string: '" .. argString .. "'")
+        -- outputDebugString("[CHAT] Final arg string: '" .. argString .. "'")
         executeCommandHandler(command, player, argString)
     end
 end)

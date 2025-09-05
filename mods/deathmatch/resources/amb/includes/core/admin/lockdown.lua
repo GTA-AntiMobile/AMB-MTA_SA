@@ -220,7 +220,7 @@ end)
 addCommandHandler("ar", function(player, cmd, reportID, ...)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 1 then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("❌ Ban can admin level 1 de tra loi report.", player, 255, 100, 100)
         return
     end
@@ -270,7 +270,7 @@ end)
 addCommandHandler("reports", function(player)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 1 then
+    if isPlayerAdmin(player, 1) then
         outputChatBox("❌ Ban can admin level 1 de xem reports.", player, 255, 100, 100)
         return
     end
@@ -317,7 +317,7 @@ end)
 addCommandHandler("anticheat", function(player, cmd, targetName, cheatType)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 2 then
+    if isPlayerAdmin(player, 2) then
         outputChatBox("❌ Ban can admin level 2 de su dung anticheat.", player, 255, 100, 100)
         return
     end
@@ -380,7 +380,7 @@ end)
 addCommandHandler("warn", function(player, cmd, targetName, ...)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 1 then
+    if isPlayerAdmin(player, 1) then
         outputChatBox("❌ Ban can admin level 1 de warn nguoi choi.", player, 255, 100, 100)
         return
     end
@@ -456,7 +456,7 @@ end)
 addCommandHandler("checkwarns", function(player, cmd, targetName)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 1 then
+    if isPlayerAdmin(player, 1) then
         outputChatBox("❌ Ban can admin level 1 de check warnings.", player, 255, 100, 100)
         return
     end
@@ -496,7 +496,7 @@ end)
 addCommandHandler("secscan", function(player, cmd, targetName)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 3 then
+    if isPlayerAdmin(player, 3) then
         outputChatBox("❌ Ban can admin level 3 de security scan.", player, 255, 100, 100)
         return
     end
@@ -559,7 +559,7 @@ end)
 addCommandHandler("endlockdown", function(player)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 5 then
+    if isPlayerAdmin(player, 5) then
         outputChatBox("❌ Ban can admin level 5 de end lockdown.", player, 255, 100, 100)
         return
     end
@@ -591,7 +591,7 @@ end
 addCommandHandler("spec", function(player, cmd, targetName)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 2 then
+    if not isPlayerAdmin(player, 2) then
         outputChatBox("❌ Ban can admin level 2 de spectate.", player, 255, 100, 100)
         return
     end
@@ -616,7 +616,7 @@ addCommandHandler("spec", function(player, cmd, targetName)
 
     -- Start spectating
     setCameraTarget(player, targetPlayer)
-    outputChatBox(string.format("👁️ Dang spectate %s. Su dung /spec de dung.", getPlayerName(targetPlayer)),
+    outputChatBox(string.format("👁️ Dang spectate %s. Su dung /specoff de dung.", getPlayerName(targetPlayer)),
         player, 255, 255, 0)
 end)
 
@@ -624,7 +624,7 @@ end)
 addCommandHandler("checkip", function(player, cmd, targetName)
     local playerData = getElementData(player, "playerData") or {}
 
-    if (playerData.adminLevel or 0) < 3 then
+    if isPlayerAdmin(player, 3) then
         outputChatBox("❌ Ban can admin level 3 de check IP.", player, 255, 100, 100)
         return
     end
