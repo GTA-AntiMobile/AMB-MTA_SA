@@ -57,6 +57,7 @@ addCommandHandler("togchancegambler", function(player)
     outputDebugString("[EVENT] " .. getPlayerName(player) .. " toggled chance gambler: " ..
                           tostring(eventSystem.chanceGambler))
 end)
+
 addCommandHandler("gamblechances", function(player)
     if not eventSystem.chanceGambler then
         outputChatBox("Su kien chance gambler chua duoc kich hoat!", player, 255, 0, 0)
@@ -239,6 +240,44 @@ addCommandHandler("unzombie", function(player, _, playerIdOrName)
 
     outputChatBox("Ban da chua " .. getPlayerName(target) .. " khoi zombie", player, 0, 255, 0)
     outputChatBox("Ban da duoc chua khoi zombie boi admin " .. getPlayerName(player), target, 0, 255, 0)
+end)
+
+addCommandHandler("bite", function(player, _, playerIdOrName)
+    if not getElementData(player, "player.zombie") then
+        outputChatBox("Chi zombie moi co the can!", player, 255, 0, 0)
+        return
+    end
+
+    if not playerIdOrName then
+        outputChatBox("Su dung: /bite [player]", player, 255, 255, 255)
+        return
+    end
+
+    local target = getPlayerFromNameOrId(playerIdOrName)
+    if not target then
+        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
+        return
+    end
+
+    if getElementData(target, "player.zombie") then
+        outputChatBox(getPlayerName(target) .. " da la zombie roi!", player, 255, 0, 0)
+        return
+    end
+
+    -- Check distance
+    local x1, y1, z1 = getElementPosition(player)
+    local x2, y2, z2 = getElementPosition(target)
+    local dist = getDistanceBetweenPoints3D(x1, y1, z1, x2, y2, z2)
+
+    if dist > 3 then
+        outputChatBox("Ban can o gan hon de can!", player, 255, 0, 0)
+        return
+    end
+
+    -- Infect target
+    setElementModel(target, 162)
+    setElementData(target, "player.zombie", true)
+    eventSystem.zombie.infected[target] = true
 
     outputChatBox("Ban da can " .. getPlayerName(target) .. "!", player, 0, 255, 0)
     outputChatBox("Ban bi " .. getPlayerName(player) .. " can va tro thanh zombie!", target, 255, 0, 0)

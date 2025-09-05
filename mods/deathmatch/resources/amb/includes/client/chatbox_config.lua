@@ -11,7 +11,7 @@ local lineHeight = math.floor(fontBaseHeight + 6)
 
 -- Messages & history
 local chatMessages = {}
-local maxMessages = 300
+-- local maxMessages = 300
 local chatInputBox = nil
 local chatInputActive = false
 local chatKeyHandler = nil
@@ -40,9 +40,9 @@ function addChatMessage(text, r, g, b)
             b = b or 255
         })
     end
-    while #chatMessages > maxMessages do
-        table.remove(chatMessages, 1)
-    end
+    -- while #chatMessages > maxMessages do
+    --     table.remove(chatMessages, 1)
+    -- end
     chatScrollOffset = 0
 end
 

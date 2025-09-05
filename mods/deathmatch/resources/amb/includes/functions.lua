@@ -392,4 +392,27 @@ function loadBanks()
     outputDebugString("Loaded " .. #banks .. " banks from banks.txt")
 end
 
+-- Đăng ký lệnh đã có để check lệnh ko tồn tại
+-- Lưu bản gốc để gọi lại
+local _addCommandHandler = addCommandHandler
+_G.registeredCommands = _G.registeredCommands or {}
+local registeredCommands = _G.registeredCommands
+
+-- Hook lại
+function addCommandHandler(command, handler, restricted, caseSensitive)
+    registeredCommands[command] = true
+    return _addCommandHandler(command, handler, restricted, caseSensitive)
+end
+
+-- Chặn chat lệnh không tồn tại
+addEventHandler("onPlayerChat", root, function(message, msgType)
+    if msgType == 0 and message:sub(1, 1) == "/" then
+        local cmd = message:sub(2):match("^(%S+)")
+        if not registeredCommands[cmd] then
+            cancelEvent()
+            outputChatBox("⚠️ Lệnh '" .. cmd .. "' không tồn tại!", source, 255, 50, 50)
+        end
+    end
+end)
+
 print("🔧 Functions loaded")

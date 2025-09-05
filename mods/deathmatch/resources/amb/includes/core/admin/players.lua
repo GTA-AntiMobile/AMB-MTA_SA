@@ -159,7 +159,6 @@ end)
 
 -- /goto command - Teleport to locations (SA-MP style) - FIXED VERSION
 addCommandHandler("goto", function(player, _, location)
-    outputDebugString("[GOTO] Command called by " .. getPlayerName(player))
     outputChatBox("🔧 GOTO command received!", player, 255, 255, 0)
 
     -- Check admin permission: EventCreator or Admin level 1+

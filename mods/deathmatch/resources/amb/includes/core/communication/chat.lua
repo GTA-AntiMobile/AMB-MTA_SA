@@ -95,20 +95,26 @@ addEventHandler("onCustomPlayerCommand", root, function(cmd)
     end
 
     local command = parts[1]
-    outputDebugString("[COMMAND] " .. getPlayerName(player) .. " executing: /" .. cmd)
-    
+    -- outputDebugString("[COMMAND] " .. getPlayerName(player) .. " executing: /" .. cmd)
+
     -- Pass arguments correctly - use table.unpack for Lua 5.3+ or unpack for Lua 5.1
     local args = {}
     for i = 2, #parts do
         table.insert(args, parts[i])
     end
-    
+
     -- Debug output
-    outputDebugString("[CHAT] Command: " .. command .. ", Args count: " .. #args)
-    for i, arg in ipairs(args) do
-        outputDebugString("[CHAT] Arg " .. i .. ": '" .. tostring(arg) .. "'")
+    -- outputDebugString("[CHAT] Command: " .. command .. ", Args count: " .. #args)
+    -- for i, arg in ipairs(args) do
+    --     outputDebugString("[CHAT] Arg " .. i .. ": '" .. tostring(arg) .. "'")
+    -- end
+
+    -- Kiểm tra command có tồn tại không
+    if not registeredCommands[cmd] then
+        cancelEvent()
+        outputChatBox("⚠️ Lệnh '" .. cmd .. "' không tồn tại!", source, 255, 50, 50)
     end
-    
+
     -- MTA executeCommandHandler format: executeCommandHandler(commandName, responsibleElement, [arg1, arg2, ...])
     -- Nhưng args phải được pass như string separated, thử cách khác:
     if #args == 0 then
