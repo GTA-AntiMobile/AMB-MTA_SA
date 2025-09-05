@@ -108,7 +108,7 @@ end)
 
 -- Go to speedcam/crate location
 addCommandHandler("gotospeedcam", function(player, _, locationID)
-    if not hasPermission(player, "admin") then
+    if not isPlayerAdmin(player, 1) then
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end

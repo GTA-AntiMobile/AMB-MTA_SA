@@ -35,12 +35,15 @@ VEHICLE_LOCK_HOTWIRED = 2
 
 -- Admin levels table for easy access
 ADMIN_LEVELS = {
-    NONE = 0,
-    MODERATOR = 1,
-    ADMINISTRATOR = 2,
-    SENIORADMIN = 3,
-    EXECUTIVEADMIN = 4,
+    PLAYER = 0,
+    HELPER = 1,
+    MODERATOR = 2,
+    ADMIN = 3,
+    SENIORADMIN = 4,
     HEADADMIN = 5,
+    MANAGER = 6,
+    DEVELOPER = 7,
+    FOUNDER = 8,
     GOD = 99999
 }
 

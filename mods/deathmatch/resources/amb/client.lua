@@ -173,11 +173,10 @@ end
 
 -- Server response
 addEvent("onLoginResponse", true)
-addEventHandler("onLoginResponse", root, function(success, message)
-    clientLog("CLIENT", "📩 [LOGIN] Response: " .. message)
-    if success then
+addEventHandler("onLoginResponse", root, function(success, message, accountData)
+    if success and accountData then
         forceCloseLogin()
-        -- Don't show message here - server already sends welcome message separately
+        triggerServerEvent("onPlayerSpawnRequest", localPlayer, accountData)
     else
         outputChatBox("⚠️ " .. message, 255, 0, 0)
     end
@@ -199,19 +198,12 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
     setTimer(createSimpleLogin, 1000, 1)
 end)
 
-addEvent("onClientLoadCustomSkin", true)
-addEventHandler("onClientLoadCustomSkin", root, function(customSkinID)
-    clientLog("CLIENT", "🎨 [SKIN] Loading custom skin ID " .. tostring(customSkinID))
-    -- Tính baseSkinID từ customSkinID
-    local baseSkinID = 0 + ((customSkinID - 20001) % 310)
-    setElementModel(localPlayer, baseSkinID)
-    -- Replace model bằng file custom
-    local txd = engineLoadTXD("skins/" .. customSkinID .. ".txd")
-    if txd then
-        engineImportTXD(txd, baseSkinID)
-    end
-    local dff = engineLoadDFF("skins/" .. customSkinID .. ".dff", baseSkinID)
-    if dff then
-        engineReplaceModel(dff, baseSkinID)
-    end
+addEventHandler("onResourceStart", resourceRoot, loadBanks)
+
+addEvent("onAdminLevelChanged", true)
+addEventHandler("onAdminLevelChanged", root, function(newLevel)
+    local level = tonumber(newLevel) or 0
+    outputChatBox("🚨 Admin level cua ban da duoc cap len: " .. level, 255, 200, 0)
+    -- Cập nhật HUD / icon admin ở đây nếu có
+    -- playSoundFrontEnd(44) -- ví dụ
 end)

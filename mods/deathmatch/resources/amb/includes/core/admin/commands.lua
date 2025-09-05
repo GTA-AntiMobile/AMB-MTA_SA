@@ -1,9 +1,3 @@
--- ========================================
--- AMB Admin Commands System (MTA Server)
--- Migrated from server/commands.lua for better organization
--- Uses centralized ADMIN_LEVELS from shared/enums.lua
--- ========================================
--- Debug flag for command registration
 local DEBUG_COMMANDS = true
 
 local function debugLog(message)
@@ -12,92 +6,6 @@ local function debugLog(message)
         outputConsole("[ADMIN_CMD] " .. message)
     end
 end
-
--- Permission check function with GOD level support
-local function isPlayerAdmin(player, requiredLevel)
-    if not isElement(player) then
-        return false
-    end
-
-    -- Try to get adminLevel from ElementData first (more reliable)
-    local adminLevel = getElementData(player, "adminLevel")
-
-    -- Fallback to playerData if ElementData not set
-    if not adminLevel then
-        local playerData = getElementData(player, "playerData")
-        adminLevel = playerData and playerData.adminLevel or 0
-    end
-
-    outputDebugString(
-        "[ADMIN] Player " .. getPlayerName(player) .. " has adminLevel: " .. adminLevel .. ", required: " ..
-            requiredLevel)
-
-    -- GOD level có toàn quyền
-    if adminLevel == ADMIN_LEVELS.GOD then
-        outputDebugString("[ADMIN] GOD level detected - granting access")
-        return true
-    end
-
-    -- Check normal permission level
-    local hasPermission = adminLevel >= requiredLevel
-    outputDebugString("[ADMIN] Permission check result: " .. tostring(hasPermission))
-    return hasPermission
-end
-
--- Get weapon name from ID
-local function getWeaponNameFromID(weaponID)
-    local weaponNames = {
-        [22] = "Colt 45",
-        [23] = "Silenced Pistol",
-        [24] = "Desert Eagle",
-        [25] = "Shotgun",
-        [26] = "Sawn-off Shotgun",
-        [27] = "Combat Shotgun",
-        [28] = "Micro SMG",
-        [29] = "MP5",
-        [30] = "AK-47",
-        [31] = "M4",
-        [32] = "Tec-9",
-        [33] = "Country Rifle",
-        [34] = "Sniper Rifle"
-    }
-    return weaponNames[weaponID] or "Unknown Weapon"
-end
-
--- /stats command - Show player statistics
-addCommandHandler("stats", function(player, _, playerIdOrName)
-    local target = player
-    if playerIdOrName then
-        -- Check if player has permission to view other players' stats
-        if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
-            outputChatBox("Access denied! You can only view your own stats.", player, 255, 100, 100, false)
-            return
-        end
-
-        local foundTarget = getPlayerFromNameOrId(playerIdOrName)
-        if not foundTarget then
-            outputChatBox("Player not found!", player, 255, 0, 0, false)
-            return
-        end
-        target = foundTarget
-    end
-
-    local targetData = getElementData(target, "playerData")
-    if not targetData then
-        outputChatBox("Player data not found!", player, 255, 0, 0, false)
-        return
-    end
-
-    outputChatBox("=== Stats for " .. getPlayerName(target) .. " ===", player, 255, 255, 0, false)
-    outputChatBox("Level: " .. (targetData.level or 1), player, 255, 255, 255, false)
-    outputChatBox("Money: $" .. (targetData.money or 0), player, 255, 255, 255, false)
-    outputChatBox("Job: " .. (targetData.job or "Unemployed"), player, 255, 255, 255, false)
-    outputChatBox("Admin Level: " .. (targetData.adminLevel or 0), player, 255, 255, 255, false)
-
-    if target ~= player then
-        outputDebugString("[AMB Admin] " .. getPlayerName(player) .. " viewed stats for " .. getPlayerName(target))
-    end
-end)
 
 -- /cv command - Create vehicle using newmodels_azul
 addCommandHandler("cv", function(player, _, idStr)
@@ -333,52 +241,6 @@ addCommandHandler("createobject", function(player, _, objectIDStr)
     end
 end)
 
--- /sethp command - Set player health (matches SA-MP logic exactly)
-addCommandHandler("sethp", function(player, _, playerIdOrName, hp)
-    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then -- SA-MP requires level 4+
-        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
-        return
-    end
-
-    if not playerIdOrName or not hp then
-        outputChatBox("SU DUNG: /sethp [Player] [health]", player, 255, 100, 100, false)
-        return
-    end
-
-    local target, error = getPlayerFromNameOrId(playerIdOrName)
-    if not target then
-        outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
-        return
-    end
-
-    local healthAmount = tonumber(hp)
-    if not healthAmount then
-        outputChatBox("Invalid health amount.", player, 255, 100, 100, false)
-        return
-    end
-
-    -- Check jail time (simulate SA-MP pJailTime check)
-    local targetJailTime = getElementData(target, "player.jailTime") or 0
-    if targetJailTime >= 1 then
-        outputChatBox("Ban khong the thiet lap HP cho nguoi o tu OOC!", player, 255, 255, 255, false)
-        return
-    end
-
-    -- Admin protection check (like SA-MP)
-    local playerAdminLevel = getElementData(player, "adminLevel") or 0
-    local targetAdminLevel = getElementData(target, "adminLevel") or 0
-    if targetAdminLevel >= playerAdminLevel and target ~= player then
-        outputChatBox("Ban khong the lam dieu nay tren mot Admin cap cao!", player, 255, 100, 100, false)
-        return
-    end
-
-    setElementHealth(target, healthAmount)
-    outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s health cho " .. healthAmount .. ".", player, 255,
-        255, 255, false)
-    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s health to " ..
-                          healthAmount)
-end)
-
 -- /setmyhp command - Set own health (matches SA-MP logic)
 addCommandHandler("setmyhp", function(player, _, hp)
     -- SA-MP: Admin level 4+ OR Undercover level 1+
@@ -404,37 +266,6 @@ addCommandHandler("setmyhp", function(player, _, hp)
     setElementHealth(player, healthAmount)
     outputChatBox("Ban da thiet lap Health cua ban " .. healthAmount .. ".", player, 255, 255, 255, false)
     outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set their own health to " .. healthAmount)
-end)
-
--- /setarmor command - Set player armor (matches SA-MP logic exactly)
-addCommandHandler("setarmor", function(player, _, playerIdOrName, armor)
-    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then -- SA-MP requires level 4+
-        outputChatBox("Ban khong duoc phep su dung lenh nay.", player, 255, 100, 100, false)
-        return
-    end
-
-    if not playerIdOrName or not armor then
-        outputChatBox("SU DUNG: /setarmor [Player] [armor]", player, 255, 100, 100, false)
-        return
-    end
-
-    local target, error = getPlayerFromNameOrId(playerIdOrName)
-    if not target then
-        outputChatBox(error or "Nguoi choi khong hop le.", player, 255, 100, 100, false)
-        return
-    end
-
-    local armorAmount = tonumber(armor)
-    if not armorAmount then
-        outputChatBox("Invalid armor amount.", player, 255, 100, 100, false)
-        return
-    end
-
-    setPedArmor(target, armorAmount)
-    outputChatBox("Ban da thiet lap " .. getPlayerName(target) .. "'s armor cho " .. armorAmount .. ".", player, 255,
-        255, 255, false)
-    outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set " .. getPlayerName(target) .. "'s armor to " ..
-                          armorAmount)
 end)
 
 -- /setmyarmor command - Set own armor (matches SA-MP logic)
@@ -464,47 +295,6 @@ addCommandHandler("setmyarmor", function(player, _, armor)
     outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set their own armor to " .. armorAmount)
 end)
 
--- /giveweapon command - Give weapon to player
-addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponID, ammo)
-    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then
-        outputChatBox("Access denied! You need admin level or higher.", player, 255, 100, 100, false)
-        return
-    end
-
-    if not playerIdOrName or not weaponID then
-        outputChatBox("Usage: /giveweapon [player] [weapon ID] [ammo=100]", player, 255, 255, 100, false)
-        return
-    end
-
-    local target = getPlayerFromNameOrId(playerIdOrName)
-    if not target then
-        outputChatBox("Player not found!", player, 255, 100, 100, false)
-        return
-    end
-
-    weaponID = tonumber(weaponID)
-    if not weaponID or weaponID < 1 or weaponID > 46 then
-        outputChatBox("Invalid weapon ID! Use 1-46", player, 255, 100, 100, false)
-        return
-    end
-
-    ammo = tonumber(ammo) or 100
-    if ammo < 1 or ammo > 9999 then
-        outputChatBox("Invalid ammo amount! Use 1-9999", player, 255, 100, 100, false)
-        return
-    end
-
-    giveWeapon(target, weaponID, ammo)
-
-    local weaponName = getWeaponNameFromID(weaponID)
-    outputChatBox(
-        "Gave " .. getPlayerName(target) .. " weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo",
-        player, 100, 255, 100, false)
-    outputChatBox("You received weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo from " ..
-                      getPlayerName(player), target, 100, 255, 100, false)
-    outputDebugString("[AMB Admin] " .. getPlayerName(player) .. " gave " .. getPlayerName(target) .. " weapon " ..
-                          weaponID .. " with " .. ammo .. " ammo")
-end) -- /forcelogin command - Force close login window for stuck players
 addCommandHandler("forcelogin", function(player, _, playerIdOrName)
     if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
@@ -537,7 +327,7 @@ end)
 
 -- /reloadmodels command - Hot reload custom models
 addCommandHandler("reloadmodels", function(player, command)
-    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMINISTRATOR) then
+    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then
         outputChatBox("Access denied! You need administrator level or higher.", player, 255, 100, 100, false)
         return
     end
@@ -581,47 +371,46 @@ addCommandHandler("acmds", function(player, command)
 end)
 
 -- /makeadmin command - Hidden admin setup (silent operation)
-addCommandHandler("makeadmin", function(player, _, targetPlayer, level)
-    local target = getPlayerFromNameOrId(targetPlayer)
-    if not target then
-        outputChatBox("Player not found!", player, 255, 0, 0, false)
+addCommandHandler("makeadmin", function(player, command, playerIdOrName, level)
+    outputDebugString("[DEBUG] /makeadmin called: playerIdOrName='" .. tostring(playerIdOrName) .. "', level='" ..
+                          tostring(level) .. "'")
+
+    -- Check args
+    if not playerIdOrName or not level then
+        outputChatBox("Su dung: /makeadmin [player] [level]", player, 255, 100, 100)
         return
     end
-    local targetData = getElementData(target, "playerData") or {}
-    targetData.adminLevel = level
-    setElementData(target, "playerData", targetData)
 
-    local levelName = "Player"
-    if level == ADMIN_LEVELS.GOD then
-        levelName = "GOD (Toàn quyền)"
-    elseif level == ADMIN_LEVELS.FOUNDER then
-        levelName = "Founder"
-    elseif level == ADMIN_LEVELS.DEVELOPER then
-        levelName = "Developer"
-    elseif level == ADMIN_LEVELS.MANAGEMENT then
-        levelName = "Management"
-    elseif level == ADMIN_LEVELS.HEAD_ADMIN then
-        levelName = "Head Admin"
-    elseif level == ADMIN_LEVELS.SENIOR_ADMIN then
-        levelName = "Senior Admin"
-    elseif level == ADMIN_LEVELS.ADMIN then
-        levelName = "Admin"
-    elseif level == ADMIN_LEVELS.MODERATOR then
-        levelName = "Moderator"
-    elseif level == ADMIN_LEVELS.HELPER then
-        levelName = "Helper"
-    else
-        levelName = "Player"
+    level = tonumber(level)
+    if not level then
+        outputChatBox("Level phai la mot so.", player, 255, 100, 100)
+        return
     end
 
-    outputChatBox("Set " .. getPlayerName(target) .. "'s admin level to " .. level .. " (" .. levelName .. ")", player,
-        100, 255, 100, false)
-    -- Silent notification to target (no sender info)
-    outputChatBox("Your admin level has been updated to " .. level .. " (" .. levelName .. ")", target, 100, 255, 100,
-        false)
-    -- Silent debug log only
-    outputDebugString(
-        "[AMB Admin] Admin level set: " .. getPlayerName(target) .. " -> " .. level .. " (" .. levelName .. ")")
+    -- Optional: check if player executing has sufficient rights (example: must be GOD or FOUNDER)
+    local myLevel = getElementData(player, "adminLevel") or 0
+    if myLevel < ADMIN_LEVELS.FOUNDER then
+        outputChatBox("Ban khong co quyen cap admin level.", player, 255, 100, 100)
+        return
+    end
+
+    -- Get target player
+    local target = getPlayerFromNameOrId(playerIdOrName)
+    if not target then
+        outputChatBox("Khong tim thay nguoi choi: " .. tostring(playerIdOrName), player, 255, 100, 100)
+        return
+    end
+
+    -- Set admin level
+    setElementData(target, "adminLevel", level)
+    outputChatBox("Da cap level admin " .. level .. " cho " .. getPlayerName(target), player, 0, 255, 0)
+    outputChatBox("Quyen admin cua ban da duoc cap level " .. level, target, 0, 255, 0)
+
+    -- Optional: trigger client event
+    triggerClientEvent(target, "onAdminLevelChanged", target, level)
+
+    outputDebugString(string.format("[ADMIN] %s set admin level %d for %s", getPlayerName(player), level,
+        getPlayerName(target)))
 end)
 
 -- ========================================

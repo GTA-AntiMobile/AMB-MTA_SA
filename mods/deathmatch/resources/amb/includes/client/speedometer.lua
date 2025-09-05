@@ -48,7 +48,7 @@ end)
 addEventHandler("onClientPlayerSpawn", localPlayer, function()
     setTimer(function()
         setPlayerHudComponentVisible("vehicle_name", false)
-        clientLog("CLIENT", "🚗 [SPEEDOMETER] Vehicle name display disabled on spawn")
+        -- clientLog("CLIENT", "🚗 [SPEEDOMETER] Vehicle name display disabled on spawn")
     end, 500, 1)
 end)
 

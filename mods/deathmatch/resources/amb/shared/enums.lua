@@ -1,6 +1,5 @@
 -- AMB Roleplay Enums
 -- Shared enums and data structures for AMB Roleplay
-
 -- Group/Faction Data Structure
 GROUP_DATA_STRUCTURE = {
     id = 0,
@@ -80,10 +79,17 @@ GROUP_VEHICLE_STRUCTURE = {
     rot_z = 0.0,
     upkeep = 0,
     modifications = {},
-    attached_objects = {
-        {id = 0, model = 0, pos = {0, 0, 0}, rot = {0, 0, 0}},
-        {id = 0, model = 0, pos = {0, 0, 0}, rot = {0, 0, 0}}
-    }
+    attached_objects = {{
+        id = 0,
+        model = 0,
+        pos = {0, 0, 0},
+        rot = {0, 0, 0}
+    }, {
+        id = 0,
+        model = 0,
+        pos = {0, 0, 0},
+        rot = {0, 0, 0}
+    }}
 }
 
 -- Business Data Structure
@@ -194,14 +200,14 @@ CHARACTER_STRUCTURE = {
     email = "",
     registered_date = "",
     last_login = "",
-    
+
     -- Character Details
     char_name = "",
     age = 18,
     gender = 0, -- 0 = Male, 1 = Female
     ethnicity = 0,
     skin = 299,
-    
+
     -- Position & World
     pos_x = 1481.0,
     pos_y = -1771.0,
@@ -209,17 +215,17 @@ CHARACTER_STRUCTURE = {
     pos_a = 0.0,
     interior = 0,
     virtual_world = 0,
-    
+
     -- Financial
     money = 5000,
     bank_money = 0,
     savings_money = 0,
-    
+
     -- Statistics
     level = 1,
     experience = 0,
     hours_played = 0,
-    
+
     -- Health & Status
     health = 100,
     armor = 0,
@@ -227,14 +233,14 @@ CHARACTER_STRUCTURE = {
     thirst = 100,
     bladder = 100,
     energy = 100,
-    
+
     -- Administrative
     admin_level = 0,
     helper_level = 0,
     donator_level = 0,
     warns = 0,
     warn_time = 0,
-    
+
     -- Faction & Job
     faction_id = 0,
     faction_rank = 0,
@@ -242,66 +248,66 @@ CHARACTER_STRUCTURE = {
     job = 0,
     job_level = 1,
     job_exp = 0,
-    
+
     -- Skills
     driving_skill = 0,
     flying_skill = 0,
     sailing_skill = 0,
     bike_skill = 0,
-    
+
     -- Communication
     phone_number = 0,
     phone_book = {},
     sms_credits = 0,
     call_credits = 0,
-    
+
     -- Inventory
     inventory = {},
     inventory_slots = 10,
-    
+
     -- Weapons
     weapons = {},
     weapon_ammo = {},
-    
+
     -- Vehicles
     vehicles_owned = {},
     current_vehicle = 0,
-    
+
     -- Properties
     properties_owned = {},
-    
+
     -- Temp/Session Data
     logged_in = false,
     spawned = false,
     character_selected = false,
     tutorial_step = 0,
-    
+
     -- Misc
     mask_id = 0,
     disguise = false,
     radio_freq = 0,
     walkietalkie_freq = 0,
-    
+
     -- Timers & Cooldowns
     last_command_time = 0,
     flood_protection = 0,
-    
+
     -- Death & Medical
     injured = false,
     bleeding = false,
     unconscious = false,
     death_reason = "",
-    
+
     -- Drugs & Addiction
     drug_addiction = {},
     drug_tolerance = {},
-    
+
     -- Crime & Law
     wanted_level = 0,
     arrest_time = 0,
     jail_time = 0,
     crimes = {},
-    
+
     -- Business & Economy
     businesses_owned = {},
     bank_pin = 0,
@@ -387,20 +393,6 @@ VEHICLE_TYPES = {
     BOAT = 9,
     AIRCRAFT = 10,
     SPECIAL = 11
-}
-
--- Admin Levels (Centralized Definition)
-ADMIN_LEVELS = {
-    PLAYER = 0,
-    HELPER = 1,
-    MODERATOR = 2,
-    ADMIN = 3,
-    SENIOR_ADMIN = 4,
-    HEAD_ADMIN = 5,
-    MANAGEMENT = 6,
-    DEVELOPER = 7,
-    FOUNDER = 8,
-    GOD = 99999  -- Toàn quyền - có thể sử dụng tất cả lệnh
 }
 
 -- Donator Levels

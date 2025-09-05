@@ -67,7 +67,7 @@ function isPlayerAdmin(player, requiredLevel)
 
     -- GOD level có toàn quyền
     if adminLevel == ADMIN_LEVELS.GOD then
-        outputDebugString("[ADMIN] GOD level detected, granting access")
+        -- outputDebugString("[ADMIN] GOD level detected, granting access")
         return true
     end
 
@@ -144,18 +144,6 @@ function hasPermission(player, permission, level)
     end
 
     return false
-end
-
-function formatMoney(amount)
-    local formatted = tostring(amount)
-    local k
-    while true do
-        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
-        if k == 0 then
-            break
-        end
-    end
-    return formatted
 end
 
 function sendMessageToAdmins(message, minLevel)
@@ -377,6 +365,67 @@ function dumpTable(table, player)
         outputChatBox(result, player, 255, 255, 0)
     else
         print(result)
+    end
+end
+
+banks = {} -- global table lưu thông tin banks
+function loadBanks()
+    local file = fileOpen("data/properties/banks.txt")
+    if not file then
+        outputDebugString("Failed to open banks.txt")
+        return
+    end
+
+    while not fileIsEOF(file) do
+        local line = fileRead(file, 1024)
+        line = line:gsub(";.*", ""):gsub("%s+", "") -- bỏ comment & space
+        if line ~= "" then
+            local modelID, x, y, z, rot, int, dim = line:match(
+                "([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+),([%d%.%-]+)")
+            if modelID then
+                table.insert(banks, {tonumber(x), tonumber(y), tonumber(z), tonumber(int), tonumber(dim)})
+            end
+        end
+    end
+
+    fileClose(file)
+    outputDebugString("Loaded " .. #banks .. " banks from banks.txt")
+end
+
+-- Đăng ký lệnh đã có để check lệnh ko tồn tại
+-- Lưu bản gốc để gọi lại
+local _addCommandHandler = addCommandHandler
+_G.registeredCommands = _G.registeredCommands or {}
+local registeredCommands = _G.registeredCommands
+-- Hook lại
+function addCommandHandler(command, handler, restricted, caseSensitive)
+    registeredCommands[command] = true
+    return _addCommandHandler(command, handler, restricted, caseSensitive)
+end
+-- Chặn chat lệnh không tồn tại
+addEventHandler("onPlayerChat", root, function(message, msgType)
+    if msgType == 0 and message:sub(1, 1) == "/" then
+        local cmd = message:sub(2):match("^(%S+)")
+        if not registeredCommands[cmd] then
+            cancelEvent()
+            outputChatBox("⚠️ Lệnh '" .. cmd .. "' không tồn tại!", source, 255, 50, 50)
+        end
+    end
+end)
+
+-- Reload models ingame without shutting down the server
+function reloadCustomModels()
+    local resource = getResourceFromName("newmodels_azul")
+    if resource then
+        if getResourceState(resource) == "running" then
+            restartResource(resource)
+            outputDebugString("[ADMIN_CMD] newmodels_azul resource restarted for model reload")
+        else
+            startResource(resource)
+            outputDebugString("[ADMIN_CMD] newmodels_azul resource started for model reload")
+        end
+    else
+        outputDebugString("[ADMIN_CMD] newmodels_azul resource not found!")
     end
 end
 

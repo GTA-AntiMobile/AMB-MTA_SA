@@ -73,24 +73,58 @@ addEventHandler("onPlayerChat", root, function(message, messageType)
     outputDebugString("[CHAT] " .. username .. ": " .. message)
 end)
 
--- Cho phép client gửi command
+-- Cho phép client gửi command - FIXED version
 addEvent("onCustomPlayerCommand", true)
 addEventHandler("onCustomPlayerCommand", root, function(cmd)
     local player = client
-
     if not getElementData(player, "loggedIn") then
         outputChatBox("❌ Bạn phải đăng nhập trước khi có thể chat được!", player, 255, 100, 100)
         return
     end
+    if not cmd or cmd:match("^%s*$") then
+        return
+    end
 
-    local parts = split(cmd, " ")
+    -- Parse command properly để hỗ trợ multiple arguments
+    local parts = {}
+    for word in cmd:gmatch("%S+") do
+        table.insert(parts, word)
+    end
+    if #parts == 0 then
+        return
+    end
+
     local command = parts[1]
-    local args = {unpack(parts, 2)}
+    -- outputDebugString("[COMMAND] " .. getPlayerName(player) .. " executing: /" .. cmd)
 
-    outputDebugString("[COMMAND] " .. getPlayerName(player) .. " executing: /" .. cmd)
+    -- Pass arguments correctly - use table.unpack for Lua 5.3+ or unpack for Lua 5.1
+    local args = {}
+    for i = 2, #parts do
+        table.insert(args, parts[i])
+    end
 
-    -- Execute directly
-    executeCommandHandler(command, player, unpack(args))
+    -- Debug output
+    -- outputDebugString("[CHAT] Command: " .. command .. ", Args count: " .. #args)
+    -- for i, arg in ipairs(args) do
+    --     outputDebugString("[CHAT] Arg " .. i .. ": '" .. tostring(arg) .. "'")
+    -- end
+
+    -- Kiểm tra command có tồn tại không
+    if not registeredCommands[parts[1]] then
+        cancelEvent()
+        outputChatBox("⚠️ Lệnh '" .. parts[1] .. "' không tồn tại!", source, 255, 50, 50)
+    end
+
+    -- MTA executeCommandHandler format: executeCommandHandler(commandName, responsibleElement, [arg1, arg2, ...])
+    -- Nhưng args phải được pass như string separated, thử cách khác:
+    if #args == 0 then
+        executeCommandHandler(command, player, "")
+    else
+        -- Convert args to single string như MTA mong đợi
+        local argString = table.concat(args, " ")
+        -- outputDebugString("[CHAT] Final arg string: '" .. argString .. "'")
+        executeCommandHandler(command, player, argString)
+    end
 end)
 
 -- Cho phép client gửi chat thường

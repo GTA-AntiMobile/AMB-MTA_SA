@@ -42,7 +42,7 @@ local function fetchLatestCallback(data, info)
     end
 
     if foundEqual then
-        outputInfo("You are running the latest version: " .. currentVersion, true)
+        -- outputInfo("You are running the latest version: " .. currentVersion, true)
         return
     end
 

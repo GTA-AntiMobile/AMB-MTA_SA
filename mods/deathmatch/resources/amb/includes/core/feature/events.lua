@@ -2,7 +2,6 @@
 -- AMB MTA:SA - Events & Special Systems
 -- Migrated from SA-MP open.mp server
 -- ================================
-
 -- Event systems for special gameplay features
 local eventSystem = {
     chanceGambler = false,
@@ -15,23 +14,38 @@ local eventSystem = {
         active = false,
         players = {},
         teams = {},
-        locations = {
-            {x = 1412.6, y = -41.4, z = 1000.8, name = "Ganton Gym"},
-            {x = 768.0, y = 5.7, z = 1000.7, name = "Cobra Martial Arts"},
-            {x = -975.9, y = 1060.9, z = 1345.7, name = "Doherty Garage"}
-        }
+        locations = {{
+            x = 1412.6,
+            y = -41.4,
+            z = 1000.8,
+            name = "Ganton Gym"
+        }, {
+            x = 768.0,
+            y = 5.7,
+            z = 1000.7,
+            name = "Cobra Martial Arts"
+        }, {
+            x = -975.9,
+            y = 1060.9,
+            z = 1345.7,
+            name = "Doherty Garage"
+        }}
     }
 }
 
 -- Chance Gambler Event Commands
 addCommandHandler("togchancegambler", function(player)
-    if not hasPermission(player, "admin") then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
+    -- Check proper permission levels: Admin >= 1338 OR PR >= 2
+    local adminLevel = getElementData(player, "player.adminLevel") or 0
+    local prLevel = getElementData(player, "player.prLevel") or 0
+
+    if adminLevel < 1338 and prLevel < 2 then
+        outputChatBox("Ban khong the su dung lenh nay.", player, 255, 100, 100)
         return
     end
-    
+
     eventSystem.chanceGambler = not eventSystem.chanceGambler
-    
+
     if eventSystem.chanceGambler then
         outputChatBox("Ban da kich hoat su kien chance gambler", player, 255, 255, 255)
         outputChatBox("Su kien Chance Gambler da duoc kich hoat!", root, 255, 255, 0)
@@ -39,6 +53,9 @@ addCommandHandler("togchancegambler", function(player)
         outputChatBox("Ban da tat su kien chance gambler", player, 255, 255, 255)
         outputChatBox("Su kien Chance Gambler da ket thuc!", root, 255, 255, 0)
     end
+
+    outputDebugString("[EVENT] " .. getPlayerName(player) .. " toggled chance gambler: " ..
+                          tostring(eventSystem.chanceGambler))
 end)
 
 addCommandHandler("gamblechances", function(player)
@@ -46,28 +63,29 @@ addCommandHandler("gamblechances", function(player)
         outputChatBox("Su kien chance gambler chua duoc kich hoat!", player, 255, 0, 0)
         return
     end
-    
-    local chances = getElementData(player, "player.rewardChances") or 0
-    local availableChances = math.floor(chances / 3)
-    
+
+    -- Use proper calculation like Pawn version: PlayerInfo[playerid][pRewardDrawChance] / 3
+    local rewardDrawChance = getElementData(player, "player.rewardDrawChance") or 0
+    local availableChances = math.floor(rewardDrawChance / 3)
+
     if availableChances < 1 then
         outputChatBox("Ban khong co bat ky co hoi nao", player, 128, 128, 128)
         return
     end
-    
-    -- Check if near Pershing Square
+
+    -- Check if near Pershing Square (exact coordinates from Pawn)
     local x, y, z = getElementPosition(player)
-    local dist = getDistanceBetweenPoints3D(x, y, z, 1479.1, -1675.6, 14.0)
+    local dist = getDistanceBetweenPoints3D(x, y, z, 1479.1448, -1675.6207, 14.0469)
     if dist > 20 then
         outputChatBox("Ban khong o Pershing Square", player, 128, 128, 128)
         return
     end
-    
+
     -- Show gambling dialog
     local message = "Ban phai roll so lon hon 4 de nhan doi so co hoi cua ban.\n\n"
     message = message .. "Co hoi hien tai: " .. availableChances .. "\n"
     message = message .. "Tat ca hoac khong co gi!"
-    
+
     showDialog(player, "CHANCE_GAMBLER", "Su kien Chance Gambler - Tat ca hoac khong co gi", message, "Roll", "Huy")
 end)
 
@@ -75,10 +93,10 @@ addCommandHandler("chances", function(player)
     if not eventSystem.chanceGambler then
         return
     end
-    
+
     local chances = getElementData(player, "player.rewardChances") or 0
     local availableChances = math.floor(chances / 3)
-    
+
     outputChatBox("Co hoi: " .. availableChances, player, 0, 255, 255)
 end)
 
@@ -88,10 +106,10 @@ addEventHandler("onPlayerDialogResponse", root, function(dialogID, button, item,
     if dialogID == "CHANCE_GAMBLER" and button == 1 then
         local chances = getElementData(source, "player.rewardChances") or 0
         local availableChances = math.floor(chances / 3)
-        
+
         if availableChances >= 1 then
             local roll = math.random(1, 6)
-            
+
             if roll > 4 then
                 -- Win - double chances
                 local newChances = availableChances * 2 * 3
@@ -122,9 +140,9 @@ addCommandHandler("zombieevent", function(player)
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
-    
+
     eventSystem.zombie.active = not eventSystem.zombie.active
-    
+
     if eventSystem.zombie.active then
         setWeather(19) -- Dark weather
         setTime(0, 0) -- Midnight
@@ -141,7 +159,7 @@ addCommandHandler("zombieevent", function(player)
             end
         end
         eventSystem.zombie.infected = {}
-        
+
         outputChatBox("Su kien Zombie da ket thuc!", root, 0, 255, 0)
         outputChatBox("Admin " .. getPlayerName(player) .. " da tat su kien zombie", player, 0, 255, 0)
     end
@@ -152,9 +170,9 @@ addCommandHandler("zombieweather", function(player)
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
-    
+
     eventSystem.zombie.weather = not eventSystem.zombie.weather
-    
+
     if eventSystem.zombie.weather then
         setWeather(19)
         setTime(0, 0)
@@ -171,23 +189,23 @@ addCommandHandler("makezombie", function(player, _, playerIdOrName)
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
-    
+
     if not playerIdOrName then
         outputChatBox("Su dung: /makezombie [player]", player, 255, 255, 255)
         return
     end
-    
+
     local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
     end
-    
+
     -- Make zombie
     setElementModel(target, 162) -- Zombie skin
     setElementData(target, "player.zombie", true)
     eventSystem.zombie.infected[target] = true
-    
+
     outputChatBox("Ban da bien " .. getPlayerName(target) .. " thanh zombie", player, 0, 255, 0)
     outputChatBox("Ban da bi bien thanh zombie boi admin " .. getPlayerName(player), target, 255, 0, 0)
     outputChatBox(getPlayerName(target) .. " da tro thanh zombie!", root, 255, 255, 0)
@@ -198,28 +216,28 @@ addCommandHandler("unzombie", function(player, _, playerIdOrName)
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
-    
+
     if not playerIdOrName then
         outputChatBox("Su dung: /unzombie [player]", player, 255, 255, 255)
         return
     end
-    
+
     local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
     end
-    
+
     if not getElementData(target, "player.zombie") then
         outputChatBox(getPlayerName(target) .. " khong phai zombie!", player, 255, 0, 0)
         return
     end
-    
+
     -- Cure zombie
     setElementModel(target, 0) -- Normal skin
     setElementData(target, "player.zombie", false)
     eventSystem.zombie.infected[target] = nil
-    
+
     outputChatBox("Ban da chua " .. getPlayerName(target) .. " khoi zombie", player, 0, 255, 0)
     outputChatBox("Ban da duoc chua khoi zombie boi admin " .. getPlayerName(player), target, 0, 255, 0)
 end)
@@ -229,38 +247,38 @@ addCommandHandler("bite", function(player, _, playerIdOrName)
         outputChatBox("Chi zombie moi co the can!", player, 255, 0, 0)
         return
     end
-    
+
     if not playerIdOrName then
         outputChatBox("Su dung: /bite [player]", player, 255, 255, 255)
         return
     end
-    
+
     local target = getPlayerFromNameOrId(playerIdOrName)
     if not target then
         outputChatBox("Khong tim thay player!", player, 255, 0, 0)
         return
     end
-    
+
     if getElementData(target, "player.zombie") then
         outputChatBox(getPlayerName(target) .. " da la zombie roi!", player, 255, 0, 0)
         return
     end
-    
+
     -- Check distance
     local x1, y1, z1 = getElementPosition(player)
     local x2, y2, z2 = getElementPosition(target)
     local dist = getDistanceBetweenPoints3D(x1, y1, z1, x2, y2, z2)
-    
+
     if dist > 3 then
         outputChatBox("Ban can o gan hon de can!", player, 255, 0, 0)
         return
     end
-    
+
     -- Infect target
     setElementModel(target, 162)
     setElementData(target, "player.zombie", true)
     eventSystem.zombie.infected[target] = true
-    
+
     outputChatBox("Ban da can " .. getPlayerName(target) .. "!", player, 0, 255, 0)
     outputChatBox("Ban bi " .. getPlayerName(player) .. " can va tro thanh zombie!", target, 255, 0, 0)
     outputChatBox(getPlayerName(target) .. " da bi can va tro thanh zombie!", root, 255, 255, 0)
@@ -271,21 +289,32 @@ addCommandHandler("buycure", function(player)
         outputChatBox("Ban khong phai zombie!", player, 255, 0, 0)
         return
     end
-    
+
     local money = getPlayerMoney(player)
     if money < 5000 then
         outputChatBox("Ban can $5000 de mua thuoc chua zombie!", player, 255, 0, 0)
         return
     end
-    
+
     -- Check if near hospital
     local x, y, z = getElementPosition(player)
-    local hospitals = {
-        {x = 1607.0, y = -1822.3, z = 13.5, name = "All Saints General Hospital"},
-        {x = -2655.0, y = 640.1, z = 14.5, name = "San Fierro Medical Center"},
-        {x = 1244.3, y = 1432.2, z = 10.8, name = "Las Venturas Hospital"}
-    }
-    
+    local hospitals = {{
+        x = 1607.0,
+        y = -1822.3,
+        z = 13.5,
+        name = "All Saints General Hospital"
+    }, {
+        x = -2655.0,
+        y = 640.1,
+        z = 14.5,
+        name = "San Fierro Medical Center"
+    }, {
+        x = 1244.3,
+        y = 1432.2,
+        z = 10.8,
+        name = "Las Venturas Hospital"
+    }}
+
     local nearHospital = false
     for _, hospital in ipairs(hospitals) do
         local dist = getDistanceBetweenPoints3D(x, y, z, hospital.x, hospital.y, hospital.z)
@@ -294,49 +323,20 @@ addCommandHandler("buycure", function(player)
             break
         end
     end
-    
+
     if not nearHospital then
         outputChatBox("Ban can o gan benh vien de mua thuoc chua!", player, 255, 0, 0)
         return
     end
-    
+
     -- Cure zombie
     takePlayerMoney(player, 5000)
     setElementModel(player, 0)
     setElementData(player, "player.zombie", false)
     eventSystem.zombie.infected[player] = nil
-    
+
     outputChatBox("Ban da mua thuoc chua zombie tai " .. nearHospital.name .. " ($5000)", player, 0, 255, 0)
     outputChatBox(getPlayerName(player) .. " da tu chua khoi zombie!", root, 255, 255, 0)
-end)
-
--- Health/Armor commands
-addCommandHandler("sethp", function(player, _, playerIdOrName, amount)
-    if not hasPermission(player, "admin") then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
-    end
-    
-    if not playerIdOrName or not amount then
-        outputChatBox("Su dung: /sethp [player] [amount]", player, 255, 255, 255)
-        return
-    end
-    
-    local target = getPlayerFromNameOrId(playerIdOrName)
-    if not target then
-        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
-        return
-    end
-    
-    local hp = tonumber(amount)
-    if not hp or hp < 0 or hp > 100 then
-        outputChatBox("Mau phai tu 0-100!", player, 255, 0, 0)
-        return
-    end
-    
-    setElementHealth(target, hp)
-    outputChatBox("Da set mau cua " .. getPlayerName(target) .. " thanh " .. hp, player, 0, 255, 0)
-    outputChatBox("Admin " .. getPlayerName(player) .. " da set mau cua ban thanh " .. hp, target, 255, 255, 0)
 end)
 
 addCommandHandler("setmyhp", function(player, _, amount)
@@ -344,43 +344,15 @@ addCommandHandler("setmyhp", function(player, _, amount)
         outputChatBox("Su dung: /setmyhp [amount]", player, 255, 255, 255)
         return
     end
-    
+
     local hp = tonumber(amount)
     if not hp or hp < 0 or hp > 100 then
         outputChatBox("Mau phai tu 0-100!", player, 255, 0, 0)
         return
     end
-    
+
     setElementHealth(player, hp)
     outputChatBox("Da set mau cua ban thanh " .. hp, player, 0, 255, 0)
-end)
-
-addCommandHandler("setarmor", function(player, _, playerIdOrName, amount)
-    if not hasPermission(player, "admin") then
-        outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
-        return
-    end
-    
-    if not playerIdOrName or not amount then
-        outputChatBox("Su dung: /setarmor [player] [amount]", player, 255, 255, 255)
-        return
-    end
-    
-    local target = getPlayerFromNameOrId(playerIdOrName)
-    if not target then
-        outputChatBox("Khong tim thay player!", player, 255, 0, 0)
-        return
-    end
-    
-    local armor = tonumber(amount)
-    if not armor or armor < 0 or armor > 100 then
-        outputChatBox("Giap phai tu 0-100!", player, 255, 0, 0)
-        return
-    end
-    
-    setPedArmor(target, armor)
-    outputChatBox("Da set giap cua " .. getPlayerName(target) .. " thanh " .. armor, player, 0, 255, 0)
-    outputChatBox("Admin " .. getPlayerName(player) .. " da set giap cua ban thanh " .. armor, target, 255, 255, 0)
 end)
 
 addCommandHandler("setmyarmor", function(player, _, amount)
@@ -388,13 +360,13 @@ addCommandHandler("setmyarmor", function(player, _, amount)
         outputChatBox("Su dung: /setmyarmor [amount]", player, 255, 255, 255)
         return
     end
-    
+
     local armor = tonumber(amount)
     if not armor or armor < 0 or armor > 100 then
         outputChatBox("Giap phai tu 0-100!", player, 255, 0, 0)
         return
     end
-    
+
     setPedArmor(player, armor)
     outputChatBox("Da set giap cua ban thanh " .. armor, player, 0, 255, 0)
 end)
@@ -404,24 +376,24 @@ addCommandHandler("setarmorall", function(player, _, amount)
         outputChatBox("Ban khong co quyen su dung lenh nay!", player, 255, 0, 0)
         return
     end
-    
+
     if not amount then
         outputChatBox("Su dung: /setarmorall [amount]", player, 255, 255, 255)
         return
     end
-    
+
     local armor = tonumber(amount)
     if not armor or armor < 0 or armor > 100 then
         outputChatBox("Giap phai tu 0-100!", player, 255, 0, 0)
         return
     end
-    
+
     local count = 0
     for _, target in ipairs(getElementsByType("player")) do
         setPedArmor(target, armor)
         count = count + 1
     end
-    
+
     outputChatBox("Da set giap cho tat ca " .. count .. " player thanh " .. armor, player, 0, 255, 0)
     outputChatBox("Admin " .. getPlayerName(player) .. " da set giap cho tat ca thanh " .. armor, root, 255, 255, 0)
 end)

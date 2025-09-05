@@ -159,9 +159,6 @@ end)
 
 -- /goto command - Teleport to locations (SA-MP style) - FIXED VERSION
 addCommandHandler("goto", function(player, _, location)
-    outputDebugString("[GOTO] Command called by " .. getPlayerName(player))
-    outputChatBox("🔧 GOTO command received!", player, 255, 255, 0)
-
     -- Check admin permission: EventCreator or Admin level 1+
     local adminLevel = getElementData(player, "adminLevel") or 0
     local isEventCreator = getElementData(player, "isEventCreator") or false
@@ -328,7 +325,7 @@ addEventHandler("onPlayerJoin", root, function()
     if playerID >= 0 then
         playerSlots[playerID] = source
         setElementData(source, "ID", playerID) -- Use "ID" consistently
-        outputDebugString("[PLAYER] Assigned ID " .. playerID .. " to " .. getPlayerName(source))
+        -- outputDebugString("[PLAYER] Assigned ID " .. playerID .. " to " .. getPlayerName(source))
     else
         outputDebugString("[PLAYER] Server full! Cannot assign ID to " .. getPlayerName(source), 2)
         kickPlayer(source, "Server full")
@@ -340,7 +337,7 @@ addEventHandler("onPlayerQuit", root, function()
     local playerID = getElementData(source, "ID")
     if playerID and playerSlots then -- Add safety check for playerSlots table
         releasePlayerID(playerID)
-        outputDebugString("[PLAYER] Released ID " .. playerID .. " from " .. getPlayerName(source))
+        -- outputDebugString("[PLAYER] Released ID " .. playerID .. " from " .. getPlayerName(source))
     elseif playerID then
         outputDebugString("[PLAYER] Warning: Player " .. getPlayerName(source) .. " had ID " .. playerID ..
                               " but playerSlots table not available (resource stopping?)")
