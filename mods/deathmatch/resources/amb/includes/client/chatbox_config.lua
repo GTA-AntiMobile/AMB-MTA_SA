@@ -16,6 +16,7 @@ local chatInputBox = nil
 local chatInputActive = false
 local chatKeyHandler = nil
 local chatScrollOffset = 0
+local chatboxActive = false
 _G.persistentCommandHistory = _G.persistentCommandHistory or {}
 
 -- Chatbox position
@@ -118,6 +119,9 @@ function openChatInput()
             sendChatMessage(text)
         end
         closeChatInput()
+        chatboxActive = false
+        chatVisible = false
+        showChat(false)
     end)
 
     -- History navigation
@@ -213,38 +217,12 @@ end)
 -- Init
 ---------------------------------------------------------------------
 addEventHandler("onClientResourceStart", resourceRoot, function()
+
+    -- Khi mới vào, chatbox sẽ ẩn hoàn toàn
+    chatboxActive = false
+    chatVisible = false
     showChat(false)
-    
-    -- COMPLETELY DISABLE T key và thay bằng F6
-    unbindKey("t", "down", "chatbox")
-    unbindKey("y", "down", "chatbox") 
-    
-    -- ENABLE T key để mở chat + F6 backup
-    bindKey("t", "down", function()
-        if not chatInputActive and not guiGetInputEnabled() then
-            openChatInput()
-        end
-    end)
-    
-    -- F6 backup key
-    bindKey("F6", "down", function()
-        if not chatInputActive and not guiGetInputEnabled() then
-            openChatInput()
-        end
-    end)
-    
-    -- Block T character chỉ khi KHÔNG trong chat input và không mở được chat
-    addEventHandler("onClientCharacter", root, function(character)
-        if (character == "t" or character == "T") then
-            -- CHỈ block nếu không trong chat input và T key sẽ mở chat
-            if not chatInputActive and not guiGetInputEnabled() then
-                -- Không cancelEvent ở đây vì T key đã handle mở chat
-                return
-            end
-            -- Cho phép 't' khi đang trong chat input
-        end
-    end)
-    
+
     -- Mouse wheel scroll
     addEventHandler("onClientKey", root, function(key, press)
         if not press then return end
@@ -259,12 +237,29 @@ addEventHandler("onClientResourceStart", resourceRoot, function()
             end
         end
     end)
-    
+
     addEventHandler("onClientRender", root, drawCustomChatbox)
 
-    addChatMessage("🎮 AMB Chatbox Loaded - Nhấn T hoặc F6 để mở chat, Mouse wheel để scroll", 100, 255, 100)
+    addChatMessage("🎮 AMB Chatbox Loaded - Nhấn F6 để mở/ẩn chat, Mouse wheel để scroll", 100, 255, 100)
 end)
 
 addEventHandler("onClientResourceStop", resourceRoot, function()
     showChat(true)
 end)
+
+bindKey("F6", "down", toggleChatbox)
+function toggleChatbox()
+    if not chatboxActive then
+        chatboxActive = true
+        chatVisible = true
+        openChatInput()
+        showChat(false) -- Luôn ẩn chatbox mặc định khi mở custom chatbox
+    else
+        chatboxActive = false
+        chatVisible = false
+        closeChatInput()
+        showChat(false) -- Hiện lại chatbox mặc định khi tắt custom chatbox
+    end
+end
+
+bindKey("F6", "down", toggleChatbox)

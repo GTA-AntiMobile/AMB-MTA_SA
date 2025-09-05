@@ -1,4 +1,3 @@
-require("includes/core/database.lua")
 addEvent("onPlayerLoginRequest", true)
 addEventHandler("onPlayerLoginRequest", root, function(username, password)
     if not username or not password then
@@ -34,10 +33,14 @@ addEventHandler("onPlayerLoginRequest", root, function(username, password)
         triggerClientEvent(client, "onLoginResponse", root, false, "Account not found")
         outputDebugString("❌ [LOGIN] Account not found: " .. username)
     end
+end)
+
 -- Nhận yêu cầu spawn từ client sau khi login thành công
 addEvent("onPlayerSpawnRequest", true)
 addEventHandler("onPlayerSpawnRequest", root, function(accountData)
-    if not client or not accountData then return end
+    if not client or not accountData then
+        return
+    end
     dbSpawnPlayer(client, accountData)
     -- Set additional stats
     setElementHealth(client, tonumber(accountData.pHealth) or 100)
@@ -48,7 +51,6 @@ addEventHandler("onPlayerSpawnRequest", root, function(accountData)
     -- Enable controls & HUD
     toggleAllControls(client, true)
     setPlayerHudComponentVisible(client, "all", true)
-end)
 end)
 
 -- Player register

@@ -11,227 +11,227 @@
 ]]
 
 -- Vehicle Control System
-addCommandHandler("car", function(player, cmd, action)
-    if not player or not isElement(player) then return end
+-- addCommandHandler("car", function(player, cmd, action)
+--     if not player or not isElement(player) then return end
     
-    if not action then
-        outputChatBox("Sử dụng: /car [engine/lights/hood/trunk/fuel/status/windows]", player, 255, 255, 100)
-        outputChatBox("Các tùy chọn có sẵn: engine, lights, hood, trunk, fuel, status, windows", player, 255, 255, 100)
-        return
-    end
+--     if not action then
+--         outputChatBox("Sử dụng: /car [engine/lights/hood/trunk/fuel/status/windows]", player, 255, 255, 100)
+--         outputChatBox("Các tùy chọn có sẵn: engine, lights, hood, trunk, fuel, status, windows", player, 255, 255, 100)
+--         return
+--     end
     
-    local vehicle = getPedOccupiedVehicle(player)
-    if not vehicle and action ~= "hood" and action ~= "trunk" then
-        outputChatBox("Bạn cần ở trong xe để sử dụng lệnh này!", player, 255, 100, 100)
-        return
-    end
+--     local vehicle = getPedOccupiedVehicle(player)
+--     if not vehicle and action ~= "hood" and action ~= "trunk" then
+--         outputChatBox("Bạn cần ở trong xe để sử dụng lệnh này!", player, 255, 100, 100)
+--         return
+--     end
     
-    if action == "engine" then
-        if not vehicle then return end
+--     if action == "engine" then
+--         if not vehicle then return end
         
-        local vehicleType = getVehicleType(vehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" then
-            outputChatBox("Lệnh này không thể sử dụng với xe đạp!", player, 255, 100, 100)
-            return
-        end
+--         local vehicleType = getVehicleType(vehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" then
+--             outputChatBox("Lệnh này không thể sử dụng với xe đạp!", player, 255, 100, 100)
+--             return
+--         end
         
-        local engineState = getVehicleEngineState(vehicle)
-        local playerName = getPlayerName(player)
+--         local engineState = getVehicleEngineState(vehicle)
+--         local playerName = getPlayerName(player)
         
-        if engineState then
-            setVehicleEngineState(vehicle, false)
-            outputChatBox("** " .. playerName .. " rút chìa khóa ra ngoài và dừng động cơ xe.", getRootElement(), 255, 128, 0)
-        else
-            local isRefueling = getElementData(player, "refueling")
-            if isRefueling then
-                outputChatBox("Bạn không thể nổ máy xe khi đang tiếp nhiên liệu.", player, 255, 255, 255)
-                return
-            end
+--         if engineState then
+--             setVehicleEngineState(vehicle, false)
+--             outputChatBox("** " .. playerName .. " rút chìa khóa ra ngoài và dừng động cơ xe.", getRootElement(), 255, 128, 0)
+--         else
+--             local isRefueling = getElementData(player, "refueling")
+--             if isRefueling then
+--                 outputChatBox("Bạn không thể nổ máy xe khi đang tiếp nhiên liệu.", player, 255, 255, 255)
+--                 return
+--             end
             
-            outputChatBox("** " .. playerName .. " đưa chìa khóa vào ổ và bật động cơ xe.", getRootElement(), 255, 128, 0)
-            outputChatBox("Động cơ xe đang được khởi động, vui lòng đợi trong giây lát..", player, 255, 255, 255)
+--             outputChatBox("** " .. playerName .. " đưa chìa khóa vào ổ và bật động cơ xe.", getRootElement(), 255, 128, 0)
+--             outputChatBox("Động cơ xe đang được khởi động, vui lòng đợi trong giây lát..", player, 255, 255, 255)
             
-            setTimer(function()
-                if isElement(vehicle) then
-                    setVehicleEngineState(vehicle, true)
-                end
-            end, 1000, 1)
-        end
+--             setTimer(function()
+--                 if isElement(vehicle) then
+--                     setVehicleEngineState(vehicle, true)
+--                 end
+--             end, 1000, 1)
+--         end
         
-    elseif action == "lights" then
-        if not vehicle then return end
+--     elseif action == "lights" then
+--         if not vehicle then return end
         
-        local vehicleType = getVehicleType(vehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" then
-            outputChatBox("Lệnh này không thể sử dụng với xe đạp!", player, 255, 100, 100)
-            return
-        end
+--         local vehicleType = getVehicleType(vehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" then
+--             outputChatBox("Lệnh này không thể sử dụng với xe đạp!", player, 255, 100, 100)
+--             return
+--         end
         
-        local lightsOn = getVehicleOverrideLights(vehicle)
-        local playerName = getPlayerName(player)
+--         local lightsOn = getVehicleOverrideLights(vehicle)
+--         local playerName = getPlayerName(player)
         
-        if lightsOn == 2 then -- Lights on
-            setVehicleOverrideLights(vehicle, 1) -- Lights off
-            outputChatBox("** " .. playerName .. " tắt đèn xe.", getRootElement(), 255, 128, 0)
-        else
-            setVehicleOverrideLights(vehicle, 2) -- Lights on
-            outputChatBox("** " .. playerName .. " bật đèn xe.", getRootElement(), 255, 128, 0)
-        end
+--         if lightsOn == 2 then -- Lights on
+--             setVehicleOverrideLights(vehicle, 1) -- Lights off
+--             outputChatBox("** " .. playerName .. " tắt đèn xe.", getRootElement(), 255, 128, 0)
+--         else
+--             setVehicleOverrideLights(vehicle, 2) -- Lights on
+--             outputChatBox("** " .. playerName .. " bật đèn xe.", getRootElement(), 255, 128, 0)
+--         end
         
-    elseif action == "hood" then
-        local targetVehicle = vehicle
+--     elseif action == "hood" then
+--         local targetVehicle = vehicle
         
-        -- If not in vehicle, find closest vehicle
-        if not targetVehicle then
-            local x, y, z = getElementPosition(player)
-            local vehicles = getElementsByType("vehicle", getRootElement(), true)
-            local closestVehicle = nil
-            local closestDistance = 5.0
+--         -- If not in vehicle, find closest vehicle
+--         if not targetVehicle then
+--             local x, y, z = getElementPosition(player)
+--             local vehicles = getElementsByType("vehicle", getRootElement(), true)
+--             local closestVehicle = nil
+--             local closestDistance = 5.0
             
-            for _, veh in ipairs(vehicles) do
-                local vx, vy, vz = getElementPosition(veh)
-                local distance = getDistanceBetweenPoints3D(x, y, z, vx, vy, vz)
-                if distance < closestDistance then
-                    closestVehicle = veh
-                    closestDistance = distance
-                end
-            end
+--             for _, veh in ipairs(vehicles) do
+--                 local vx, vy, vz = getElementPosition(veh)
+--                 local distance = getDistanceBetweenPoints3D(x, y, z, vx, vy, vz)
+--                 if distance < closestDistance then
+--                     closestVehicle = veh
+--                     closestDistance = distance
+--                 end
+--             end
             
-            targetVehicle = closestVehicle
-        end
+--             targetVehicle = closestVehicle
+--         end
         
-        if not targetVehicle then
-            outputChatBox("Không có xe nào gần đây!", player, 255, 100, 100)
-            return
-        end
+--         if not targetVehicle then
+--             outputChatBox("Không có xe nào gần đây!", player, 255, 100, 100)
+--             return
+--         end
         
-        local vehicleType = getVehicleType(targetVehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" or vehicleType == "Plane" or vehicleType == "Helicopter" then
-            outputChatBox("Lệnh này không thể sử dụng với loại xe này.", player, 255, 255, 255)
-            return
-        end
+--         local vehicleType = getVehicleType(targetVehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" or vehicleType == "Plane" or vehicleType == "Helicopter" then
+--             outputChatBox("Lệnh này không thể sử dụng với loại xe này.", player, 255, 255, 255)
+--             return
+--         end
         
-        local doorState = getVehicleDoorState(targetVehicle, 0) -- Hood is door 0
-        local playerName = getPlayerName(player)
+--         local doorState = getVehicleDoorState(targetVehicle, 0) -- Hood is door 0
+--         local playerName = getPlayerName(player)
         
-        if doorState == 0 then
-            setVehicleDoorState(targetVehicle, 0, 1) -- Open hood
-            outputChatBox("** " .. playerName .. " mở nắp capo xe.", getRootElement(), 255, 128, 0)
-        else
-            setVehicleDoorState(targetVehicle, 0, 0) -- Close hood
-            outputChatBox("** " .. playerName .. " đóng nắp capo xe.", getRootElement(), 255, 128, 0)
-        end
+--         if doorState == 0 then
+--             setVehicleDoorState(targetVehicle, 0, 1) -- Open hood
+--             outputChatBox("** " .. playerName .. " mở nắp capo xe.", getRootElement(), 255, 128, 0)
+--         else
+--             setVehicleDoorState(targetVehicle, 0, 0) -- Close hood
+--             outputChatBox("** " .. playerName .. " đóng nắp capo xe.", getRootElement(), 255, 128, 0)
+--         end
         
-    elseif action == "trunk" then
-        local targetVehicle = vehicle
+--     elseif action == "trunk" then
+--         local targetVehicle = vehicle
         
-        -- If not in vehicle, find closest vehicle
-        if not targetVehicle then
-            local x, y, z = getElementPosition(player)
-            local vehicles = getElementsByType("vehicle", getRootElement(), true)
-            local closestVehicle = nil
-            local closestDistance = 5.0
+--         -- If not in vehicle, find closest vehicle
+--         if not targetVehicle then
+--             local x, y, z = getElementPosition(player)
+--             local vehicles = getElementsByType("vehicle", getRootElement(), true)
+--             local closestVehicle = nil
+--             local closestDistance = 5.0
             
-            for _, veh in ipairs(vehicles) do
-                local vx, vy, vz = getElementPosition(veh)
-                local distance = getDistanceBetweenPoints3D(x, y, z, vx, vy, vz)
-                if distance < closestDistance then
-                    closestVehicle = veh
-                    closestDistance = distance
-                end
-            end
+--             for _, veh in ipairs(vehicles) do
+--                 local vx, vy, vz = getElementPosition(veh)
+--                 local distance = getDistanceBetweenPoints3D(x, y, z, vx, vy, vz)
+--                 if distance < closestDistance then
+--                     closestVehicle = veh
+--                     closestDistance = distance
+--                 end
+--             end
             
-            targetVehicle = closestVehicle
-        end
+--             targetVehicle = closestVehicle
+--         end
         
-        if not targetVehicle then
-            outputChatBox("Không có xe nào gần đây!", player, 255, 100, 100)
-            return
-        end
+--         if not targetVehicle then
+--             outputChatBox("Không có xe nào gần đây!", player, 255, 100, 100)
+--             return
+--         end
         
-        local vehicleType = getVehicleType(targetVehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" then
-            outputChatBox("Lệnh này không thể sử dụng với loại xe này.", player, 255, 255, 255)
-            return
-        end
+--         local vehicleType = getVehicleType(targetVehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" then
+--             outputChatBox("Lệnh này không thể sử dụng với loại xe này.", player, 255, 255, 255)
+--             return
+--         end
         
-        local doorState = getVehicleDoorState(targetVehicle, 1) -- Trunk is door 1
-        local playerName = getPlayerName(player)
+--         local doorState = getVehicleDoorState(targetVehicle, 1) -- Trunk is door 1
+--         local playerName = getPlayerName(player)
         
-        if doorState == 0 then
-            setVehicleDoorState(targetVehicle, 1, 1) -- Open trunk
-            outputChatBox("** " .. playerName .. " mở cốp xe.", getRootElement(), 255, 128, 0)
-        else
-            setVehicleDoorState(targetVehicle, 1, 0) -- Close trunk
-            outputChatBox("** " .. playerName .. " đóng cốp xe.", getRootElement(), 255, 128, 0)
-        end
+--         if doorState == 0 then
+--             setVehicleDoorState(targetVehicle, 1, 1) -- Open trunk
+--             outputChatBox("** " .. playerName .. " mở cốp xe.", getRootElement(), 255, 128, 0)
+--         else
+--             setVehicleDoorState(targetVehicle, 1, 0) -- Close trunk
+--             outputChatBox("** " .. playerName .. " đóng cốp xe.", getRootElement(), 255, 128, 0)
+--         end
         
-    elseif action == "fuel" then
-        if not vehicle then return end
+--     elseif action == "fuel" then
+--         if not vehicle then return end
         
-        local fuel = getElementData(vehicle, "fuel") or 100
-        local engineState = getVehicleEngineState(vehicle) and "ON" or "OFF"
-        local lightState = (getVehicleOverrideLights(vehicle) == 2) and "ON" or "OFF"
+--         local fuel = getElementData(vehicle, "fuel") or 100
+--         local engineState = getVehicleEngineState(vehicle) and "ON" or "OFF"
+--         local lightState = (getVehicleOverrideLights(vehicle) == 2) and "ON" or "OFF"
         
-        local vehicleType = getVehicleType(vehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" then
-            outputChatBox("Chiếc xe này không cần nhiên liệu.", player, 255, 100, 100)
-            return
-        end
+--         local vehicleType = getVehicleType(vehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" then
+--             outputChatBox("Chiếc xe này không cần nhiên liệu.", player, 255, 100, 100)
+--             return
+--         end
         
-        local isVIP = getElementData(vehicle, "isVIP") or false
-        local isPlayerAdmin = getElementData(vehicle, "isPlayerAdmin") or false
+--         local isVIP = getElementData(vehicle, "isVIP") or false
+--         local isPlayerAdmin = getElementData(vehicle, "isPlayerAdmin") or false
         
-        if isVIP or isPlayerAdmin then
-            outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: Unlimited", player, 255, 255, 255)
-        else
-            outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: " .. fuel .. "%", player, 255, 255, 255)
-        end
+--         if isVIP or isPlayerAdmin then
+--             outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: Unlimited", player, 255, 255, 255)
+--         else
+--             outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: " .. fuel .. "%", player, 255, 255, 255)
+--         end
         
-    elseif action == "status" then
-        if not vehicle then return end
+--     elseif action == "status" then
+--         if not vehicle then return end
         
-        local fuel = getElementData(vehicle, "fuel") or 100
-        local engineState = getVehicleEngineState(vehicle) and "ON" or "OFF"
-        local lightState = (getVehicleOverrideLights(vehicle) == 2) and "ON" or "OFF"
-        local windowState = getElementData(vehicle, "windowsDown") and "Down" or "Up"
+--         local fuel = getElementData(vehicle, "fuel") or 100
+--         local engineState = getVehicleEngineState(vehicle) and "ON" or "OFF"
+--         local lightState = (getVehicleOverrideLights(vehicle) == 2) and "ON" or "OFF"
+--         local windowState = getElementData(vehicle, "windowsDown") and "Down" or "Up"
         
-        local vehicleType = getVehicleType(vehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" then
-            outputChatBox("Chiếc xe này không cần nhiên liệu.", player, 255, 100, 100)
-            return
-        end
+--         local vehicleType = getVehicleType(vehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" then
+--             outputChatBox("Chiếc xe này không cần nhiên liệu.", player, 255, 100, 100)
+--             return
+--         end
         
-        local isVIP = getElementData(vehicle, "isVIP") or false
-        local isPlayerAdmin = getElementData(vehicle, "isPlayerAdmin") or false
+--         local isVIP = getElementData(vehicle, "isVIP") or false
+--         local isPlayerAdmin = getElementData(vehicle, "isPlayerAdmin") or false
         
-        if isVIP or isPlayerAdmin then
-            outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: Unlimited | Windows: " .. windowState, player, 255, 255, 255)
-        else
-            outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: " .. fuel .. " percent | Windows: " .. windowState, player, 255, 255, 255)
-        end
+--         if isVIP or isPlayerAdmin then
+--             outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: Unlimited | Windows: " .. windowState, player, 255, 255, 255)
+--         else
+--             outputChatBox("Động cơ: " .. engineState .. " | Đèn xe: " .. lightState .. " | Xăng: " .. fuel .. " percent | Windows: " .. windowState, player, 255, 255, 255)
+--         end
         
-    elseif action == "windows" then
-        if not vehicle then return end
+--     elseif action == "windows" then
+--         if not vehicle then return end
         
-        local vehicleType = getVehicleType(vehicle)
-        if vehicleType == "BMX" or vehicleType == "Bike" or vehicleType == "Boat" then
-            outputChatBox("Lệnh này không thể sử dụng với loại xe này.", player, 255, 255, 255)
-            return
-        end
+--         local vehicleType = getVehicleType(vehicle)
+--         if vehicleType == "BMX" or vehicleType == "Bike" or vehicleType == "Boat" then
+--             outputChatBox("Lệnh này không thể sử dụng với loại xe này.", player, 255, 255, 255)
+--             return
+--         end
         
-        local windowsDown = getElementData(vehicle, "windowsDown") or false
-        local playerName = getPlayerName(player)
+--         local windowsDown = getElementData(vehicle, "windowsDown") or false
+--         local playerName = getPlayerName(player)
         
-        if windowsDown then
-            setElementData(vehicle, "windowsDown", false)
-            outputChatBox("** " .. playerName .. " đóng kính chắn gió nhìn ra ngoài.", getRootElement(), 255, 128, 0)
-        else
-            setElementData(vehicle, "windowsDown", true)
-            outputChatBox("** " .. playerName .. " mở kính chắn gió nhìn ra ngoài.", getRootElement(), 255, 128, 0)
-        end
-    end
-end)
+--         if windowsDown then
+--             setElementData(vehicle, "windowsDown", false)
+--             outputChatBox("** " .. playerName .. " đóng kính chắn gió nhìn ra ngoài.", getRootElement(), 255, 128, 0)
+--         else
+--             setElementData(vehicle, "windowsDown", true)
+--             outputChatBox("** " .. playerName .. " mở kính chắn gió nhìn ra ngoài.", getRootElement(), 255, 128, 0)
+--         end
+--     end
+-- end)
 
 -- Engine Control
 addCommandHandler("engine", function(player, cmd)

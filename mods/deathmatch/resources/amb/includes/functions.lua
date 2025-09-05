@@ -67,7 +67,7 @@ function isPlayerAdmin(player, requiredLevel)
 
     -- GOD level có toàn quyền
     if adminLevel == ADMIN_LEVELS.GOD then
-        outputDebugString("[ADMIN] GOD level detected, granting access")
+        -- outputDebugString("[ADMIN] GOD level detected, granting access")
         return true
     end
 
@@ -397,13 +397,11 @@ end
 local _addCommandHandler = addCommandHandler
 _G.registeredCommands = _G.registeredCommands or {}
 local registeredCommands = _G.registeredCommands
-
 -- Hook lại
 function addCommandHandler(command, handler, restricted, caseSensitive)
     registeredCommands[command] = true
     return _addCommandHandler(command, handler, restricted, caseSensitive)
 end
-
 -- Chặn chat lệnh không tồn tại
 addEventHandler("onPlayerChat", root, function(message, msgType)
     if msgType == 0 and message:sub(1, 1) == "/" then
@@ -414,5 +412,21 @@ addEventHandler("onPlayerChat", root, function(message, msgType)
         end
     end
 end)
+
+-- Reload models ingame without shutting down the server
+function reloadCustomModels()
+    local resource = getResourceFromName("newmodels_azul")
+    if resource then
+        if getResourceState(resource) == "running" then
+            restartResource(resource)
+            outputDebugString("[ADMIN_CMD] newmodels_azul resource restarted for model reload")
+        else
+            startResource(resource)
+            outputDebugString("[ADMIN_CMD] newmodels_azul resource started for model reload")
+        end
+    else
+        outputDebugString("[ADMIN_CMD] newmodels_azul resource not found!")
+    end
+end
 
 print("🔧 Functions loaded")

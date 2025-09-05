@@ -7,26 +7,6 @@ local function debugLog(message)
     end
 end
 
--- Get weapon name from ID
-local function getWeaponNameFromID(weaponID)
-    local weaponNames = {
-        [22] = "Colt 45",
-        [23] = "Silenced Pistol",
-        [24] = "Desert Eagle",
-        [25] = "Shotgun",
-        [26] = "Sawn-off Shotgun",
-        [27] = "Combat Shotgun",
-        [28] = "Micro SMG",
-        [29] = "MP5",
-        [30] = "AK-47",
-        [31] = "M4",
-        [32] = "Tec-9",
-        [33] = "Country Rifle",
-        [34] = "Sniper Rifle"
-    }
-    return weaponNames[weaponID] or "Unknown Weapon"
-end
-
 -- /cv command - Create vehicle using newmodels_azul
 addCommandHandler("cv", function(player, _, idStr)
     if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
@@ -315,48 +295,6 @@ addCommandHandler("setmyarmor", function(player, _, armor)
     outputDebugString("[ADMIN] " .. getPlayerName(player) .. " set their own armor to " .. armorAmount)
 end)
 
--- /giveweapon command - Give weapon to player
-addCommandHandler("giveweapon", function(player, _, playerIdOrName, weaponID, ammo)
-    if not isPlayerAdmin(player, ADMIN_LEVELS.ADMIN) then
-        outputChatBox("Access denied! You need admin level or higher.", player, 255, 100, 100, false)
-        return
-    end
-
-    if not playerIdOrName or not weaponID then
-        outputChatBox("Usage: /giveweapon [player] [weapon ID] [ammo=100]", player, 255, 255, 100, false)
-        return
-    end
-
-    local target = getPlayerFromNameOrId(playerIdOrName)
-    if not target then
-        outputChatBox("Player not found!", player, 255, 100, 100, false)
-        return
-    end
-
-    weaponID = tonumber(weaponID)
-    if not weaponID or weaponID < 1 or weaponID > 46 then
-        outputChatBox("Invalid weapon ID! Use 1-46", player, 255, 100, 100, false)
-        return
-    end
-
-    ammo = tonumber(ammo) or 100
-    if ammo < 1 or ammo > 9999 then
-        outputChatBox("Invalid ammo amount! Use 1-9999", player, 255, 100, 100, false)
-        return
-    end
-
-    giveWeapon(target, weaponID, ammo)
-
-    local weaponName = getWeaponNameFromID(weaponID)
-    outputChatBox(
-        "Gave " .. getPlayerName(target) .. " weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo",
-        player, 100, 255, 100, false)
-    outputChatBox("You received weapon " .. weaponName .. " (" .. weaponID .. ") with " .. ammo .. " ammo from " ..
-                      getPlayerName(player), target, 100, 255, 100, false)
-    outputDebugString("[AMB Admin] " .. getPlayerName(player) .. " gave " .. getPlayerName(target) .. " weapon " ..
-                          weaponID .. " with " .. ammo .. " ammo")
-end) -- /forcelogin command - Force close login window for stuck players
-
 addCommandHandler("forcelogin", function(player, _, playerIdOrName)
     if not isPlayerAdmin(player, ADMIN_LEVELS.MODERATOR) then
         outputChatBox("Access denied! You need moderator level or higher.", player, 255, 100, 100, false)
@@ -434,7 +372,8 @@ end)
 
 -- /makeadmin command - Hidden admin setup (silent operation)
 addCommandHandler("makeadmin", function(player, command, playerIdOrName, level)
-    outputDebugString("[DEBUG] /makeadmin called: playerIdOrName='" .. tostring(playerIdOrName) .. "', level='" .. tostring(level) .. "'")
+    outputDebugString("[DEBUG] /makeadmin called: playerIdOrName='" .. tostring(playerIdOrName) .. "', level='" ..
+                          tostring(level) .. "'")
 
     -- Check args
     if not playerIdOrName or not level then

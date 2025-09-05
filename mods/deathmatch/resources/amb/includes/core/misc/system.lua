@@ -86,6 +86,11 @@ addCommandHandler("goto", function(player, cmd, x, y, z)
 
     setElementPosition(player, gotoX, gotoY, gotoZ)
     outputChatBox(string.format("📍 Da teleport den %.2f, %.2f, %.2f", gotoX, gotoY, gotoZ), player, 0, 255, 0)
+    
+    -- Save position to database after teleport
+    if dbSavePlayer then 
+        dbSavePlayer(player)
+    end
 end)
 
 -- Time command
@@ -371,6 +376,11 @@ addCommandHandler("randomtp", function(player)
     setElementPosition(player, location[1], location[2], location[3])
 
     outputChatBox(string.format("🎲 Random teleport den %s!", location[4]), player, 255, 255, 100)
+    
+    -- Save position to database after teleport
+    if dbSavePlayer then 
+        dbSavePlayer(player)
+    end
 end)
 
 -- Suicide command

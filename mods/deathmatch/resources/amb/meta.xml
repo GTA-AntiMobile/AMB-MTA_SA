@@ -26,7 +26,6 @@
     <script src="includes/core/admin/vehicles.lua" type="server" />
     <script src="includes/core/admin/basic_commands.lua" type="server" />
     <script src="includes/core/player/login.lua" type="server" />
-    <script src="includes/core/player/cleanup.lua" type="server" />
     <script src="includes/core/player/animlist.lua" type="server" />
     <script src="includes/core/vehicle/dealership.lua" type="server" />
     <script src="includes/core/police/system.lua" type="server" />
@@ -46,6 +45,7 @@
     <script src="includes/core/feature/banking.lua" type="server" />
     <script src="includes/core/feature/shop.lua" type="server" />
     <script src="includes/core/feature/help.lua" type="server" />
+    <script src="includes/core/weapons/system.lua" type="server" />
 
     <!-- Core System Features -->
     <!-- <script src="includes/core/communication/voice.lua" type="server" /> -->

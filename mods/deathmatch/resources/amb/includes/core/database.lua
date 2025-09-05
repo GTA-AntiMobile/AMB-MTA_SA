@@ -103,6 +103,8 @@ function dbSavePlayer(player)
 
     local x, y, z = getElementPosition(player)
     local _, _, rot = getElementRotation(player)
+    outputDebugString(string.format("[DBSAVE] Saving position for %s: x=%.2f, y=%.2f, z=%.2f, rot=%.2f (to DB)",
+        getPlayerName(player), x, y, z, rot))
 
     -- Get skin using newmodels system to handle custom skins properly
     local skin = 299 -- default fallback
@@ -118,6 +120,7 @@ function dbSavePlayer(player)
     local armor = getPedArmor(player)
     local interior = getElementInterior(player)
     local dim = getElementDimension(player)
+    local adminLevel = getElementData(player, "adminLevel") or 0
 
     dbExec(db_connection, [[
         UPDATE accounts SET 
@@ -125,20 +128,30 @@ function dbSavePlayer(player)
         Model=?, Money=?, pHealth=?, pArmor=?,
         `Int`=?, VirtualWorld=?, AdminLevel=?
         WHERE Username=?
-    ]], x, y, z, rot, skin, money, health, armor, interior, dim, username)
+    ]], x, y, z, rot, skin, money, health, armor, interior, dim, adminLevel, username)
 end
 
 -- Spawn player from DB
 function dbSpawnPlayer(player, accountData)
     if not isElement(player) or not accountData then
+        outputDebugString("[SPAWN] ERROR: Invalid player or accountData", 1)
         return
     end
+
+    -- Debug accountData
+    outputDebugString(string.format("[SPAWN] AccountData: SPos_x=%s, SPos_y=%s, SPos_z=%s, SPos_r=%s",
+        tostring(accountData.SPos_x), tostring(accountData.SPos_y), tostring(accountData.SPos_z),
+        tostring(accountData.SPos_r)))
+
     local x = tonumber(accountData.SPos_x) or 1642.9
     local y = tonumber(accountData.SPos_y) or -2237.6
     local z = tonumber(accountData.SPos_z) or 13.5
     local rot = tonumber(accountData.SPos_r) or 0
     local interior = tonumber(accountData.Int) or 0
     local dimension = tonumber(accountData.VirtualWorld) or 0
+
+    outputDebugString(string.format("[SPAWN] Spawning %s at x=%.2f, y=%.2f, z=%.2f, rot=%.2f (from DB)",
+        getPlayerName(player), x, y, z, rot))
 
     -- nếu pos = 0 thì fallback về LS
     if (x == 0 and y == 0 and z == 0) then

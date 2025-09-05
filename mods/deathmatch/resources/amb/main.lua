@@ -8,7 +8,6 @@
 -- ================================================================
 -- Global server configuration
 -- Load player cleanup logic
-require("includes/core/player/cleanup.lua")
 SERVER_CONFIG = {
     name = "AMB MTA:SA Production",
     version = "1.0.0-production",
@@ -39,15 +38,24 @@ end)
 
 -- Resource stop event handler
 addEventHandler("onResourceStop", resourceRoot, function()
-    outputServerLog("AMB MTA:SA v1.1.2-production stopped")
+    outputServerLog("AMB MTA:SA v1.1.2-production stopping - saving all players...")
+    
     -- Auto logout all players and trigger client force logout
+    local loggedInCount = 0
     for _, player in ipairs(getElementsByType("player")) do
+        if getElementData(player, "loggedIn") then
+            loggedInCount = loggedInCount + 1
+            outputDebugString(string.format("[MAIN-STOP] Logging out %s", getPlayerName(player)))
+        end
+        
         setElementData(player, "loggedIn", false)
         triggerClientEvent(player, "onForceLogout", player)
         -- Nếu có biến khác như "username", "adminLevel" cũng nên xóa hoặc reset
         -- setElementData(player, "username", nil)
         -- setElementData(player, "adminLevel", nil)
     end
+    
+    outputServerLog(string.format("AMB MTA:SA v1.1.2-production stopped (%d players were logged in)", loggedInCount))
 end)
 
 -- Server ready event for other modules to hook into
